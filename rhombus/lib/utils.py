@@ -1,4 +1,4 @@
-import sys, base64, os, math
+import sys, base64, os, math, contextlib
 
 def cout(s, nl=True, flush=False):
     sys.stdout.write(s)
@@ -19,6 +19,13 @@ cinfo = cout
 # general utils
 
 random_string = lambda n: base64.b64encode(os.urandom(int(math.ceil(0.75*n))), b'-_')[:n].decode('UTF-8')
+
+def silent_remove( path ):
+    with contextlib.suppress(FileNotFoundError):
+        os.remove( path )
+
+def silent_rmdir( path ):
+    raise NotImplementedError()
 
 
 # dbhandler
