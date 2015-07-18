@@ -64,6 +64,11 @@ essential_groups = [
             ]
 
 ek_initlist = [
+    ( '@BASIC', 'Basic common keywords',
+        [   ('', ''),
+            ('X', 'undefined'),
+        ]),
+
     ( '@ROLES', 'Group roles',
         [   (SYSADM, 'system administrator role'),
             (SYSVIEW, 'system viewer role'),
