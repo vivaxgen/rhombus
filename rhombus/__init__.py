@@ -179,6 +179,10 @@ class RhoRequest(Request):
         except KeyError:
             pass
 
+    def get_resource(self, resource_name, default):
+        return self.registry.settings.get(resource_name, default)
+
+
 
 def userobj_factory(auth_cache):
 
@@ -236,6 +240,7 @@ def userobj_checker(auth_cache):
         return False
 
     return hasrole_userobj
+
 
 
 
