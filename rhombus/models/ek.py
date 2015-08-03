@@ -12,7 +12,7 @@ class EK(BaseMixIn, Base):
 
     __tablename__ = 'eks'
 
-    key = Column(types.String(128), nullable=False, unique=True)
+    key = Column(types.String(128), nullable=False)
     desc = Column(types.String(128), nullable=False)
     data = deferred(Column(types.Binary(), nullable=True))
     syskey = Column(types.Boolean, nullable=False, default=False)
@@ -23,6 +23,8 @@ class EK(BaseMixIn, Base):
 
     group_id = Column(types.Integer, ForeignKey('groups.id'))
     group = relationship('Group', uselist=False)
+
+    __table_args__ = ( UniqueConstraint('key', 'member_of_id'), {} )
 
     #cache = idcache()
 
@@ -100,7 +102,7 @@ class EK(BaseMixIn, Base):
         """ key and grp is the key name (as string) """
         if dbsession is None:
             dbsession = get_dbhandler().session()
-        id = dbsession.get_id(key)
+        id = dbsession.get_id((key, grp))
         if id: return id
 
         ek = EK.search(key, grp, dbsession)
@@ -114,7 +116,7 @@ class EK(BaseMixIn, Base):
             dbsession.add( ek )
             dbsession.flush([ek])
 
-        dbsession.set_key(ek.key, ek.id)
+        dbsession.set_key((ek.key, grp), ek.id)
         return ek.id
 
 
@@ -167,11 +169,14 @@ class EK(BaseMixIn, Base):
         """ [ ( '@IDENTIFIER', 'Identifiers', [ ( 'k1', 'd1'), ('k2', 'd2'), ... ] ), ... ] """
         assert dbsession, "FATAL ERROR - must provide dbsession arg"
         for item in alist:
-            (k, d) = item[:2]
+            if type(item) == str:
+                k = d = item
+            else:
+                (k, d) = item[:2]
             if d is None:
                 # update/add members of this particular key, assuming the key already
                 # exists in the database
-                ek = EK.search( k, dbsession )
+                ek = EK.search( k, dbsession = dbsession )
                 EK.bulk_insert( item[2], ek, syskey, dbsession = dbsession )
                 continue
             if type(d) == list:
@@ -194,14 +199,14 @@ class EK(BaseMixIn, Base):
 
 
     @staticmethod
-    def proxy(attrname, grpname=None, match_case=False, auto=False):
+    def proxy(attrname, grpname, match_case=False, auto=False):
         def _getter(inst):
             _id = getattr(inst, attrname)
             #print("*** id is", _id, "for attr", attrname)
             dbsession = object_session(inst)
             if dbsession is None:
                 dbsession = get_dbhandler().session()
-            key = EK._key( getattr(inst, attrname), dbsession )
+            key = EK._key( getattr(inst, attrname), dbsession, grpname )
             if not match_case and key:
                 return key.lower()
             return key
@@ -213,7 +218,7 @@ class EK(BaseMixIn, Base):
                 dbsession = getattr(inst, '_dbh_session_')
             setattr(inst, attrname, EK._id( value, dbsession, grpname, auto=auto) )
             #print("*** set attr", attrname, "with", getattr(inst, attrname))
-        return property(_getter, _setter)
+        return property(_getter, _setter, doc=grpname)
 
 
     @staticmethod
