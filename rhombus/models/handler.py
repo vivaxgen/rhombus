@@ -48,7 +48,7 @@ class DBHandler(object):
         
         from rhombus.models.setup import setup
         setup( self.session )
-        cinfo('[rhombus] Database has been initialized')
+        cerr('[rhombus] Database has been initialized')
 
 
     def get_userclass(self, userclass):
@@ -65,5 +65,26 @@ class DBHandler(object):
 
     def get_group_by_id(self, id):
         return user.Group.get(id)
+
+
+    def add_ekey(self, ekey, group=None):
+        group_ek = None
+        if group:
+            group_ek = ek.EK.search(group, dbsession=self.session)
+
+
+        if not group_ek and not ekey.startswith('@'):
+            raise RuntimeError('ekey must be under a group, or starts with @')
+
+        new_ekey = ek.EK( ekey, '-', parent=group_ek)
+        self.session.add(new_ekey)
+        return new_ekey
+
+
+    def list_ekeys(self, group=None):
+        if group:
+            return ek.EK.getmembers(group, self.session)
+        else:
+            return ek.EK.query(self.session).filter( ek.EK.key.startswith('@') ).all()
 
 

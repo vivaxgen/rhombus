@@ -109,10 +109,10 @@ class EK(BaseMixIn, Base):
                 raise KeyError( "Key: %s is not found!" % key )
             if not grp:
                 raise RuntimeError('EK: when set auto creation, group needs to be provided')
-            group = EK.search(grp)
+            group = EK.search(grp, dbsession=dbsession)
             ek = EK(key, '-', parent=group)
             dbsession.add( ek )
-            dbsession.flush()
+            dbsession.flush([ek])
 
         dbsession.set_key(ek.key, ek.id)
         return ek.id
@@ -138,6 +138,7 @@ class EK(BaseMixIn, Base):
     @staticmethod
     def search(key, group=None, dbsession=None):
         assert dbsession, "Please provide dbsession!"
+        assert group == None or type(group) == str, "group argument must be string or None"
         q = EK.query(dbsession).autoflush(False).filter( EK.key.ilike(key) )
         if group:
             q = q.filter( EK.member_of_id == EK._id(group, dbsession=dbsession) )
@@ -146,7 +147,7 @@ class EK(BaseMixIn, Base):
         return None
 
     @staticmethod
-    def getmember(grpname, dbsession):
+    def getmembers(grpname, dbsession):
         return EK.query(dbsession).filter( EK.member_of_id == EK._id(grpname, dbsession) )
 
     @staticmethod

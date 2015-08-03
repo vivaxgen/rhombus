@@ -1,13 +1,8 @@
 
 import sys, argparse, yaml, transaction
-from rhombus.lib.utils import get_dbhandler
+from rhombus.lib.utils import get_dbhandler, cerr, cout, cexit
 from rhombus.scripts import setup_settings
 
-cinfo = cerr = cout = print
-
-def cexit(msg):
-    cerr(msg)
-    sys.exit(1)
 
 def init_argparser( parser = None):
 
@@ -43,6 +38,11 @@ def init_argparser( parser = None):
     p.add_argument('--exportenumkey', default=False,
         help = 'export enumerated key to YAML file')
 
+    # ekeys
+
+    p.add_argument('--listenumkey', default=False, action='store_true')
+    p.add_argument('--addenumkey', default=False)
+    p.add_argument('--delenumkey', default=False)
 
     # direct manipulation
 
@@ -61,6 +61,8 @@ def init_argparser( parser = None):
     p.add_argument('--firstname', default='')
     p.add_argument('--userclass', default='')
     p.add_argument('--email', default='')
+
+    p.add_argument('--ekeygroup', default=None)
 
     # general options
 
@@ -108,6 +110,12 @@ def do_dbmgr(args, settings, dbh = None):
 
     elif args.adduser:
         do_adduser(args, dbh, settings)
+
+    elif args.listenumkey:
+        do_listenumkey(args, dbh, settings)
+
+    elif args.addenumkey:
+        do_addenumkey(args, dbh, settings)
 
     else:
         return False
@@ -166,6 +174,32 @@ def do_adduser(args, dbh, settings):
     print('User %s added sucessfully.' % user.login)
 
 
+## ENUM KEY
 
-    
+
+
+def do_addenumkey(args, dbh, settings):
+
+    cerr('Add enumkey')
+
+    key = args.addenumkey
+    key = key.upper() if key.startswith('@') else key.lower()
+
+    key_group = args.ekeygroup
+    if key_group is None and not key.startswith('@'):
+        cexit('ekey must under a group, or a group key which starts with @')
+
+    ekey = dbh.add_ekey(key, key_group)
+    cerr('I - enumkey: %s / %s has been added.' % 
+        (ekey.key, ekey.group.key if ekey.group else '*'))
+
+
+def do_listenumkey(args, dbh, settings):
+
+    cerr('List enumkey')
+
+    ekeys = dbh.list_ekeys(group = args.ekeygroup)
+    for ek in ekeys:
+        cout('%s' % ek.key)
+
     

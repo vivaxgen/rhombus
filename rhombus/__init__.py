@@ -47,8 +47,17 @@ def includeme( config ):
         '/group/{id}@@edit',
         '/group/{id}@@save',
         ('/group/{id}', 'view'),
-
     )
+
+    add_route_view( config, 'rhombus.views.ek', 'rhombus.ek', 
+        '/ek',
+        '/ek/@@action',
+        '/ek/@@lookup',
+        '/ek/{id}@@edit',
+        '/ek/{id}@@save',
+        ('/ek/{id}', 'view'),
+    )
+
 
 
 
