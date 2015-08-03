@@ -2,7 +2,8 @@ import logging
 from pyramid.response import Response
 from pyramid.renderers import render_to_response
 
-from rhombus.lib.roles import PUBLIC
+from rhombus.lib.roles import *
+from rhombus.lib.utils import get_dbhandler
 
 log = logging.getLogger(__name__)
         
