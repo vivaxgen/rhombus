@@ -39,16 +39,19 @@ class DBHandler(object):
 
 
 
-    def initdb(self):
+    def initdb(self, create_table=True, init_data=True):
         """ prepare the database for the first time by initializing it with
             necessary, basic, default data set """
         
         # WARN! if possible, use alembic to create tables
-        core.Base.metadata.create_all(self.engine)
-        
-        from rhombus.models.setup import setup
-        setup( self.session )
-        cerr('[rhombus] Database has been initialized')
+        if create_table:
+            core.Base.metadata.create_all(self.engine)
+            cerr('[rhombus] Database tables created.')
+
+        if init_data:
+            from rhombus.models.setup import setup
+            setup( self.session )
+            cerr('[rhombus] Database has been initialized.')
 
 
     def get_userclass(self, userclass):
