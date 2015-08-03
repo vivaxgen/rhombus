@@ -109,8 +109,8 @@ ${selection( name, label,
 <%def name="input_hidden( name, label='', class_='form-group', class_span='', style='', value='')">
 % if label:
 <div class='${class_}'>
-  <label class='control-label' for='${name}'>${label}</label>
-  <div class='controls'>
+  <label class='col-md-2 control-label' for='${name}'>${label}</label>
+  <div class='col-md-10'>
     <input type='hidden' id='${name}' name='${name}' value='${value}'
      ${"class='%s'" % class_ if class_.startswith('span') else "class='%s'" % class_span | n}
      ${"style='%s'" % style if style else ""| n} />
@@ -123,10 +123,10 @@ ${selection( name, label,
 
 
 ##
-<%def name="input_show(label, value, class_='control-group', class_span = 'input-large')">
+<%def name="input_show(label, value, class_='form-group', class_span = 'input-large')">
 <div class='${class_}'>
-  <label class='control-label'>${label}</label>
-  <div class='controls'>
+  <label class='col-md-2 control-label'>${label}</label>
+  <div class='col-md-10'>
     <span ${("class='%s uneditable-input'" % class_ if class_.startswith('span') else "class='%s uneditable-input'" % class_span) | n} >${value or ""}</span>
   </div>
 </div>
@@ -134,10 +134,10 @@ ${selection( name, label,
 
 
 ##
-<%def name="textarea_show(label, value, class_='control-group', class_span = 'input-large', rows=3)">
+<%def name="textarea_show(label, value, class_='form-group', class_span = 'input-large', rows=3)">
 <div class='${class_}'>
-  <label class='control-label'>${label}</label>
-  <div class='controls'>
+  <label class='col-md-2 control-label'>${label}</label>
+  <div class='col-md-10'>
     <span ${("class='%s uneditable-textarea'" % class_ if class_.startswith('span') else "class='%s uneditable-textarea'" % class_span) | n} ${"rows='%d'" % rows | n} >${value or ""}</span>
   </div>
 </div>
