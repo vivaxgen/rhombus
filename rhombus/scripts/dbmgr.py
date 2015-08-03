@@ -133,7 +133,7 @@ def do_initdb(args, dbh, settings):
     userclass = yaml.load(open(args.initial_userclass)) if args.initial_userclass else None
     groups = yaml.load(open(args.initial_groups)) if args.initial_groups else None
     populate_db(dbh.session, groups, userclass)
-    print('INFO - database has been initialized')
+    cout('INFO - database has been initialized')
 
 
 def do_adduser(args, dbh, settings):
@@ -171,7 +171,7 @@ def do_adduser(args, dbh, settings):
                             primarygroup = args.primarygroup,
                             groups = groups )
 
-    print('User %s added sucessfully.' % user.login)
+    cout('User %s added sucessfully.' % user.login)
 
 
 ## ENUM KEY
