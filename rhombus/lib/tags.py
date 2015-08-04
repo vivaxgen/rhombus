@@ -209,6 +209,26 @@ class li(doubletag):
     _tag = 'li'
 
 
+## tables
+
+class table(doubletag):
+    _tag = 'table'
+
+class thead(doubletag):
+    _tag = 'thead'
+
+class tbody(doubletag):
+    _tag = 'tbody'
+
+class tr(doubletag):
+    _tag = 'tr'
+
+class th(doubletag):
+    _tag = 'th'
+
+class td(doubletag):
+    _tag = 'td'
+
 ## singleton
 
 BR = literal('<br/>')
