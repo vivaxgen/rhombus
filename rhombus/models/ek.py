@@ -206,7 +206,7 @@ class EK(BaseMixIn, Base):
             dbsession = object_session(inst)
             if dbsession is None:
                 dbsession = get_dbhandler().session()
-            key = EK._key( getattr(inst, attrname), dbsession, grpname )
+            key = EK._key( getattr(inst, attrname), dbsession)
             if not match_case and key:
                 return key.lower()
             return key
