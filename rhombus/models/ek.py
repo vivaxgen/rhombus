@@ -87,12 +87,12 @@ class EK(BaseMixIn, Base):
 
     @staticmethod
     def _key(id, dbsession):
-        k = dbsession.get_key(id)
-        if k: return k
+        key_pair = dbsession.get_key(id)
+        if key_pair: return key_pair[0]
 
         ek = EK.get(id, dbsession)
         if ek:
-            dbsession.set_key(ek.key, ek.id)
+            dbsession.set_key((ek.key, ek.member_of.key if ek.member_of else None), ek.id)
             return ek.key
 
         return None
