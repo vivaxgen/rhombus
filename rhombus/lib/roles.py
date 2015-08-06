@@ -1,6 +1,8 @@
 
 SYSADM = '~r|system-adm'
 SYSVIEW = '~r|system-viewer'
+DATAADM = '~r|data-adm'
+DATAVIEW = '~r|data-viewer'
 PUBLIC = '~r|public'
 
 EK_CREATE = '~r|ek|create'
