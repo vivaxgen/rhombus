@@ -31,7 +31,7 @@ class htmltag(object):
         if self.class_:
             attrs.append('class="%s"' % escape(self.class_))
         for (key, val) in self.attrs.items():
-            attrs.append('%s="%s"' % (escape(key), escape(value)))
+            attrs.append('%s="%s"' % (escape(key), escape(val)))
         return ' '.join(attrs)
 
 
