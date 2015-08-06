@@ -59,6 +59,7 @@ essential_groups = [
             ( '_UserMgr_', [ USER_CREATE, USER_MODIFY, USER_DELETE ] ),
             ( '_GroupMgr_', [ GROUP_CREATE, GROUP_MODIFY, GROUP_DELETE,
                                 GROUP_ADDUSER, GROUP_DELUSER ] ),
+            ( '_DataAdm_', [DATAADM, DATAVIEW] ),
             ( '_LogViewer_', [] ),
             ( '_MasterViewer_', [ SYSVIEW ] )
             ]
@@ -72,6 +73,8 @@ ek_initlist = [
     ( '@ROLES', 'Group roles',
         [   (SYSADM, 'system administrator role'),
             (SYSVIEW, 'system viewer role'),
+            (DATAADM, 'data administrator role'),
+            (DATAVIEW, 'data viewer role'),
             (PUBLIC, 'public role - all visitor'),
             (EK_CREATE, 'create new EnumKey (EK)'),
             (EK_MODIFY, 'modify EnumKey(EK)'),
