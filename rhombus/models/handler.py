@@ -86,8 +86,8 @@ class DBHandler(object):
 
     def list_ekeys(self, group=None):
         if group:
-            return ek.EK.getmembers(group, self.session)
+            return ek.EK.getmembers(group, self.session())
         else:
-            return ek.EK.query(self.session).filter( ek.EK.key.startswith('@') ).all()
+            return ek.EK.query(self.session()).filter( ek.EK.key.startswith('@') ).all()
 
 
