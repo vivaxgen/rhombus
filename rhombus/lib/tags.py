@@ -78,8 +78,8 @@ class input_text(htmltag):
         return literal( input_text_template.format( name=escape(self.name),
                         label=escape(self.label), value=escape(self.value),
                         class_div = 'form-group',
-                        class_label = 'col-md-2 control-label',
-                        class_value = 'col-md-10',
+                        class_label = 'col-md-3 control-label',
+                        class_value = 'col-md-9',
                         class_input = 'form-control',
                     ) )
 
@@ -89,8 +89,8 @@ class input_textarea(input_text):
         return literal( input_textarea_template.format( name=escape(self.name),
                         label=escape(self.label), value=escape(self.value),
                         class_div = 'form-group',
-                        class_label = 'col-md-2 control-label',
-                        class_value = 'col-md-10',
+                        class_label = 'col-md-3 control-label',
+                        class_value = 'col-md-9',
                         class_input = 'form-control',
                     ) )
 
@@ -122,16 +122,16 @@ class input_select(input_text):
                 selected = 'selected="selected"'
             options.append( '<option value="%s" %s>%s</option>' % 
                         (escape(val), selected, escape(label) ))
-        return input_select_template.format(
+        return literal( input_select_template.format(
                     name = escape(self.name), label = escape(self.label),
                     value = escape(self.value),
                     options = '\n'.join(options),
                     multiple = 'multiple="multiple"' if self.multiple else '',
                     class_div = 'form-group',
-                    class_label = 'col-md-2 control-label',
-                    class_value = 'col-md-10',
+                    class_label = 'col-md-3 control-label',
+                    class_value = 'col-md-9',
                     class_input = 'form-control',
-                )
+                ))
 
 class input_select_ek(input_select):
 
@@ -165,6 +165,9 @@ class image(htmltag):
 
     def __str__(self):
         return literal( '<%s %s />' % (self._tag, self.attributes()))
+
+class fieldset(doubletag):
+    _tag = 'fieldset'
 
 class p(doubletag):
     _tag = 'p'
