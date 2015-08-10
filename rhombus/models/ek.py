@@ -108,7 +108,7 @@ class EK(BaseMixIn, Base):
         ek = EK.search(key, grp, dbsession)
         if not ek:
             if not auto:
-                raise KeyError( "Key: %s is not found!" % key )
+                raise KeyError( "Key: %s/%s is not found!" % (key, grp) )
             if not grp:
                 raise RuntimeError('EK: when set auto creation, group needs to be provided')
             group = EK.search(grp, dbsession=dbsession)
