@@ -251,9 +251,6 @@ def userobj_checker(auth_cache):
     return hasrole_userobj
 
 
-
-
-
 def override_assets( config, settings, asset_list ):
     """ asset_list: [ (cfg, asset, def_overrider), ...]
                 eg. [ ('override.base', 'rhombus:templates/base.mako',
