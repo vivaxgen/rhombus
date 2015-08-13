@@ -85,6 +85,7 @@ class EK(BaseMixIn, Base):
             return json.loads( self.data.decode('UTF-8') )
         return None
 
+
     @staticmethod
     def _key(id, dbsession):
         key_pair = dbsession.get_key(id)
@@ -96,6 +97,7 @@ class EK(BaseMixIn, Base):
             return ek.key
 
         return None
+
 
     @staticmethod
     def _id(key, dbsession=None, grp=None, auto=False):
