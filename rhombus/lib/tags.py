@@ -24,6 +24,8 @@ class htmltag(object):
     def add(self, *args):
         self.contents += args
         for el in args:
+            if not isinstance(el, htmltag):
+                continue
             if el.name:
                 if el.name in self.elements:
                     raise RuntimeError('duplicate element id/name: %s' % el.name)
@@ -73,7 +75,7 @@ class form(htmltag):
 
     def __str__(self):
         return literal( form_template.format( name=escape(self.name),
-                                action = url_escape(self.action),
+                                action = self.action,
                                 method = self.method,
                                 contents = '\n'.join( escape(c) for c in self.contents ),
                         ) )
@@ -119,6 +121,7 @@ class input_hidden(htmltag):
                         (escape(self.name), escape(self.name), escape(self.value)) )
 
 
+
 class input_select(input_text):
 
     def __init__(self, name, label, value='', options=[], multiple=False, **kwargs):
@@ -148,14 +151,9 @@ class input_select(input_text):
 
 class input_select_ek(input_select):
 
-    def __init__(self, name, label, value='', group=None, **kwargs):
+    def __init__(self, name, label, value, parent_ek, group=None, **kwargs):
         super().__init__( name, label, value, multiple=False, **kwargs )
-        self.group = group
-        dbh = get_dbhandler()
-        self.options = None
-
-    def __str__(self):
-        return '<input>'
+        self.options = [ (ek.id, ek.key) for ek in parent_ek.members ]
 
 
 class doubletag(htmltag):
@@ -250,6 +248,19 @@ class td(doubletag):
 BR = literal('<br/>')
 HR = literal('<hr/>')
 
+## composites
+
+class submit_bar(htmltag):
+
+    def __init__(self, label='Save', value='save'):
+        self.label = label
+        self.value = value
+
+    def __str__(self):
+        return literal( submit_bar_template.format( label = self.label, val = self.value ) )
+
+    
+
 
 input_text_template = '''\
 <div class='{class_div}'>
@@ -295,9 +306,18 @@ radioboxes_template = '''\
   % endfor
 </div>'''
 
+submit_bar_template = '''\
+<div class='form-group'>
+  <div class='col-md-10'>
+    <button class='btn btn-primary' type='submit' name='_method' value='{val}'>{label}</button>
+    <button class='btn' type='reset'>Reset</button>
+  </div>
+</div>
+'''
+
 form_template = '''\
 <form name="{name}" id="{name}" action="{action}" method="{method}" class="form-horizontal input-group-sm">
   {contents}
 </form>'''
-## test
+
 
