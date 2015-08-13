@@ -12,6 +12,7 @@ class htmltag(object):
         self.class_ = escape(kwargs.get('class_', ''))
         self.container = None
         self.contents = []
+        self.elements = {}
         self.attrs = {}
         for (key, val) in kwargs.items():
             key = key.lower()
@@ -22,6 +23,18 @@ class htmltag(object):
 
     def add(self, *args):
         self.contents += args
+        for el in args:
+            if el.name:
+                if el.name in self.elements:
+                    raise RuntimeError('duplicate element id/name: %s' % el.name)
+                self.elements[el.name] = el
+            for (name, value) in el.elements.items():
+                if name in self.elements:
+                    raise RuntimeError('duplicate element id/name: %s' % name)
+                self.elements[name] = value
+
+    def get(self, name):
+        return self.elements[name]
 
 
     def attributes(self):
@@ -51,7 +64,7 @@ class htmltag(object):
 
 class form(htmltag):
 
-    def __init__(self, name, action, method=GET, **kwargs):
+    def __init__(self, name, action='#', method=GET, **kwargs):
         super().__init__( **kwargs )
         self.name = name
         self.action = action
