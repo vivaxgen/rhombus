@@ -91,3 +91,7 @@ class DBHandler(object):
             return ek.EK.query(self.session()).filter( ek.EK.key.startswith('@') ).all()
 
 
+    def get_ekey(self, ekey):
+        return self.EK.search(ekey, dbsession = self.session())
+
+
