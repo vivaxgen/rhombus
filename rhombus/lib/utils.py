@@ -58,6 +58,11 @@ def get_dbhandler( settings = None, tag = 'sqlalchemy.', initial=False):
     return _DBHANDLER_
 
 
+def get_dbhandler_notsafe():
+    global _DBHANDLER_
+    return _DBHANDLER_
+
+
 def set_dbhandler_class( class_ ):
     global _DBHANDLER_CLASS_
     cerr('Setting dbhandler class to %s' % str(class_))
