@@ -10,6 +10,7 @@ class htmltag(object):
     def __init__(self, **kwargs):
         self.name = kwargs.get('name', '')
         self.class_ = escape(kwargs.get('class_', ''))
+        self.id = kwargs.get('id', '')
         self.container = None
         self.contents = []
         self.elements = {}
@@ -42,7 +43,8 @@ class htmltag(object):
     def attributes(self):
         attrs = []
         if self.name:
-            attrs.append('name="%s" id="%s"' % (escape(self.name), escape(self.name)))
+            attrs.append('name="%s" id="%s"' % (escape(self.name),
+                        escape(self.id or self.name)))
         if self.class_:
             attrs.append('class="%s"' % escape(self.class_))
         for (key, val) in self.attrs.items():
@@ -176,6 +178,21 @@ class image(htmltag):
 
     def __str__(self):
         return literal( '<%s %s />' % (self._tag, self.attributes()))
+
+class input(htmltag):
+
+    _tag = 'input'
+
+    def __str__(self):
+        return literal( '<%s %s />' % (self._tag, self.attributes()))
+
+class br(htmltag):
+
+    _tag = 'br'
+
+    def __str__(self):
+        return literal( '<%s %s />' % (self._tag, self.attributes()))
+
 
 class fieldset(doubletag):
     _tag = 'fieldset'
