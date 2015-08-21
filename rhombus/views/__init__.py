@@ -54,3 +54,11 @@ def row(*args, **kwargs):
         class_ = 'row'
     return div(*args, class_=class_, **kwargs)
 
+def button(*args, **kwargs):
+    if CLASS in kwargs:
+        class_ = 'btn btn-info ' + kwargs[CLASS]
+        del kwargs[CLASS]
+    else:
+        class_ = 'btn btn-info'
+    return span(*args, class_=class_, **kwargs)
+
