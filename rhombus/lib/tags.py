@@ -8,9 +8,11 @@ GET = 'get'
 class htmltag(object):
 
     def __init__(self, **kwargs):
-        self.name = kwargs.get('name', '')
+        self.name = kwargs.get('name', '').strip()
         self.class_ = escape(kwargs.get('class_', ''))
-        self.id = kwargs.get('id', '')
+        self.id = kwargs.get('id', '').strip()
+        if not self.id:
+            self.id = self.name
         self.container = None
         self.contents = []
         self.elements = {}
@@ -22,28 +24,42 @@ class htmltag(object):
             self.attrs[key] = val
 
 
+    def get_container(self):
+        if self.container:
+            return self.container.get_container()
+        return self
+
+
     def add(self, *args):
-        self.contents += args
+        root = self.get_container()
         for el in args:
+            self.contents.append( el )
             if not isinstance(el, htmltag):
                 continue
-            if el.name:
-                if el.name in self.elements:
-                    raise RuntimeError('duplicate element id/name: %s' % el.name)
-                self.elements[el.name] = el
-            for (name, value) in el.elements.items():
-                if name in self.elements:
-                    raise RuntimeError('duplicate element id/name: %s' % name)
-                self.elements[name] = value
+            if el.id:
+                identifier = el.id
+                if identifier in root.elements:
+                    raise RuntimeError('duplicate element id/name: %s' % identifier)
+                root.elements[identifier] = el
+            for (identifier, value) in el.elements.items():
+                if identifier in root.elements:
+                    raise RuntimeError('duplicate element id/name: %s' % identifier)
+                root.elements[identifier] = value
+            el.container = self
 
-    def get(self, name):
-        return self.elements[name]
+
+    def get(self, identifier):
+        return self.elements[identifier]
+
+
+    def __contains__(self, identifier):
+        return identifier in self.elements
 
 
     def attributes(self):
         attrs = []
-        if self.name:
-            attrs.append('name="%s" id="%s"' % (escape(self.name),
+        if self.name or self.id:
+            attrs.append('name="%s" id="%s"' % (escape(self.name or self.id),
                         escape(self.id or self.name)))
         if self.class_:
             attrs.append('class="%s"' % escape(self.class_))
@@ -120,7 +136,7 @@ class input_hidden(htmltag):
 
     def __str__(self):
         return literal( '<input type="hidden" id="%s" name="%s" value="%s" />' %
-                        (escape(self.name), escape(self.name), escape(self.value)) )
+                        (escape(self.id or self.name), escape(self.name), escape(self.value)) )
 
 
 
@@ -164,7 +180,7 @@ class doubletag(htmltag):
 
     def __init__(self, *args, **kwargs):
         super().__init__( **kwargs )
-        self.contents = args
+        self.add( *args )
 
     def __str__(self):
         return literal( '<%s %s>%s</%s>' % ( self._tag, self.attributes(),
@@ -222,6 +238,9 @@ class div(doubletag):
         return literal( '<%s %s>\n%s\n</%s>' % ( self._tag, self.attributes(),
                                         '\n'.join( escape(str(c)) for c in self.contents ),
                                         self._tag ) )
+
+class pre(doubletag):
+    _tag = 'pre'
 
 class ul(doubletag):
     _tag = 'ul'
