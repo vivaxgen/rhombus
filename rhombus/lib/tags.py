@@ -152,7 +152,7 @@ class input_select(input_text):
         options = []
         for val, label in self.options:
             selected = ''
-            if self.value and self.value == key:
+            if self.value and self.value == val:
                 selected = 'selected="selected"'
             options.append( '<option value="%s" %s>%s</option>' % 
                         (escape(val), selected, escape(label) ))
@@ -289,6 +289,7 @@ HR = literal('<hr/>')
 class submit_bar(htmltag):
 
     def __init__(self, label='Save', value='save'):
+        super().__init__()
         self.label = label
         self.value = value
 
