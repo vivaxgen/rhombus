@@ -9,4 +9,5 @@ Open Sans Condensed
 Font with tabular style:
 
 Source Sans Pro
-Open Sans 
+Open Sans
+Signika
