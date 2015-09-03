@@ -85,8 +85,7 @@ class htmltag(object):
 class form(htmltag):
 
     def __init__(self, name, action='#', method=GET, **kwargs):
-        super().__init__( **kwargs )
-        self.name = name
+        super().__init__( name = name, **kwargs )
         self.action = action
         self.method = method
 
@@ -102,19 +101,30 @@ class form(htmltag):
 class input_text(htmltag):
     
     def __init__(self, name, label, value='', **kwargs):
-        super().__init__( **kwargs )
-        self.name = name
+        super().__init__( name = name, **kwargs )
         self.label = label
         self.value = value
+        self.error = None
 
     def __str__(self):
         return literal( input_text_template.format( name=escape(self.name),
                         label=escape(self.label), value=escape(self.value),
-                        class_div = 'form-group',
+                        class_div = 'form-group' + (' has-error' if self.error else ''),
                         class_label = 'col-md-3 control-label',
                         class_value = 'col-md-9',
                         class_input = 'form-control',
+                        help_span = self.help(),
                     ) )
+
+    def help(self):
+        if not self.error:
+            return ''
+        return '<span id="helpBlock" class="help-block">' + self.error + '</span>'
+
+    def add_error(self, errmsg):
+        self.error = errmsg
+
+
 
 class input_textarea(input_text):
 
@@ -130,7 +140,7 @@ class input_textarea(input_text):
 class input_hidden(htmltag):
 
     def __init__(self, name, value, **kwargs):
-        super().__init__( **kwargs )
+        super().__init__( name = name, **kwargs )
         self.name = name
         self.value = value
 
@@ -304,6 +314,7 @@ input_text_template = '''\
   <label class='{class_label}' for='{name}'>{label}</label>
   <div class='{class_value}'>
     <input type='text' id='{name}' name='{name}' value='{value}' class='{class_input}'/>
+    {help_span}
   </div>
 </div>'''
 
