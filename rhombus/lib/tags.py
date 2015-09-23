@@ -100,20 +100,28 @@ class form(htmltag):
 
 class input_text(htmltag):
     
-    def __init__(self, name, label, value='', **kwargs):
+    def __init__(self, name, label, value='', info=None, size=8, extra_control=None, **kwargs):
         super().__init__( name = name, **kwargs )
         self.label = label
         self.value = value
         self.error = None
+        self.info = info
+        self.size = size
+        self.extra_control = extra_control
 
     def __str__(self):
+        if self.info:
+            info = '<div class="col-md-1 form-control-static"><span class="glyphicon glyphicon-question-sign" aria-hidden="true"></span></div>'
+        else:
+            info = ''
         return literal( input_text_template.format( name=escape(self.name),
                         label=escape(self.label), value=escape(self.value),
                         class_div = 'form-group' + (' has-error' if self.error else ''),
                         class_label = 'col-md-3 control-label',
-                        class_value = 'col-md-9',
+                        class_value = 'col-md-%d' % self.size,
                         class_input = 'form-control',
                         help_span = self.help(),
+                        info = info,
                     ) )
 
     def help(self):
@@ -129,12 +137,18 @@ class input_text(htmltag):
 class input_textarea(input_text):
 
     def __str__(self):
+        if type(self.size) == str and 'x' in self.size:
+            rows,size = ( int(v) for v in self.size.split('x') )
+        else:
+            rows,size = 4, self.size
         return literal( input_textarea_template.format( name=escape(self.name),
                         label=escape(self.label), value=escape(self.value),
                         class_div = 'form-group',
                         class_label = 'col-md-3 control-label',
-                        class_value = 'col-md-9',
+                        class_value = 'col-md-%d' % size,
+                        rows = rows,
                         class_input = 'form-control',
+                        extra_control = literal(self.extra_control) if self.extra_control else '',
                     ) )
 
 class input_hidden(htmltag):
@@ -152,11 +166,12 @@ class input_hidden(htmltag):
 
 class input_select(input_text):
 
-    def __init__(self, name, label, value='', options=[], multiple=False, **kwargs):
+    def __init__(self, name, label, value='', options=[], multiple=False, extra_control=None, **kwargs):
         """ options: [ (val, label), ... ] """
         super().__init__( name, label, value, **kwargs )
         self.options = options
         self.multiple = multiple
+        self.extra_control = extra_control
 
     def __str__(self):
         options = []
@@ -173,8 +188,9 @@ class input_select(input_text):
                     multiple = 'multiple="multiple"' if self.multiple else '',
                     class_div = 'form-group',
                     class_label = 'col-md-3 control-label',
-                    class_value = 'col-md-9',
+                    class_value = 'col-md-%d' % self.size,
                     class_input = 'form-control',
+                    extra_control = literal(self.extra_control) if self.extra_control else '',
                 ))
 
 class input_select_ek(input_select):
@@ -316,6 +332,7 @@ input_text_template = '''\
     <input type='text' id='{name}' name='{name}' value='{value}' class='{class_input}'/>
     {help_span}
   </div>
+  {info}
 </div>'''
 
 
@@ -327,7 +344,8 @@ input_textarea_template = '''\
 <div class='{class_div}'>
   <label class='{class_label}' for='{name}'>{label}</label>
   <div class='{class_value}'>
-    <textarea id='{name}' name='{name}' class='{class_input}'>{value}</textarea>
+    <textarea id='{name}' name='{name}' class='{class_input}' rows='{rows}'>{value}</textarea>
+    {extra_control}
   </div>
 </div>'''
 
@@ -338,6 +356,7 @@ input_select_template = '''\
     <select id='{name}' name='{name}' class='{class_input}' {multiple}>
     {options}
     </select>
+    {extra_control}
   </div>
 </div>'''
 
