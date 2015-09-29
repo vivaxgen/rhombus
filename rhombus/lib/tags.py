@@ -81,6 +81,9 @@ class htmltag(object):
             self.add( arg )
         return self
 
+    def __repr__(self):
+        return '<%s name=%s>' % (self.__class__.__name__, self.name)
+
 
 class form(htmltag):
 
@@ -192,6 +195,15 @@ class input_select(input_text):
                     class_input = 'form-control',
                     extra_control = literal(self.extra_control) if self.extra_control else '',
                 ))
+
+    def set(self, options=None, value=None, extra_control=None):
+        if options:
+            self.options = options
+        if value:
+            self.value = value
+        if extra_control:
+            self.extra_control = extra_control
+
 
 class input_select_ek(input_select):
 
