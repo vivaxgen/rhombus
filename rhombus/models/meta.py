@@ -13,7 +13,7 @@ __revision__ = '20150216'
 from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy.orm import scoped_session, sessionmaker, mapper, Session
 from sqlalchemy.engine import Engine
-from sqlalchemy import event
+from sqlalchemy import event, MetaData
 
 from zope.sqlalchemy import ZopeTransactionExtension
 
@@ -46,9 +46,33 @@ class RhoSession(Session):
         self._ek_ids.clear()
 
 
+def uq_convention(constraint, table):
+    names = [ table.name]
+    names += [ str(c).split('.')[-1] for c in constraint.columns ]
+    return "_".join( names )
+
+def ck_convention(constraint, table):
+    print(dir(constraint))
+    print('table name:', table.name)
+    return "CK"
+
+
+convention = {
+  "ix": 'ix_%(column_0_label)s',
+  "uq_custom": uq_convention,
+  #"uq": "uq_%(table_name)s_%(column_0_name)s",
+  "uq": "uq_%(uq_custom)s",
+  #"ck": "ck_%(table_name)s_%(constraint_name)s",
+  "ck_custom": ck_convention,
+  "ck": "ck_%(ck_custom)s",
+  "fk": "fk_%(table_name)s_%(column_0_name)s_%(referred_table_name)s",
+  "pk": "pk_%(table_name)s"
+}
+
+_metadata = MetaData(naming_convention=convention)
 _dbsession = scoped_session(sessionmaker(class_ = RhoSession,
                                         extension = ZopeTransactionExtension()))
-_base = declarative_base()
+_base = declarative_base(metadata=_metadata)
 
 # this is necessary for SQLite to use FOREIGN KEY support (as well as ON DELETE CASCADE)
 @event.listens_for(Engine, 'connect')
