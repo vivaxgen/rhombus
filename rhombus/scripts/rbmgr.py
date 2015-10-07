@@ -3,11 +3,16 @@ import sys, argparse, yaml, transaction
 from rhombus.lib.utils import get_dbhandler, cerr, cout, cexit
 from rhombus.scripts import setup_settings
 
+## rbmgr.py
+##
+## this command manages datatype directly related to rhombus only
+## ie: userclass, user, group, enumkey
+
 
 def init_argparser( parser = None):
 
     if parser is None:
-        p = argparse.ArgumentParser('dbmgr')
+        p = argparse.ArgumentParser('rbmgr [rhombus]')
     else:
         p = parser
 
@@ -64,7 +69,14 @@ def init_argparser( parser = None):
 
     p.add_argument('--ekeygroup', default=None)
 
-    # general options
+    # general options here
+
+    return db_argparser(p)
+
+
+def db_argparser( p ):
+
+    # all db-related options here
 
     p.add_argument('-c', '--config', default=False,
         help = 'config file (or use RHOMBUS_CONFIG environment)')
@@ -78,16 +90,17 @@ def init_argparser( parser = None):
     return p
 
 
+
 def main(args):
 
     settings = setup_settings( args )
 
     if any( (args.exportuserclass, args.exportgroup, args.exportenumkey) ):
-        do_dbmgr( args, settings )
+        do_rbmgr( args, settings )
 
     elif not args.rollback and (args.commit or args.initdb):
         with transaction.manager:
-            do_dbmgr( args, settings )
+            do_rbmgr( args, settings )
             cerr('** COMMIT database **')
 
     else:
@@ -96,11 +109,11 @@ def main(args):
             keys = input('Do you want to continue?')
             if keys.lower()[0] != 'y':
                 sys.exit(1)
-        do_dbmgr( args, settings )
+        do_rbmgr( args, settings )
                 
 
 
-def do_dbmgr(args, settings, dbh = None):
+def do_rbmgr(args, settings, dbh = None):
 
     if not dbh:
         dbh = get_dbhandler(settings, initial = args.initdb)
