@@ -57,6 +57,9 @@ def init_argparser( parser = None):
 
     # specific options
 
+    p.add_argument('--no-create-table', default=False, action='store_true')
+    p.add_argument('--no-init-data', default=False, action='store_true')
+
     p.add_argument('--initial_userclass', default=False)
     p.add_argument('--initial_groups', default=False)
 
@@ -141,7 +144,8 @@ def do_initdb(args, dbh, settings):
 
     print('do_initdb()')
 
-    dbh.initdb()
+    dbh.initdb(create_table = (not args.no_create_table),
+            init_data = (not args.no_init_data))
     from rhombus.scripts.setup import populate_db
     userclass = yaml.load(open(args.initial_userclass)) if args.initial_userclass else None
     groups = yaml.load(open(args.initial_groups)) if args.initial_groups else None
