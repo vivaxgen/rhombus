@@ -1,0 +1,8 @@
+
+As Rhombus uses SQLAlchemy as its database library system, all information
+pertaining the use of PostgreSQL in SQLAlchemy applies.
+
+To set up PostgreSQL database for Rhombus use, follow the below instructions:
+
+- Set up PostgreSQL according to your Linux distribution
+- Create the database as PostgreSQL admin user

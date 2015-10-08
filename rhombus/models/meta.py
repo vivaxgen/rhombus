@@ -8,7 +8,7 @@ This software is licensed under LGPL v3 or later version.
 Please read the README.txt of this software.
 '''
 
-__revision__ = '20150216'
+__revision__ = '20151008'
 
 from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy.orm import scoped_session, sessionmaker, mapper, Session
@@ -75,7 +75,7 @@ _dbsession = scoped_session(sessionmaker(class_ = RhoSession,
 _base = declarative_base(metadata=_metadata)
 
 # this is necessary for SQLite to use FOREIGN KEY support (as well as ON DELETE CASCADE)
-@event.listens_for(Engine, 'connect')
+#@event.listens_for(Engine, 'connect')
 def set_sqlite_pragma(dbapi_connection, connection_record):
     #raise RuntimeError(dir(connection_record))
     cursor = dbapi_connection.cursor()
