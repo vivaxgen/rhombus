@@ -1,4 +1,6 @@
 
+from rhombus.views import *
+
 import shutil, os, re
 
 
@@ -63,3 +65,18 @@ def save_file(destpath, filestorage, request):
 
         return (size, total)
 
+
+@roles( PUBLIC )
+def index(request):
+    """ send the content of file to browser
+    """
+
+    path = request.matchdict.get('path', '')
+    if not path:
+        return error_page('ERR - Path not specified!')
+
+    fso_file = FileOverlay.open(path)
+    if not fso_file.check_permission(request.user, 'r'):
+        return error_page('ERR - authorization error, permission denied.')
+
+    return FileResponse( fso_file.abspath )
