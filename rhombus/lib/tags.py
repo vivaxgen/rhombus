@@ -263,6 +263,12 @@ class h2(doubletag):
 class h3(doubletag):
     _tag = 'h3'
 
+class h4(doubletag):
+    _tag = 'h4'
+
+class h5(doubletag):
+    _tag = 'h5'
+
 class span(doubletag):
     _tag = 'span'
 
