@@ -6,3 +6,10 @@ To set up PostgreSQL database for Rhombus use, follow the below instructions:
 
 - Set up PostgreSQL according to your Linux distribution
 - Create the database as PostgreSQL admin user
+
+
+SCHEMA MIGRATION
+
+Sometimes, during development, we need to modify the SQL schema. Use alembic
+to manage the schema.
+
