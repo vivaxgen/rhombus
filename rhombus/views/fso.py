@@ -80,3 +80,23 @@ def index(request):
         return error_page('ERR - authorization error, permission denied.')
 
     return FileResponse( fso_file.abspath )
+
+
+@roles( PUBLIC )
+def view(request):
+    pass
+
+
+@roles( PUBLIC )
+def edit(request):
+    pass
+
+
+@roles( PUBLIC )
+def save(request):
+    pass
+
+
+@roles( PUBLIC )
+def action(request):
+    pass
