@@ -14,13 +14,14 @@ _MOUNTS = []
 
 
 def fsomount(virtual_path, absolute_path):
-    _MOUNTS.append( (virtual_path, absolute_path) )
+    _MOUNTS.append(
+        (os.path.normpath(virtual_path), os.path.normpath(absolute_path)) )
 
 
 def mkranddir( parent_directory, userid ):
     d = FileOverlay(abspath = '%s/%s/' % (parent_directory, random_string(12)),
     	type = 'dir')
-    d.add_permision(userid)
+    d.add_permission(userid)
     d.create_directory()
     return d
 
@@ -74,18 +75,18 @@ class FileOverlay(object):
     def __init__(self, virtpath=None, abspath=None, type='file'):
         if (virtpath and abspath):
         	raise RuntimeError('ERR - need only virtpath nor abspath')
-        if virpath:
-        	self.virtpath = virtpath
-        	self.mount_point = get_absmount(virtpath)
-        	self.abspath = get_abspath(virpath, self.mount_point)
+        if virtpath:
+        	self.virtpath = os.path.normpath(virtpath)
+        	self.mount_point = get_absmount(self.virtpath)
+        	self.abspath = get_abspath(self.virtpath, self.mount_point)
         elif abspath:
-        	self.abspath = abspath
-        	self.mount_point = get_virtmount(abspath)
-        	self.virtpath = get_virtpath(abspath, self.mount_point)
+        	self.abspath = os.path.normpath(abspath)
+        	self.mount_point = get_virtmount(self.abspath)
+        	self.virtpath = get_virtpath(self.abspath, self.mount_point)
         else:
         	raise RuntimeERror('ERR - need either virtpath or abspath')
         self.parent = None
-        self.meta = {}
+        self._meta = None
         self.type = type
         self.mimetype = None
 
@@ -98,7 +99,7 @@ class FileOverlay(object):
         		'ERR - can only create directory from directory type'
         	)
         with open(self.abspath + '/.rhoacl', 'w') as metafile:
-        	yaml.dump(f, self.meta )
+        	yaml.dump(self.meta, metafile)
         # create .rhoauth as well
 
 
@@ -113,12 +114,36 @@ class FileOverlay(object):
     @staticmethod
     def openfile(virtpath, mode='r'):
         if mode == 'r':
-            fso_obj = FileOverlay( virtpath )
+            fso_obj = FileOverlay( virtpath = virtpath )
             return fso_obj
 
     @staticmethod
     def opendir(virtpath, mode='r'):
     	pass
+
+    @property
+    def urlpath(self):
+        return get_urlpath(self.abspath)
+
+    @property
+    def meta(self):
+        if self._meta is not None:
+            return self._meta
+        if self.type == 'file':
+            # get the parent directory the reload .rhoacl
+            rhoacl = os.path.dirname(self.abspath)
+            with open(rhoacl + '/.rhoacl') as metafile:
+                self._meta = yaml.load(metafile)
+            return self._meta
+        elif self.type == 'dir':
+            # check whether this directory exists
+            if os.path.exists(self.abspath):
+                with open(self.abspath + '/.rhoacl') as metafile:
+                    self._meta = yaml.load(metafile)
+                return self._meta
+            self._meta = {}
+            return self._meta
+        raise RuntimeError('ERR - unknown FileOverlay type')
 
 
     def add_permission(self, user):
@@ -128,10 +153,13 @@ class FileOverlay(object):
     		self.meta['users'] = [ user ]
 
 
-    def check_permission(self, user):
+    def check_user_permission(self, user, mode=None):
     	if 'users' in self.meta and user in self.meta['users']:
     		return True
     	return False
+
+    def check_groups_permission(self, groups, mode=None):
+        pass
 
 
     def read(self):

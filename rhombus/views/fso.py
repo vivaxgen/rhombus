@@ -1,5 +1,8 @@
 
+from pyramid.response import FileResponse
+
 from rhombus.views import *
+from rhombus.lib.fsoverlay import FileOverlay
 
 import shutil, os, re
 
@@ -27,7 +30,7 @@ def save_file(destpath, filestorage, request):
             shutil.copyfileobj(fileobj, f)
             size = get_file_size(f)
 
-        if not filesize == size:    
+        if not filesize == size:
             raise RuntimeError('ERR - writing to file %s' % destpath)
 
         return (size, size)
@@ -75,8 +78,8 @@ def index(request):
     if not path:
         return error_page('ERR - Path not specified!')
 
-    fso_file = FileOverlay.open(path)
-    if not fso_file.check_permission(request.user, 'r'):
+    fso_file = FileOverlay.openfile(path)
+    if not fso_file.check_user_permission(request.user.login, 'r'):
         return error_page('ERR - authorization error, permission denied.')
 
     return FileResponse( fso_file.abspath )
