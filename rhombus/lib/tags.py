@@ -47,6 +47,9 @@ class htmltag(object):
                 root.elements[identifier] = value
             el.container = self
 
+        # to accomodate chaining
+        return self
+
 
     def get(self, identifier):
         return self.elements[identifier]
@@ -102,7 +105,7 @@ class form(htmltag):
 
 
 class input_text(htmltag):
-    
+
     def __init__(self, name, label, value='', info=None, size=8, extra_control=None, **kwargs):
         super().__init__( name = name, **kwargs )
         self.label = label
@@ -182,7 +185,7 @@ class input_select(input_text):
             selected = ''
             if self.value and self.value == val:
                 selected = 'selected="selected"'
-            options.append( '<option value="%s" %s>%s</option>' % 
+            options.append( '<option value="%s" %s>%s</option>' %
                         (escape(val), selected, escape(label) ))
         return literal( input_select_template.format(
                     name = escape(self.name), label = escape(self.label),
@@ -213,7 +216,7 @@ class input_select_ek(input_select):
 
 
 class doubletag(htmltag):
-    
+
     _tag = ''
 
     def __init__(self, *args, **kwargs):
@@ -340,8 +343,8 @@ class submit_bar(htmltag):
     def __str__(self):
         return literal( submit_bar_template.format( label = self.label, val = self.value ) )
 
-    
 
+## Templates
 
 input_text_template = '''\
 <div class='{class_div}'>
