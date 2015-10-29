@@ -225,7 +225,7 @@ class doubletag(htmltag):
 
     def __str__(self):
         return literal( '<%s %s>%s</%s>' % ( self._tag, self.attributes(),
-                                    '\n'.join( escape(str(c)) for c in self.contents ),
+                                    '\n'.join( escape(c) for c in self.contents ),
                                     self._tag )
                 )
 
@@ -278,12 +278,15 @@ class span(doubletag):
 class a(doubletag):
     _tag = 'a'
 
+class b(doubletag):
+    _tag = 'b'
+
 class div(doubletag):
     _tag = 'div'
 
     def __str__(self):
         return literal( '<%s %s>\n%s\n</%s>' % ( self._tag, self.attributes(),
-                                        '\n'.join( escape(str(c)) for c in self.contents ),
+                                        '\n'.join( escape(c) for c in self.contents ),
                                         self._tag ) )
 
 class pre(doubletag):
@@ -407,5 +410,4 @@ form_template = '''\
 <form name="{name}" id="{name}" action="{action}" method="{method}" class="form-horizontal input-group-sm">
   {contents}
 </form>'''
-
 
