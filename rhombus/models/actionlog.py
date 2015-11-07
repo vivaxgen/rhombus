@@ -9,14 +9,14 @@ import json
 class ActionLog(Base):
     """ Action Log """
 
-    __tablename__ = 'actionlogs' 
+    __tablename__ = 'actionlogs'
     id = Column(types.Integer, Sequence('actionlog_seqid', optional=True),
             primary_key=True)
     user_id = Column(types.Integer, ForeignKey('users.id'), nullable=False,
             default=get_userid)
     action_id = Column(types.Integer, ForeignKey('eks.id'))
-    status = Column(types.String(1), default='P')
-    objs = Column(types.String(128))
+    status = Column(types.String(1), server_default='P')
+    objs = Column(types.String(128), nullable=False, server_default='')
     stamp = Column(types.TIMESTAMP, nullable=False, default=current_timestamp())
 
     def message(self):
@@ -41,7 +41,7 @@ class ActionLog(Base):
         else:
             return '%d second(s) ago' % delta_time.seconds
 
-        
+
 
     @staticmethod
     def add(action_id, *args, **kwargs):
@@ -59,7 +59,7 @@ class ActionLog(Base):
                 UserActionLog.add(user_id = get_userid(), actionlog_id = actionlog.id)
                 if get_userid() != kwargs[k]:
                     UserActionLog.add(user_id = kwargs[k], actionlog_id = actionlog.id)
-                
+
             elif k == 'affected_group_id':
                 group = Group.get( kwargs[k] )
                 for u in group.users:

@@ -16,7 +16,7 @@ class UserClass(Base):
         primary_key=True)
     domain = Column(types.String(16), nullable=False, unique=True)
     desc = Column(types.String(64), nullable=False)
-    referer = Column(types.String(128), nullable=True)
+    referer = Column(types.String(128), nullable=False, server_default='')
     autoadd = Column(types.Boolean, nullable=False, default=False)
     credscheme = Column(YAMLCol(256), nullable=False)  # YAML type data
 
@@ -62,7 +62,7 @@ class UserClass(Base):
                     referer = self.referer, autoadd = self.autoadd,
                     credscheme = self.credscheme,
                     users = [ u.as_dict() for u in self.users ] )
-                    
+
 
     @staticmethod
     def bulk_insert(userclass, dbsession):
@@ -101,13 +101,12 @@ class UserClass(Base):
                             primarygroup = pri_grp)
         # set as member for primary group too
         pri_grp.users.append(user_instance)
-        
+
         if groups:
             for grp in groups:
                 g = Group.search(grp)
                 g.users.append(user_instance)
         return user_instance
-
 
 
     @staticmethod
@@ -125,7 +124,7 @@ class UserData(Base):
     user_id = Column(types.Integer, ForeignKey('users.id'), nullable=False, index=True)
     key_id = Column(types.Integer, ForeignKey('eks.id'), nullable=False, index=True)
     bindata = Column(types.LargeBinary, nullable=False)
-    mimetype = Column(types.String(32))
+    mimetype = Column(types.String(32), nullable=False)
 
 
 @registered
@@ -140,12 +139,12 @@ class User(Base):
     userclass_id = Column(types.Integer, ForeignKey('userclasses.id'), nullable=False,
                     index=True)
     lastname = Column(types.String(32), index=True, nullable=False)
-    firstname = Column(types.String(32))
-    email = Column(types.String(32), nullable=False)
-    institution = Column(types.String(64))
-    address = Column(types.String(128))
-    contact = Column(types.String(64))
-    status = Column(types.String(1))
+    firstname = Column(types.String(32), nullable=False, server_default='')
+    email = Column(types.String(32), index=True, nullable=False)
+    institution = Column(types.String(64), nullable=False, server_default='')
+    address = Column(types.String(128), nullable=False, server_default='')
+    contact = Column(types.String(64), nullable=False, server_default='')
+    status = Column(types.String(1), nullable=False, server_default='A')
 
     primarygroup_id = Column(types.Integer, ForeignKey('groups.id'), nullable=False, index=True)
 
@@ -205,7 +204,7 @@ class User(Base):
         group_ids, role_ids = self.group_role_ids()
         return UserInstance( self.login, self.id, self.primarygroup_id, group_ids, role_ids,
                 dbsession = object_session(self) )
-        
+
     def render(self):
         return "%s | %s" % (str(self), self.fullname())
 
@@ -226,7 +225,7 @@ class User(Base):
         if self.credential == '{X}':
             raise RuntimeError('this password use external system')
         return pwcrypt.verify(passwd, self.credential)
-        
+
 
     @staticmethod
     def dump(out, query = None):
@@ -254,8 +253,8 @@ class Group(Base):
     __tablename__ = 'groups'
     id = Column(types.Integer, Sequence('group_seq_id', optional=True), primary_key=True)
     name = Column(types.String(32), nullable=False, unique=True)
-    desc = Column(types.String(128))
-    scheme = Column(YAMLCol(256))
+    desc = Column(types.String(128), nullable=False, server_default='')
+    scheme = Column(YAMLCol(256), nullable=False, server_default='')
 
     #users = relationship(User, secondary=user_group_table, backref=backref('groups'))
     users = association_proxy('usergroups', 'user', creator=_create_ug_by_user)
@@ -328,7 +327,7 @@ class UserGroup(Base):
             primary_key=True)
     user_id = Column(types.Integer, ForeignKey('users.id'), nullable=False)
     group_id = Column(types.Integer, ForeignKey('groups.id'), nullable=False)
-    role = Column(types.String(1), nullable=False, default='M')
+    role = Column(types.String(1), nullable=False, server_default='M')
 
     __table_args__ = ( UniqueConstraint('user_id', 'group_id'), {} )
 
@@ -349,7 +348,7 @@ class AssociatedGroup(Base):
             primary_key=True)
     group_id = Column(types.Integer, ForeignKey('groups.id'), nullable=False)
     assoc_group_id = Column(types.Integer, ForeignKey('groups.id'), nullable=False)
-    role = Column(types.String(1), nullable=False, default='R')
+    role = Column(types.String(1), nullable=False, server_default='R')
 
     __table_args__ = (UniqueConstraint('group_id', 'assoc_group_id'), {})
 
@@ -389,6 +388,11 @@ class UserInstance(object):
             elif isinstance(grp, Group):
                 grp_id = grp.id
                 grpname = grp.name
+            elif isinstance(grp, tuple) and grp[1] is None:
+                # force checking by name only:
+                for (grpname, grp_id) in self.groups:
+                    if grpname == grp[0]:
+                        return True
             if (grpname, grp_id) in self.groups:
                 return True
         return False

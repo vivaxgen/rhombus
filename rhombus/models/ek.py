@@ -59,7 +59,7 @@ class EK(BaseMixIn, Base):
     @staticmethod
     def from_dict( d, update=False, dbsession=None):
         assert dbsession, 'Please provide dbsession'
-    
+
         ek = EK()
         ek.key = d['key']
         ek.desc = d.get('desc', None)
@@ -235,5 +235,5 @@ class EK(BaseMixIn, Base):
     @staticmethod
     def load( _in ):
         import yaml
-        
+
 

@@ -30,13 +30,13 @@ class File(BaseMixIn, Base):
                 default = get_groupid)
     """ group_id for this file, default use user's primarygroup_id """
 
-    bindata = Column(types.Binary, nullable=False, default=b'')
+    bindata = Column(types.Binary, nullable=False, server_default='')
     """ actual data """
 
     permanent = Column(types.Boolean, nullable=False, default=False)
     """ whether this is permanent file or temporary file """
 
-    acl = Column(types.Integer, nullable=False, default=0)
+    acl = Column(types.Integer, nullable=False, server_default='0')
     """ acl follows basic UNIX permission model:
              0 ~ follow parent,
             -1 ~ group_id only
