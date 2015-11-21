@@ -4,6 +4,7 @@ SYSVIEW = '~r|system-viewer'
 DATAADM = '~r|data-adm'
 DATAVIEW = '~r|data-viewer'
 PUBLIC = '~r|public'
+USER = '~r|user'
 
 EK_CREATE = '~r|ek|create'
 EK_MODIFY = '~r|ek|modify'
@@ -29,4 +30,6 @@ GROUP_DELUSER = '~r|group|del-user'
 
 
 def is_sysadm(user):
+
+    raise NotImplementedError('Need to think about this')
     return True

@@ -23,7 +23,7 @@ def setup_db( *ops ):
         EK.bulk_insert( ek_initlist )
         Group.bulk_insert( essential_groups )
 
-        file = File( path='/', type='file/folder', mimetype='application/x-directory', 
+        file = File( path='/', type='file/folder', mimetype='application/x-directory',
                     group_id = Group._id('_SysAdm_'), permanent = True )
         dbsession.add( file )
 
@@ -51,7 +51,7 @@ system_userclass = ( '_SYSTEM_', 'Rhombus System', None, {},
                         [   ('system', '', '', 'root@localhost', '*', [] ) ] )
 
 
-essential_groups = [ 
+essential_groups = [
             ( '__default__', [ PUBLIC ] ),
             ( '_SysAdm_', [SYSADM, SYSVIEW] ),
             ( '_EKMgr_', [ EK_CREATE, EK_MODIFY, EK_DELETE ] ),
@@ -61,7 +61,8 @@ essential_groups = [
                                 GROUP_ADDUSER, GROUP_DELUSER ] ),
             ( '_DataAdm_', [DATAADM, DATAVIEW] ),
             ( '_LogViewer_', [] ),
-            ( '_MasterViewer_', [ SYSVIEW ] )
+            ( '_MasterViewer_', [ SYSVIEW ] ),
+            ( '_User_', [ USER ] ),
             ]
 
 ek_initlist = [
@@ -76,6 +77,7 @@ ek_initlist = [
             (DATAADM, 'data administrator role'),
             (DATAVIEW, 'data viewer role'),
             (PUBLIC, 'public role - all visitor'),
+            (USER, 'authenticated user role'),
             (EK_CREATE, 'create new EnumKey (EK)'),
             (EK_MODIFY, 'modify EnumKey(EK)'),
             (EK_VIEW, 'view EnumKey(EK)'),
