@@ -8,6 +8,35 @@ To set up PostgreSQL database for Rhombus use, follow the below instructions:
 - Create the database as PostgreSQL admin user
 
 
+POSTGRESQL SETUP
+
+
+DATABASE CREATION AND DELETION
+
+To create a new database, run the following command as PostgreSQL admin user:
+
+$ createdb -O OWNERNAME DBNAME
+$ psql DBNAME -c "DROP EXTENSION plpgsql"
+
+Note: plpgsql extension is not used anyway, and dropping this extension will make
+it easier for backing-up and restoring the database.
+
+To delete (or drop) database, run the following instead:
+
+$ dropdb DBNAME
+
+
+DATABASE BACKUP AND RESTORE
+
+To dump a database, use the following command:
+
+$ pg_dump -U USERNAME -h HOST -f OUTFILE DBNAME
+
+To restore from sql dump scripts, use the folowwing command:
+
+$ psql -U USERNAME -h HOST -f INFILE DBNAME
+
+
 SCHEMA MIGRATION
 
 Sometimes, during development, we need to modify the SQL schema. Use alembic
