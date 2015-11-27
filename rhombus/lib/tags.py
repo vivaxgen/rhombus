@@ -117,7 +117,10 @@ class input_text(htmltag):
 
     def __str__(self):
         if self.info:
-            info = '<div class="col-md-1 form-control-static"><span class="glyphicon glyphicon-question-sign" aria-hidden="true"></span></div>'
+            if self.info.startswith('popup:'):
+                info = '<div class="col-md-1 form-control-static"><a class="js-newWindow" data-popup="width=400,height=200,scrollbars=yes" href="%s"><span class="glyphicon glyphicon-question-sign" aria-hidden="true"></span></a></div>' % self.info[6:]
+            else:
+                info = ''
         else:
             info = ''
         return literal( input_text_template.format( name=escape(self.name),
