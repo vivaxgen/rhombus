@@ -69,6 +69,7 @@ def init_argparser( parser = None):
     p.add_argument('--firstname', default='')
     p.add_argument('--userclass', default='')
     p.add_argument('--email', default='')
+    p.add_argument('--groups', default='')
 
     p.add_argument('--ekeygroup', default=None)
 
@@ -113,7 +114,7 @@ def main(args):
             if keys.lower()[0] != 'y':
                 sys.exit(1)
         do_rbmgr( args, settings )
-                
+
 
 
 def do_rbmgr(args, settings, dbh = None):
@@ -137,7 +138,7 @@ def do_rbmgr(args, settings, dbh = None):
         return False
 
     return True
-    
+
 
 
 def do_initdb(args, dbh, settings):
@@ -183,10 +184,10 @@ def do_adduser(args, dbh, settings):
     else:
         groups = []
 
-    user = userclass.add_user( login = args.login, email = args.email,
+    user = domain.add_user( login = args.login, email = args.email,
                             lastname = args.lastname, firstname = args.firstname,
                             primarygroup = args.primarygroup,
-                            groups = groups )
+                            groups = groups, session = dbh.session() )
 
     cout('User %s added sucessfully.' % user.login)
 
@@ -207,7 +208,7 @@ def do_addenumkey(args, dbh, settings):
         cexit('ekey must under a group, or a group key which starts with @')
 
     ekey = dbh.add_ekey(key, key_group)
-    cerr('I - enumkey: %s / %s has been added.' % 
+    cerr('I - enumkey: %s / %s has been added.' %
         (ekey.key, ekey.group.key if ekey.group else '*'))
 
 
@@ -219,4 +220,4 @@ def do_listenumkey(args, dbh, settings):
     for ek in ekeys:
         cout('%s' % ek.key)
 
-    
+

@@ -24,8 +24,8 @@ class UserClass(Base):
         return "%s" % self.domain
 
     @staticmethod
-    def search(domain):
-        q = dbsession.query(UserClass).filter(UserClass.domain == domain).all()
+    def search(domain, session):
+        q = session.query(UserClass).filter(UserClass.domain == domain).all()
         if q: return q[0]
         return None
 
@@ -94,11 +94,11 @@ class UserClass(Base):
                     g.users.append(u)
 
 
-    def add_user(self, login, lastname, firstname, email, primarygroup, groups=[]):
-        pri_grp = Group.search(primary_group)
+    def add_user(self, login, lastname, firstname, email, primarygroup, groups=[], session=None):
+        pri_grp = Group.search(primarygroup, session)
         user_instance = User(login=login, userclass=self,
                             lastname=lastname, firstname=firstname, email=email,
-                            primarygroup = pri_grp)
+                            primarygroup = pri_grp, credential='{X}')
         # set as member for primary group too
         pri_grp.users.append(user_instance)
 
