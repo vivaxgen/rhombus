@@ -109,6 +109,10 @@ class UserClass(Base):
         return user_instance
 
 
+    def search_user(self, login):
+        return User.search(login, self)
+
+
     @staticmethod
     def dump(out):
         """ dump data to YAML-formatted file """

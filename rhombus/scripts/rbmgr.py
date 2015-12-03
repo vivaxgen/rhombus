@@ -54,6 +54,9 @@ def init_argparser( parser = None):
     p.add_argument('--adduser', action='store_true', default=False,
         help = 'add a new user')
 
+    p.add_argument('--setcred', action='store_true', default=False,
+        help = 'change user credential')
+
 
     # specific options
 
@@ -70,6 +73,7 @@ def init_argparser( parser = None):
     p.add_argument('--userclass', default='')
     p.add_argument('--email', default='')
     p.add_argument('--groups', default='')
+    p.add_argument('--credential', default='')
 
     p.add_argument('--ekeygroup', default=None)
 
@@ -110,7 +114,7 @@ def main(args):
     else:
         cerr('** WARNING -- running without database COMMIT **')
         if not args.rollback:
-            keys = input('Do you want to continue?')
+            keys = input('Do you want to continue? ')
             if keys.lower()[0] != 'y':
                 sys.exit(1)
         do_rbmgr( args, settings )
@@ -127,6 +131,9 @@ def do_rbmgr(args, settings, dbh = None):
 
     elif args.adduser:
         do_adduser(args, dbh, settings)
+
+    elif args.setcred:
+        do_setcred(args, dbh, settings)
 
     elif args.listenumkey:
         do_listenumkey(args, dbh, settings)
@@ -194,6 +201,26 @@ def do_adduser(args, dbh, settings):
 
 ## ENUM KEY
 
+
+
+def do_setcred(args, dbh, settings):
+
+    if not args.userclass:
+        cexit('ERR - please provide userclass')
+
+    if not args.login:
+        cexit('ERR - please provide login name')
+
+    domain = dbh.get_userclass(args.userclass)
+    user = domain.search_user(args.login)
+
+    if not user:
+        cexit('WARN - user does not exist')
+
+    if args.credential:
+        user.credential = args.credential
+
+    cout('User %s has been modified sucessfully' % user.login)
 
 
 def do_addenumkey(args, dbh, settings):
