@@ -106,7 +106,8 @@ class form(htmltag):
 
 class input_text(htmltag):
 
-    def __init__(self, name, label, value='', info=None, size=8, extra_control=None, **kwargs):
+    def __init__(self, name, label, value='', info=None, size=8, extra_control=None,
+                    static=False, **kwargs):
         super().__init__( name = name, **kwargs )
         self.label = label
         self.value = value
@@ -114,8 +115,14 @@ class input_text(htmltag):
         self.info = info
         self.size = size
         self.extra_control = extra_control
+        self.static = static
 
     def __str__(self):
+        if self.static:
+            return self.as_static()
+        return self.as_input()
+
+    def as_input(self):
         if self.info:
             if self.info.startswith('popup:'):
                 info = '<div class="col-md-1 form-control-static"><a class="js-newWindow" data-popup="width=400,height=200,scrollbars=yes" href="%s"><span class="glyphicon glyphicon-question-sign" aria-hidden="true"></span></a></div>' % self.info[6:]
@@ -141,6 +148,20 @@ class input_text(htmltag):
     def add_error(self, errmsg):
         self.error = errmsg
 
+    def as_static(self):
+        return literal( input_static_template.format( name=escape(self.name),
+                        label=escape(self.label), value=escape(self.value),
+                        class_div = 'form-group' + (' has-error' if self.error else ''),
+                        class_label = 'col-md-3 control-label',
+                        class_value = 'col-md-%d' % self.size,
+                        class_input = 'form-control',
+                    ) )
+
+
+class input_show(input_text):
+
+    def __str__(self):
+        return self.as_static()
 
 
 class input_textarea(input_text):
@@ -362,6 +383,13 @@ input_text_template = '''\
   {info}
 </div>'''
 
+input_static_template = '''\
+<div class='{class_div}'>
+  <label class='{class_label}' for='{name}'>{label}</label>
+  <div class='{class_value}'>
+    <p class='form-control-static'>{value}</p>
+  </div>
+</div>'''
 
 input_hidden_template = '''\
 <input type='hidden' id='{name}' name='{name}' value='{value}' />
