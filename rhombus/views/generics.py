@@ -3,23 +3,29 @@
 from pyramid.renderers import render_to_response
 
 from rhombus.lib.exceptions import *
+from rhombus.lib.utils import get_dbhandler
+
+import transaction
 
 # error view handler
 
 # pages with exception handlers
 
 def syserror_page(exc, request):
+    transaction.abort()
     text = exc.args[0] if exc.args else ""
     return render_to_response('rhombus:templates/generics/syserror_page.mako',
         { 'text': text } )
 
 def usererror_page(exc, request):
+    transaction.abort()
     text = exc.args[0] if exc.args else ""
     return render_to_response('rhombus:templates/generics/usererror_page.mako',
         { 'text': text } )
 
 def dberror_page(exc, request):
     # XXX: clear all cache first, release all db locks (if applicable)
+    transaction.abort()
     text = exc.args[0] if exc.args else ""
     return render_to_response('rhombus:templates/generics/error_page.mako',
         { 'text': text } )
@@ -27,10 +33,12 @@ def dberror_page(exc, request):
 # pages with simple text
 
 def error_page(request, text=''):
+    transaction.abort()
     return render_to_response('rhombus:templates/generics/error_page.mako',
 	{ 'text': text }, request = request )
 
 def not_authorized(text=''):
+    transaction.abort()
     return render_to_response('rhombus:templates/generics/not_authorized.mako',
         { 'text': text } )
 

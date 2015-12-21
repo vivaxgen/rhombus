@@ -46,6 +46,11 @@ class RhoSession(Session):
         self._ek_ids.clear()
 
 
+@event.listens_for(RhoSession, 'after_transaction_end')
+def clear_session_cache(session, tx):
+    session.clear_keys()
+
+
 def uq_convention(constraint, table):
     names = [ table.name]
     names += [ str(c).split('.')[-1] for c in constraint.columns ]
