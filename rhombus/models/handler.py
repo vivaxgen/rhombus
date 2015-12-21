@@ -14,6 +14,8 @@ class DBHandler(object):
 
 
     EK = ek.EK
+    Group = user.Group
+    User = user.User
 
 
     def __init__(self, settings, tag='sqlalchemy.', initial = False):
@@ -42,7 +44,7 @@ class DBHandler(object):
     def initdb(self, create_table=True, init_data=True):
         """ prepare the database for the first time by initializing it with
             necessary, basic, default data set """
-        
+
         # WARN! if possible, use alembic to create tables
         if create_table:
             core.Base.metadata.create_all(self.engine)
@@ -61,14 +63,27 @@ class DBHandler(object):
 
 
     def get_groups(self):
+        """ return all non-system groups """
 
         q = user.Group.query(self.session)
         q = q.filter( ~user.Group.name.startswith('\_', escape='\\') )
         return q.all()
 
-    def get_group_by_id(self, id):
-        return user.Group.get(id)
 
+    def get_user_by_id(self, id):
+        return self.User.get(id)
+
+
+    def get_user_by_email(self, email):
+        q = self.User.query(self.session).filter( self.User.email.ilike(email) )
+        return q.one()
+
+
+    def get_group_by_id(self, id):
+        return self.Group.get(id)
+
+
+    ## EnumeratedKey methods
 
     def add_ekey(self, ekey, group=None):
         group_ek = None
