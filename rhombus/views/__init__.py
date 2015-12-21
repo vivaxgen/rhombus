@@ -4,12 +4,13 @@ log = logging.getLogger(__name__)
 
 from pyramid.response import Response
 from pyramid.renderers import render_to_response
+from pyramid.httpexceptions import HTTPFound
 
 from rhombus.lib.roles import *
 from rhombus.lib.utils import get_dbhandler
 from rhombus.lib.tags import *
 
-        
+
 
 class roles(object):
 

@@ -31,11 +31,13 @@ def view(request):
 @roles( SYSADM, SYSVIEW, EK_MODIFY, EK_CREATE )
 def edit(request):
     """ edit a EnumKey """
+
+    dbh = get_dbhandler()
     ek_id = int(request.matchdict.get('id', -1))
     if ek_id < 0:
         return error_page()
     if ek_id == 0:
-        ek = EK()
+        ek = dbh.EK()
         ek.id = 0
         ek.member_of_id = int(request.params.get('member_of_id', 0))
     else:
@@ -49,10 +51,12 @@ def edit(request):
 def save(request):
     """ save a EnumKey """
     ek_id = int(request.matchdict.get('id', -1))
-    ek = parse_form(request.POST)
+    dbh = get_dbhandler()
+    ek = parse_form(request.POST, dbh)
     if ek_id == 0:
-        dbsession.add( ek )
-        dbsession.flush()
+        session = dbh.session()
+        session.add( ek )
+        session.flush()
         db_ek = ek
     else:
         db_ek = EK.get(ek_id)
@@ -100,7 +104,7 @@ def parse_form( d, dbh ):
     ek.data = d.get('ek.data').encode('UTF-8') or None
     ek.member_of_id = int(d.get('ek.member_of_id', 0)) or None
     return ek
-            
+
 
 def lookup(request):
     raise NotImplementedError
@@ -120,7 +124,7 @@ def action(request):
 
         if len(eks) == 0:
             return Response(modal_error)
-        
+
         #return Response('Delete Enumerated Keys: ' + str(request.POST))
         return Response(modal_delete % ''.join( '<li>%s</li>' % x.key for x in eks ))
 
@@ -138,7 +142,7 @@ def action(request):
 
     return Response(str(request.POST))
 
-    
+
 modal_delete = '''
 <div class="modal-header">
     <button type="button" class="close" data-dismiss="modal" aria-hidden="true">×</button>
