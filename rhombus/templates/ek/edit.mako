@@ -3,6 +3,6 @@
 
 <h2>Enumerated Key - Editing</h2>
 
-<div class='row'><div class='span6'>
-  ${edit_ek(ek)}
+<div class='row'><div class='col-md-10'>
+  ${form}
 </div></div>

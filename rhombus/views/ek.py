@@ -41,10 +41,12 @@ def edit(request):
         ek.id = 0
         ek.member_of_id = int(request.params.get('member_of_id', 0))
     else:
-        ek = EK.get(ek_id)
+        ek = dbh.EK.get(ek_id)
+
+    eform = edit_form(ek, dbh, request)
 
     return render_to_response('rhombus:templates/ek/edit.mako',
-            { 'ek': ek }, request = request )
+            { 'ek': ek, 'form': eform }, request = request )
 
 
 @roles( SYSADM, EK_CREATE, EK_MODIFY )
@@ -74,13 +76,13 @@ def save(request):
     return HTTPFound( location = location )
 
 
-def edit_form( ek, request ):
+def edit_form( ek, dbh, request, static=False ):
 
     from rhombus.lib import tags as t
 
     form = t.form(name='rhombus.ek', method=t.POST,
                     action=request.route_url('rhombus.ek-save', id=ek.id or 0))
-    t.add(
+    form.add(
         t.fieldset(
             t.input_hidden('ek.id', value=ek.id or 0),
             t.input_hidden('ek.member_of_id', value=ek.member_of_id),
