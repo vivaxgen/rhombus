@@ -239,6 +239,75 @@ class input_select_ek(input_select):
         self.options = [ (ek.id, ek.key) for ek in parent_ek.members ]
 
 
+class checkboxes(htmltag):
+
+    def __init__(self, name, label, boxes, static=False):
+        """ boxes: list of [ (name, label, value), ... ] """
+        super().__init__( name = name )
+        self.label = label
+        self.static = static
+        for (box_name, box_label, box_value) in boxes:
+            self.add( checkbox_item(box_name, box_label, box_value, static ) )
+
+    def __str__(self):
+        return literal( checkboxes_template.format(
+                class_div = 'form-group',
+                class_label = 'col-md-3 control-label',
+                class_value = 'col-md-8',
+                label = self.label,
+                boxes = '\n'.join( str(item) for item in self.contents )
+            ))
+
+
+class checkbox_item(htmltag):
+
+    def __init__(self, name, label, value, static=False):
+        super().__init__( name = name )
+        self.label = label
+        self.value = value
+        self.static = static
+
+    def __str__(self):
+        return literal(
+            '<div class="checkbox">'
+                '<label><input type="checkbox" name="%s" id="%s" %s />%s</label>'
+            '</div>' % ( self.name, self.id, 'checked' if self.value else '', self.label )
+            )
+
+
+class radioboxes(htmltag):
+
+    def __init__(self, name, label, value, boxes, static=False):
+        """ boxes: list of [ (label, value), ...] """
+        super().__init__( name = name )
+        self.label = label
+        self.boxes = boxes
+        self.static = static
+
+    def __str__(self):
+        boxes = []
+        for (idx, box) in enumerate(self.boxes):
+            boxes.append(
+                literal(
+                    '<div class="radio">'
+                        '<label>'
+                            '<input type="radio" name="%s" id="%s" %s />'
+                            '%s'
+                        '</label>'
+                    '</div>' % (self.name, self.id + '%02d' % idx,
+                                    'checked' if self.value == box[1] else '',
+                                    box[0])
+                )
+            )
+        return literal( checkboxes_template.format(
+                class_div = 'form-group',
+                class_label = 'col-md-3 control-label',
+                class_value = 'col-md-8',
+                label = self.label,
+                boxes = '\n'.join( boxes )
+            ))
+
+
 class doubletag(htmltag):
 
     _tag = ''
@@ -415,7 +484,23 @@ input_select_template = '''\
   </div>
 </div>'''
 
+checkboxes_template = '''\
+<div class='{class_div}'>
+  <label class='{class_label}'>{label}</label>
+  <div class='{class_value}'>
+    {boxes}
+  </div>
+</div>'''
+
 radioboxes_template = '''\
+<div class='{class_div}'>
+  <label class='{class_label'}>{label}</label>
+  <div class='{class_value}'>
+    {boxes}
+  </div>
+</div>'''
+
+radioboxes_template_xxx = '''\
 <div class="{class_div}">
   <label class="{class_label}" for="{name}">{label}</label>
   % for (n, l, c) in params:
