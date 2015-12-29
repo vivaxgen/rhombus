@@ -90,7 +90,10 @@ def edit_form( ek, dbh, request, static=False ):
             t.input_text('ek.desc', 'Description', ek.desc),
             t.checkboxes('ek.options', 'Option',
                     [ ('ek.syskey', 'System key', ek.syskey) ]),
-            t.input_textarea('ek.data', 'Aux Data', ek.data or '')
+            t.input_textarea('ek.data', 'Aux Data', ek.data or ''),
+        ),
+        t.fieldset(
+            t.submit_bar()
         )
     )
     return form
