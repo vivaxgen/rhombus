@@ -93,7 +93,7 @@ def edit_form( ek, dbh, request, static=False ):
             t.input_textarea('ek.data', 'Aux Data', ek.data or ''),
         ),
         t.fieldset(
-            t.submit_bar()
+            t.submit_bar() if not static else ''
         )
     )
     return form
