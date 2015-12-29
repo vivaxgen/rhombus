@@ -91,7 +91,7 @@ def format_grouptable(groups, request):
 var dataset = %s;
 
 $(document).ready(function() {
-    $('#group_table').DataTable( {
+    $('#grouptable').DataTable( {
         data: dataset,
         paging: false,
         fixedHeader: true,
