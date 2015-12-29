@@ -4,6 +4,6 @@
 
 <ul>
 <li>User class and user management</li>
-<li>Group management</li>
-<li>Enumerated Key management</li>
+<li><a href="${request.route_url('rhombus.group')}">Group management</a></li>
+<li><a href="${request.route_url('rhombus.ek')}">Enumerated Key management</a></li>
 </ul>
