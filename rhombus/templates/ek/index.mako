@@ -3,7 +3,7 @@
 
 <h2>Enumerated Key</h2>
 
-<div class='row'><div class='span6'>
+<div class='row'><div class='col-md-6'>
   ${list_eks(eks)}
 </div></div>
 
