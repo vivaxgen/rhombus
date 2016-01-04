@@ -69,6 +69,30 @@ def save_file(destpath, filestorage, request):
         return (size, total)
 
 
+def serve_file(path, user=None, mount_point=None, formatter=None,
+                    virtual_indexer=False):
+    """ mount_point: (virtual_path, absolute_path)
+        formatter: a_func( absolute_file_path), returning a Response
+        virtual_indexer: a_func( absolute_file_path ) if absolute_file_path is
+                        a directory, returning a Response
+    """
+
+    fso_file = FileOverlay.openfile(path, mount_point=mount_point)
+    if user and fso_file.check_user_permission(user, 'r'):
+        raise RuntimeError('ERR - authorization error, permission denined.')
+
+    abspath = fso_file.abspath
+    if os.path.isdir(abspath):
+        if virtual_indexer:
+            return virtual_indexer( abspath )
+        raise RuntimeError('ERR - virtual index not allowed!')
+
+    if formatter:
+        return formatter( abspath )
+
+    return FileResponse( abspath )
+
+
 @roles( PUBLIC )
 def index(request):
     """ send the content of file to browser

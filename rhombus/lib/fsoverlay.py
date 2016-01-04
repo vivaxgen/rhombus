@@ -6,6 +6,8 @@
 
 from rhombus.lib.utils import random_string
 
+from pyramid.path import AssetResolver
+
 import os, yaml
 
 
@@ -45,7 +47,7 @@ def get_abspath(vpath, mp=None):
     """ return an absolute path from a virtual path """
     mp = mp or get_absmount(vpath)
     if mp:
-    	return mp[1] + vpath[len(mp[0]):]
+        return mp[1] + vpath[len(mp[0]):]
     return None
 
 
@@ -72,17 +74,27 @@ def return_as_response( rpath = None, vpath = None):
 
 class FileOverlay(object):
 
-    def __init__(self, virtpath=None, abspath=None, type='file'):
+    def __init__(self, virtpath=None, abspath=None, type='file',
+                        mount_point=None):
+        """ mount_point: (virtual_path, absolute_path)
+        """
+        self.mount_point = None
+        if mount_point:
+            ar = AssetResolver()
+            self.mount_point = (mount_point[0],
+                            ar.resolve(mount_point[1]).abspath())
         if (virtpath and abspath):
         	raise RuntimeError('ERR - need only virtpath nor abspath')
         if virtpath:
-        	self.virtpath = os.path.normpath(virtpath)
-        	self.mount_point = get_absmount(self.virtpath)
-        	self.abspath = get_abspath(self.virtpath, self.mount_point)
+            self.virtpath = os.path.normpath(virtpath)
+            if mount_point is None:
+                self.mount_point = get_absmount(self.virtpath)
+            self.abspath = get_abspath(self.virtpath, self.mount_point)
         elif abspath:
-        	self.abspath = os.path.normpath(abspath)
-        	self.mount_point = get_virtmount(self.abspath)
-        	self.virtpath = get_virtpath(self.abspath, self.mount_point)
+            self.abspath = os.path.normpath(abspath)
+            if mount_point is None:
+                self.mount_point = get_virtmount(self.abspath)
+            self.virtpath = get_virtpath(self.abspath, self.mount_point)
         else:
         	raise RuntimeERror('ERR - need either virtpath or abspath')
         self.parent = None
@@ -112,9 +124,12 @@ class FileOverlay(object):
 
 
     @staticmethod
-    def openfile(virtpath, mode='r'):
+    def openfile(virtpath, mode='r', mount_point=None):
+        """ mount_point: (virtual_path, absolute_path )
+        """
         if mode == 'r':
-            fso_obj = FileOverlay( virtpath = virtpath )
+            fso_obj = FileOverlay( virtpath = virtpath,
+                        mount_point = mount_point )
             return fso_obj
 
     @staticmethod
