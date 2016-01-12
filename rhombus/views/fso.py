@@ -4,6 +4,8 @@ from pyramid.response import FileResponse
 from rhombus.views import *
 from rhombus.lib.fsoverlay import FileOverlay
 
+import docutils.core
+
 import shutil, os, re
 
 
@@ -91,6 +93,15 @@ def serve_file(path, user=None, mount_point=None, formatter=None,
         return formatter( abspath )
 
     return FileResponse( abspath )
+
+
+def render_rst(text, format='html'):
+
+    parts = docutils.core.publish_parts( text, writer_name=format,
+        settings_overrides={'initial_header_level': 2} )
+    if format == 'html':
+        return parts['html_body']
+    return None
 
 
 @roles( PUBLIC )
