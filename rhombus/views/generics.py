@@ -20,8 +20,8 @@ def syserror_page(exc, request):
 def usererror_page(exc, request):
     transaction.abort()
     text = exc.args[0] if exc.args else ""
-    return render_to_response('rhombus:templates/generics/usererror_page.mako',
-        { 'text': text } )
+    return render_to_response('rhombus:templates/generics/error_page.mako',
+        { 'text': text }, request = request )
 
 def dberror_page(exc, request):
     # XXX: clear all cache first, release all db locks (if applicable)

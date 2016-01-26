@@ -22,7 +22,7 @@ from rhombus.lib.utils import cout, cerr, get_dbhandler
 from rhombus.lib import helpers as h
 
 def includeme( config ):
-    
+
     cerr('rhombus configuration with prefix: %s' % config.route_prefix)
 
     config.include('pyramid_mako')
@@ -33,6 +33,10 @@ def includeme( config ):
 
     # configure RbRequest
 
+    # configure exception views if debugtoolbar is not enabled
+    settings = config.get_settings()
+    if 'debugtoolbar.includes' not in settings:
+        config.add_view('rhombus.views.generics.usererror_page', context=RuntimeError)
 
     # configure routes & views
 
@@ -40,7 +44,7 @@ def includeme( config ):
         config.add_route('rhombus.dashboard', '/')
         config.add_view('rhombus.views.dashboard.index', route_name = 'rhombus.dashboard')
 
-    add_route_view( config, 'rhombus.views.group', 'rhombus.group', 
+    add_route_view( config, 'rhombus.views.group', 'rhombus.group',
         '/group',
         '/group/@@action',
         '/group/@@lookup',
@@ -49,7 +53,7 @@ def includeme( config ):
         ('/group/{id}', 'view'),
     )
 
-    add_route_view( config, 'rhombus.views.ek', 'rhombus.ek', 
+    add_route_view( config, 'rhombus.views.ek', 'rhombus.ek',
         '/ek',
         '/ek/@@action',
         '/ek/@@lookup',
@@ -138,7 +142,7 @@ def main(global_config, **settings):
 
     #config = Configurator(settings=settings)
     #config.include( includeme )
-    
+
     #config.include('pyramid_chameleon')
     #config.add_static_view('static', 'static', cache_max_age=3600)
     #config.add_route('home', '/')
@@ -210,7 +214,7 @@ def userobj_factory(auth_cache):
 def userobj_setter(auth_cache):
 
     def set_userobj(request, user_id, userinstance):
-        
+
         if request.registry.settings['rhombus.authmode'] != 'master':
             raise RuntimeError( 'ERR: only server with Rhombus authmode as master can set '
                                 'user instance!')
@@ -242,7 +246,7 @@ def userobj_deleter(auth_cache):
 def userobj_checker(auth_cache):
 
     def hasrole_userobj(request, *roles):
-        
+
         userinstance = request.user
         if userinstance:
             return userinstance.has_role( *roles )
