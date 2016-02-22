@@ -190,7 +190,7 @@ def do_adduser(args, dbh, settings):
         cexit('ERR - please provide primarygroup')
 
     if args.groups:
-        groups = args.group.split(',')
+        groups = args.groups.split(',')
     else:
         groups = []
 

@@ -104,7 +104,7 @@ class UserClass(Base):
 
         if groups:
             for grp in groups:
-                g = Group.search(grp)
+                g = Group.search(grp, session)
                 g.users.append(user_instance)
         return user_instance
 
