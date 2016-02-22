@@ -135,6 +135,9 @@ def do_rbmgr(args, settings, dbh = None):
     elif args.setcred:
         do_setcred(args, dbh, settings)
 
+    elif args.importgroup:
+        do_importgroup(args, dbh, settings)
+
     elif args.listenumkey:
         do_listenumkey(args, dbh, settings)
 
@@ -246,5 +249,15 @@ def do_listenumkey(args, dbh, settings):
     ekeys = dbh.list_ekeys(group = args.ekeygroup)
     for ek in ekeys:
         cout('%s' % ek.key)
+
+
+def do_importgroup(args, dbh, settings):
+
+    cerr('Importing group')
+    groups = yaml.load(open(args.importgroup))
+
+    from rhombus.models.user import UserClass, Group
+
+    Group.bulk_insert(groups, dbsession=dbh.session)
 
 
