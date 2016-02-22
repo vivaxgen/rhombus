@@ -221,9 +221,8 @@ def do_setcred(args, dbh, settings):
         cexit('WARN - user does not exist')
 
     if args.credential:
-        user.credential = args.credential
-
-    cout('User %s has been modified sucessfully' % user.login)
+        user.set_credential(args.credential)
+        cerr('Credential for user %s has been modified sucessfully' % user.login)
 
 
 def do_addenumkey(args, dbh, settings):
