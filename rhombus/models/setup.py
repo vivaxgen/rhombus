@@ -1,10 +1,11 @@
 
 from rhombus.models.ek import EK
-from rhombus.models.user import Group
+from rhombus.models.user import Group, UserClass
 from rhombus.models.filemgr import File
 from rhombus.models.core import get_clsreg
 from rhombus.models.meta import get_datalogger
 from rhombus.lib.roles import *
+from rhombus.lib.utils import random_string, cerr
 import transaction
 
 def setup_db( *ops ):
@@ -39,6 +40,7 @@ def setup( dbsession ):
 
     EK.bulk_insert( ek_initlist, dbsession=dbsession )
     Group.bulk_insert( essential_groups, dbsession=dbsession )
+    UserClass.bulk_insert( system_userclass, dbsession=dbsession )
 
     group_id = Group._id('_SysAdm_', dbsession)
     file = File( path='/', group_id = group_id, permanent = True )
@@ -46,9 +48,12 @@ def setup( dbsession ):
     file.type = 'file/folder'
     file.mimetype = 'application/x-directory'
 
+    cerr('INFO: root password is %s\n' % root_password)
 
+
+root_password = random_string(16)
 system_userclass = ( '_SYSTEM_', 'Rhombus System', None, {},
-                        [   ('system', '', '', 'root@localhost', '*', [] ) ] )
+                        [   ('system', '', '', 'root@localhost', '_SysAdm_', root_password, [] ) ] )
 
 
 essential_groups = [
