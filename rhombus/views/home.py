@@ -10,6 +10,7 @@ from pyramid.httpexceptions import HTTPFound, HTTPNotFound
 from rhombus.views import roles
 from rhombus.lib.roles import SYSADM, SYSVIEW
 from rhombus.models.user import UserClass
+from rhombus.lib.utils import get_dbhandler
 
 import time
 
@@ -35,16 +36,23 @@ def login(request):
     msg = None
     referrer = request.url
     came_from = request.params.get('came_from', referrer)
+    userclass_name = request.params.get('userclass', None)
     if came_from == '/login':
         came_from = '/'
     login = request.params.get('login', '')
+    if '/' in login:
+        login, userclass_name = login.split('/')
+    elif userclass_name is None:
+        userclass_name = '_SYSTEM_'
+
+    dbh = get_dbhandler()
 
     if request.POST:
-        
+
         passwd = request.params.get('password', '')
         userclass_id = int(request.params.get('domain', 1))
 
-        userclass = UserClass.get( userclass_id )
+        userclass = dbh.get_userclass( userclass_name )
         userinstance = userclass.auth_user( login, passwd )
 
         if userinstance is not None:
@@ -53,7 +61,7 @@ def login(request):
             headers = remember(request, login)
             return HTTPFound( location = came_from,
                                 headers = headers )
-        
+
         msg = 'Invalid username or password!'
 
     return render_to_response("rhombus:templates/login.mako",
