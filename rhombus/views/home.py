@@ -65,7 +65,8 @@ def login(request):
         msg = 'Invalid username or password!'
 
     return render_to_response("rhombus:templates/login.mako",
-                { 'msg': msg, 'came_from': came_from, 'login': login },
+                {   'msg': msg, 'came_from': came_from,
+                    'login': '%s/%s' % (login, userclass_name) },
                 request = request)
 
 
