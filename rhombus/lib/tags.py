@@ -164,6 +164,26 @@ class input_show(input_text):
         return self.as_static()
 
 
+class input_password(input_text):
+
+    def __str__(self):
+        if self.info:
+            if self.info.startswith('popup:'):
+                info = '<div class="col-md-1 form-control-static"><a class="js-newWindow" data-popup="width=400,height=200,scrollbars=yes" href="%s"><span class="glyphicon glyphicon-question-sign" aria-hidden="true"></span></a></div>' % self.info[6:]
+            else:
+                info = ''
+        else:
+            info = ''
+        return literal( input_password_template.format( name=escape(self.name),
+                        label=escape(self.label), value=escape(self.value),
+                        class_div = 'form-group' + (' has-error' if self.error else ''),
+                        class_label = 'col-md-3 control-label',
+                        class_value = 'col-md-%d' % self.size,
+                        class_input = 'form-control',
+                        help_span = self.help(),
+                        info = info,
+                    ) )
+
 class input_textarea(input_text):
 
     def __str__(self):
@@ -447,6 +467,16 @@ input_text_template = '''\
   <label class='{class_label}' for='{name}'>{label}</label>
   <div class='{class_value}'>
     <input type='text' id='{name}' name='{name}' value='{value}' class='{class_input}'/>
+    {help_span}
+  </div>
+  {info}
+</div>'''
+
+input_password_template = '''\
+<div class='{class_div}'>
+  <label class='{class_label}' for='{name}'>{label}</label>
+  <div class='{class_value}'>
+    <input type='password' id='{name}' name='{name}' value='{value}' class='{class_input}'/>
     {help_span}
   </div>
   {info}
