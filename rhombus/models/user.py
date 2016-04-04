@@ -113,6 +113,10 @@ class UserClass(Base):
         return User.search(login, self)
 
 
+    def get_user(self, login):
+        return User.search(login, self)
+
+
     @staticmethod
     def dump(out):
         """ dump data to YAML-formatted file """
@@ -178,6 +182,7 @@ class User(Base):
 
     @staticmethod
     def search(login, userclass):
+        dbsession = object_session(userclass)
         q = dbsession.query(User).filter(and_(User.login == login, User.userclass == userclass))
         r = q.all()
         if r: return r[0]
