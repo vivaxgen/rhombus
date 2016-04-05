@@ -16,6 +16,7 @@ class DBHandler(object):
     EK = ek.EK
     Group = user.Group
     User = user.User
+    UserClass = user.UserClass
 
 
     def __init__(self, settings, tag='sqlalchemy.', initial = False):
@@ -56,10 +57,48 @@ class DBHandler(object):
             cerr('[rhombus] Database has been initialized.')
 
 
-    def get_userclass(self, userclass):
+    def get_userclass(self, userclass=None):
 
-        uc = user.UserClass.search(userclass, self.session)
-        return uc
+        if userclass is None:
+            return self.UserClass.query(self.session).all()
+
+        if type(userclass) == list:
+            return [ self.get_userclass(x) for x in userclass ]
+
+        if type(userclass) == int:
+            return self.UserClass.get(userclass, self.session)
+        else:
+            return self.UserClass.search(userclass, self.session)
+
+        raise RuntimeError('ERR: unknown data type for getting UserClass!')
+
+
+    def get_user(self, user=None):
+
+        if user is None:
+            return self.User.query(self.session).all()
+
+        if type(user) == list:
+            return [ self.get_user(u) for u in user ]
+
+        if type(user) == int:
+            return self.User.get(user, self.session)
+
+        return self.User.search(user, self.session)
+
+
+    def get_group(self, group=None):
+
+        if group is None:
+            return self.get_groups()
+
+        if type(group) == list:
+            return [ self.get_group(g) for g in group ]
+
+        if type(group) == int:
+            return self.Group.get(group, self.session)
+
+        return self.Group.search(group, self.session)
 
 
     def get_groups(self):
