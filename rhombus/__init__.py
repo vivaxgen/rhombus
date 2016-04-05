@@ -21,6 +21,7 @@ import dogpile.cache.util
 from rhombus.lib.utils import cout, cerr, get_dbhandler
 from rhombus.lib import helpers as h
 
+
 def includeme( config ):
 
     cerr('rhombus configuration with prefix: %s' % config.route_prefix)
@@ -62,7 +63,20 @@ def includeme( config ):
         ('/ek/{id}', 'view'),
     )
 
+    add_route_view( config, 'rhombus.views.userclass', 'rhombus.userclass',
+        '/userclass',
+        '/userclass/@@action',
+        '/userclass/{id}@@edit',
+        ('/userclass/{id}', 'view'),
+    )
 
+    add_route_view( config, 'rhombus.views.user', 'rhombus.user',
+        '/user',
+        '/user/@@action',
+        '/user/{id}@@edit',
+        '/user/{id}@@passwd',
+        ('/user/{id}', 'view'),
+    )
 
 
 def add_route_view( config, view_module, prefix_name, *routelist):
@@ -87,6 +101,7 @@ def add_route_view( config, view_module, prefix_name, *routelist):
         config.add_view( '%s.%s' % (view_module, view_name),
                 route_name = route_name,
                 renderer = renderer )
+
 
 
 def init_app(global_config, settings, prefix=None, dbhandler_factory = get_dbhandler):
