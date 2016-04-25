@@ -106,14 +106,15 @@ class form(htmltag):
 
 class input_text(htmltag):
 
-    def __init__(self, name, label, value='', info=None, size=8, extra_control=None,
-                    static=False, **kwargs):
+    def __init__(self, name, label, value='', info=None, size=8, offset=3,
+                    extra_control=None, static=False, **kwargs):
         super().__init__( name = name, **kwargs )
         self.label = label
         self.value = value
         self.error = None
         self.info = info
         self.size = size
+        self.offset = offset
         self.extra_control = extra_control
         self.static = static
 
@@ -133,7 +134,7 @@ class input_text(htmltag):
         return literal( input_text_template.format( name=escape(self.name),
                         label=escape(self.label), value=escape(self.value),
                         class_div = 'form-group' + (' has-error' if self.error else ''),
-                        class_label = 'col-md-3 control-label',
+                        class_label = 'col-md-%d control-label' % self.offset,
                         class_value = 'col-md-%d' % self.size,
                         class_input = 'form-control',
                         help_span = self.help(),
@@ -152,7 +153,7 @@ class input_text(htmltag):
         return literal( input_static_template.format( name=escape(self.name),
                         label=escape(self.label), value=escape(self.value),
                         class_div = 'form-group' + (' has-error' if self.error else ''),
-                        class_label = 'col-md-3 control-label',
+                        class_label = 'col-md-%d control-label' % self.offset,
                         class_value = 'col-md-%d' % self.size,
                         class_input = 'form-control',
                     ) )
@@ -177,7 +178,7 @@ class input_password(input_text):
         return literal( input_password_template.format( name=escape(self.name),
                         label=escape(self.label), value=escape(self.value),
                         class_div = 'form-group' + (' has-error' if self.error else ''),
-                        class_label = 'col-md-3 control-label',
+                        class_label = 'col-md-%d control-label' % self.offset,
                         class_value = 'col-md-%d' % self.size,
                         class_input = 'form-control',
                         help_span = self.help(),
@@ -194,11 +195,12 @@ class input_textarea(input_text):
         return literal( input_textarea_template.format( name=escape(self.name),
                         label=escape(self.label), value=escape(self.value),
                         class_div = 'form-group',
-                        class_label = 'col-md-3 control-label',
+                        class_label = 'col-md-%d control-label' % self.offset,
                         class_value = 'col-md-%d' % size,
                         rows = rows,
                         class_input = 'form-control',
                         extra_control = literal(self.extra_control) if self.extra_control else '',
+                        style = 'style="font-family:monospace;"'
                     ) )
 
 class input_hidden(htmltag):
@@ -422,6 +424,18 @@ class li(doubletag):
     _tag = 'li'
 
 
+class button(doubletag):
+    _tag = 'button'
+
+    def __init__(self, label, **kwargs):
+        super().__init__( **kwargs )
+        self.label = label
+
+    def __str__(self):
+        return literal( '<%s %s>\n%s\n</%s>' % ( self._tag, self.attributes(),
+                                self.label, self._tag ) )
+
+
 ## tables
 
 class table(doubletag):
@@ -458,6 +472,30 @@ class submit_bar(htmltag):
 
     def __str__(self):
         return literal( submit_bar_template.format( label = self.label, val = self.value ) )
+
+class custom_submit_bar(htmltag):
+
+    def __init__(self, *args):
+        # args: ('Save', 'save'), ('Continue', 'continue')
+        super().__init__()
+        self.buttons = args
+        self.offset=3
+
+    def set_offset(self, offset):
+        self.offset = offset
+        return self
+
+    def __str__(self):
+        html = div(class_='form-group')
+        buttons = div(class_='col-md-10 col-md-offset-%d' % self.offset)
+        for b in self.buttons:
+            buttons.add(
+                button(class_="btn btn-primary", type="submit", name="_method",
+                        id="_method.%s" % b[1], label=b[0], value=b[1])
+            )
+        buttons.add( button(class_="btn", type="reset", label="Reset") )
+        html.add(buttons)
+        return literal(html)
 
 
 ## Templates
@@ -498,7 +536,7 @@ input_textarea_template = '''\
 <div class='{class_div}'>
   <label class='{class_label}' for='{name}'>{label}</label>
   <div class='{class_value}'>
-    <textarea id='{name}' name='{name}' class='{class_input}' rows='{rows}'>{value}</textarea>
+    <textarea id='{name}' name='{name}' class='{class_input}' rows='{rows}' {style}>{value}</textarea>
     {extra_control}
   </div>
 </div>'''
@@ -545,7 +583,7 @@ radioboxes_template_xxx = '''\
 
 submit_bar_template = '''\
 <div class='form-group'>
-  <div class='col-md-10'>
+  <div class='col-md-10 col-md-offset-3'>
     <button class='btn btn-primary' type='submit' name='_method' value='{val}'>{label}</button>
     <button class='btn' type='reset'>Reset</button>
   </div>
