@@ -103,3 +103,37 @@ def password_form(user):
 
 def action(request):
     pass
+
+
+def user_menu(request):
+    """ return a HTML for user menu, bootstrap-based """
+    user_menu_html = ul(class_ = 'nav navbar-nav navbar-right')
+    if request.user:
+        user_menu_list = li(class_ = "active dropdown" )[
+                a(class_='dropdown-toggle', role='button',
+                    **  { 'data-toggle': 'dropdown',
+                            'aria-haspopup': 'true',
+                            'aria-expanded': 'false',
+                        }
+                )[
+                    span(class_='fa fa-user'),
+                    ' ' + request.user.login + ' ',
+                    span(class_='caret')
+                ],
+                ul(class_='dropdown-menu')[
+                    li(a('Change password',
+                            href=request.route_url('rhombus.user-passwd', id=request.user.id))),
+                    li(a('Logout', href='/logout'))
+                ]
+
+            ]
+    else:
+        user_menu_list = li(class_ = 'active dropdown')[
+                a(href='/login')[
+                    span(class_='fa fa-sign-in'),
+                    ' Login '
+                ]
+            ]
+    user_menu_html.add( user_menu_list )
+
+    return user_menu_html
