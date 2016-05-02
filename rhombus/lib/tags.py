@@ -261,6 +261,28 @@ class input_select_ek(input_select):
         self.options = [ (ek.id, ek.key) for ek in parent_ek.members ]
 
 
+class input_file(input_text):
+
+    def as_input(self):
+        if self.info:
+            if self.info.startswith('popup:'):
+                info = '<div class="col-md-1 form-control-static"><a class="js-newWindow" data-popup="width=400,height=200,scrollbars=yes" href="%s"><span class="glyphicon glyphicon-question-sign" aria-hidden="true"></span></a></div>' % self.info[6:]
+            else:
+                info = ''
+        else:
+            info = ''
+        return literal( input_file_template.format( name=escape(self.name),
+                        label=escape(self.label), value=escape(self.value),
+                        class_div = 'form-group' + (' has-error' if self.error else ''),
+                        class_label = 'col-md-%d control-label' % self.offset,
+                        class_value = 'col-md-%d' % self.size,
+                        class_input = 'form-control',
+                        help_span = self.help(),
+                        info = info,
+                        extra_control = literal(self.extra_control) if self.extra_control else '',
+                    ) )
+
+
 class checkboxes(htmltag):
 
     def __init__(self, name, label, boxes, static=False):
@@ -550,6 +572,17 @@ input_select_template = '''\
     </select>
     {extra_control}
   </div>
+</div>'''
+
+input_file_template = '''\
+<div class='{class_div}'>
+  <label class='{class_label}' for='{name}'>{label}</label>
+  <div class='{class_value}'>
+    <input type='file' id='{name}' name='{name}' value='{value}'/>
+    {help_span}
+    {extra_control}
+  </div>
+  {info}
 </div>'''
 
 checkboxes_template = '''\
