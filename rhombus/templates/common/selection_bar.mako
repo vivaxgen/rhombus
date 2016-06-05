@@ -2,7 +2,7 @@
 ##
 ##
 <%def name="selection_bar(prefix, add=None, others='')">
-<div id='${prefix + "-modal"}' class="modal hide" role="dialog"></div>
+<div id='${prefix + "-modal"}' class="modal fade" role="dialog" tabindex="-1"></div>
 <div class='btn-toolbar'>
   <div class='btn-group'>
     <button type="button" class="btn btn-mini" id='${prefix + "-select-all"}'>Select all</button>
