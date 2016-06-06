@@ -520,6 +520,55 @@ class custom_submit_bar(htmltag):
         return literal(html)
 
 
+class selection_bar(object):
+
+    def __init__(self, prefix, action, add=None, others=''):
+        super().__init__()
+        self.prefix = prefix
+        self.action = action
+        self.add = add
+        self.others = others
+
+    def render(self, html, jscode=''):
+
+        button_bar = div(class_='btn-toolbar')[
+            div(class_='btn-group')[
+                button(label="Select all", type='button', class_='btn btn-sm', id=self.prefix + '-select-all'),
+                button(label="Unselect all", type='button', class_="btn btn-sm", id=self.prefix + '-select-none'),
+                button(label='Inverse', type='button', class_='btn btn-sm', id=self.prefix + '-select-inverse')
+            ],
+            div(class_='btn-group')[
+                button(label="<i class='icon-trash icon-white'></i> Delete",
+                        class_="btn btn-sm btn-danger", id=self.prefix + '-submit-delete',
+                        name='_method', value='delete', type='button')
+            ]
+        ]
+
+        if self.add:
+            button_bar.add(
+                div(class_='btn-group')[
+                    a(href=self.add[1])[
+                        button(label=self.add[0], type='button', class_='btn btn-sm btn-success')
+                    ]
+                ]
+            )
+
+        if self.others:
+            button_bar.add(
+                div(class_='btn-group')[ self.others ]
+            )
+
+        sform = form(name="selection_bar", method='post', action=self.action)
+        sform.add(
+            div(id=self.prefix + '-modal', class_='modal fade', role='dialog', tabindex='-1'),
+            button_bar,
+            html
+        )
+
+        return sform, jscode + selection_bar_js % { 'prefix': self.prefix }
+
+
+
 ## Templates
 
 input_text_template = '''\
@@ -628,3 +677,39 @@ form_template = '''\
   {contents}
 </form>'''
 
+selection_bar_js = '''\
+  $('#%(prefix)s-select-all').click( function() {
+        $('input[name="%(prefix)s"]').each( function() {
+            this.checked = true;
+        });
+    });
+
+  $('#%(prefix)s-select-none').click( function() {
+        $('input[name="%(prefix)s"]').attr("checked", false);
+    });
+
+  $('#%(prefix)s-select-inverse').click( function() {
+        $('input[name="%(prefix)s"]').each( function() {
+            if (this.checked == true) {
+                this.checked = false;
+            } else {
+                this.checked = true;
+            }
+        });
+    });
+
+  $('#%(prefix)s-submit-delete').click( function(e) {
+        var form = $(this.form);
+        var data = form.serializeArray();
+        data.push({ name: $(this).attr('name'), value: $(this).val() });
+        $.ajax({
+            type: form.attr('method'),
+            url: form.attr('action'),
+            data: data,
+            success: function(data, status) {
+                $('#%(prefix)s-modal').html(data);
+                $('#%(prefix)s-modal').modal('show');
+            }
+        });
+    });
+'''
