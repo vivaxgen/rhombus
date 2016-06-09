@@ -83,6 +83,7 @@ ek_initlist = [
             (DATAVIEW, 'data viewer role'),
             (PUBLIC, 'public role - all visitor'),
             (USER, 'authenticated user role'),
+            (GUEST, 'guest / anonymous user role'),
             (EK_CREATE, 'create new EnumKey (EK)'),
             (EK_MODIFY, 'modify EnumKey(EK)'),
             (EK_VIEW, 'view EnumKey(EK)'),
