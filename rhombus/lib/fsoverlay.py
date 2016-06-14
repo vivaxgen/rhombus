@@ -183,3 +183,7 @@ class FileOverlay(object):
 
     def write(self, data):
         pass
+
+    @staticmethod
+    def get_urlpath(abspath):
+        return get_urlpath(abspath)
