@@ -61,13 +61,13 @@ def save(request):
         session.flush()
         db_ek = ek
     else:
-        db_ek = EK.get(ek_id)
+        db_ek = dbh.EK.get(ek_id)
         if not db_ek:
             return error_page()
         db_ek.update( ek )
 
     if ek_id != 0:
-        location = request.referer or request.route_url('rhombus.ek-view', id=ek_id)
+        location = request.route_url('rhombus.ek-view', id=ek_id)
     elif ek.member_of_id:
         location = request.route_url('rhombus.ek-view', id = ek.member_of_id)
     else:
