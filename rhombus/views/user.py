@@ -122,7 +122,10 @@ def user_menu(request):
                 ],
                 ul(class_='dropdown-menu')[
                     li(a('Change password',
-                            href=request.route_url('rhombus.user-passwd', id=request.user.id))),
+                            href=request.route_url('rhombus.user-passwd', id=request.user.id)))
+                        if not request.user.has_roles(GUEST) else '',
+                    li(a('Management', href=request.route_url('rhombus.dashboard')))
+                        if request.user.has_roles(SYSADM) else '',
                     li(a('Logout', href='/logout'))
                 ]
 
