@@ -239,7 +239,7 @@ class input_select(input_text):
                     options = '\n'.join(options),
                     multiple = 'multiple="multiple"' if self.multiple else '',
                     class_div = 'form-group',
-                    class_label = 'col-md-3 control-label',
+                    class_label = 'col-md-%d control-label' % self.offset,
                     class_value = 'col-md-%d' % self.size,
                     class_input = 'form-control',
                     extra_control = literal(self.extra_control) if self.extra_control else '',
