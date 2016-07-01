@@ -11,16 +11,21 @@ ${ form }
 
 <div class='col-md-6'>
 <h4>Roles</h4>
-<p>List of roles</p>
+${ role_table }
+</div>
 </div>
 
-<div class='col-md-6'>
+<div class='row'>
+<div class='col-md-8'>
 <h4>Members</h4>
+${ user_table }
 </div>
 
 </div>
 ##
 ##
 <%def name="jscode()">
+
+${ code | n }
 
 </%def>

@@ -313,6 +313,12 @@ class Group(Base):
                 grp.roles.append( EK.search(role, dbsession = dbsession) )
 
     def update(self, obj):
+        if type(obj) == dict:
+            self.name = obj['name']
+            self.desc = obj['desc']
+            self.scheme = obj['scheme']
+            return
+
         self.name = obj.name
         self.desc = obj.desc
         self.scheme = obj.scheme
