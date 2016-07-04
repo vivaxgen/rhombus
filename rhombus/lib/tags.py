@@ -373,12 +373,14 @@ class image(htmltag):
     def __str__(self):
         return literal( '<%s %s />' % (self._tag, self.attributes()))
 
-class input(htmltag):
+class inputtag(htmltag):
 
     _tag = 'input'
 
     def __str__(self):
         return literal( '<%s %s />' % (self._tag, self.attributes()))
+
+input = inputtag
 
 class br(htmltag):
 
