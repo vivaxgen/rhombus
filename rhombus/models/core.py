@@ -34,7 +34,7 @@ import transaction
 import pickle
 import threading
 
-from .meta import get_base, get_dbsession, get_datalogger
+from .meta import get_base, get_dbsession, get_datalogger, RhoSession
 
 #from pylons import session as tylons_session
 
@@ -149,7 +149,7 @@ class YAMLCol(types.TypeDecorator):
 #
 
 class ClassRegistry(object):
-    """ 
+    """
         use application/x-python-pickle
 
         please make sure that sync() & update_table() methods are not called
@@ -251,6 +251,8 @@ def ClsReg():
 def _generic_query(cls, dbsess = None):
     if dbsess is None:
         dbsess = dbsession
+        print('DEPRECATED: please provide instance of RhoSession')
+    assert isinstance(dbsess, RhoSession), 'FATAL PROG ERR: need to pass instance of RhoSession'
     return dbsess.query(cls)
 
 Base.query = classmethod(_generic_query)
@@ -402,7 +404,6 @@ class idcache_XXX(object):
         self._keys = {}
         self._ids = {}
         self.add_self(self)
-        
 
     def get_key(self, id):
         return self._keys.get(id, None)
