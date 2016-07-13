@@ -2,6 +2,7 @@ from .core import *
 from .ek import *
 
 from rhombus.lib.auth import authfunc
+from rhombus.lib.roles import SYSADM, DATAADM
 from passlib.hash import sha256_crypt as pwcrypt
 
 import yaml
@@ -201,10 +202,12 @@ class User(Base):
         g_jsoncache.save_data(self)
 
     def groupids(self):
-        return [ x.group_id for x in UserGroup.query().filter( UserGroup.user_id == self.id ).all() ]
+        dbsession = object_session(self)
+        return [ x.group_id for x in UserGroup.query(dbsession).filter( UserGroup.user_id == self.id ).all() ]
 
     def group_role_ids(self):
-        grp_ids = [ x.group_id for x in UserGroup.query().filter( UserGroup.user_id == self.id ).all() ]
+        dbsession = object_session(self)
+        grp_ids = [ x.group_id for x in UserGroup.query(dbsession).filter( UserGroup.user_id == self.id ).all() ]
         res = dbsession.execute( group_role_table.select( group_role_table.c.group_id.in_( grp_ids ) ).with_only_columns([group_role_table.c.role_id]).distinct())
         role_ids = [ item for sublist in res.fetchall() for item in sublist ]
         return ( grp_ids, role_ids )
@@ -387,12 +390,17 @@ class UserInstance(object):
         self.login = login
         self.id = id
         self.primarygroup_id = primarygroup_id
-        self.groups = [ (g.name, g.id) for g in [ Group.get(gid) for gid in groups ] ]
+        self.groups = [ (g.name, g.id) for g in [ Group.get(gid, dbsession) for gid in groups ] ]
         self.roles = [ (EK._key(rid, dbsession=dbsession), rid) for rid in roles ]
 
 
     def in_group(self, *groups):
         """ check if user at least is in one of the groups """
+
+        # if has SYSADM or DATAADM roles, then user is virtually part of any group
+        if self.has_roles( SYSADM, DATAADM ):
+            return True
+
         for grp in groups:
             if isinstance(grp, str):
                 grp_id = Group._id( grp )
