@@ -53,7 +53,7 @@ class DBHandler(object):
 
         if init_data:
             from rhombus.models.setup import setup
-            setup( self.session )
+            setup( self )
             cerr('[rhombus] Database has been initialized.')
 
 
