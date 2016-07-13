@@ -167,19 +167,24 @@ class EK(BaseMixIn, Base):
         return [ (x.id, x.key) for x in parents ]
 
     @staticmethod
-    def bulk_insert( alist, parent=None, syskey=False, dbsession=False ):
+    def bulk_update( alist, parent=None, syskey=False, dbsession=False ):
         """ [ ( '@IDENTIFIER', 'Identifiers', [ ( 'k1', 'd1'), ('k2', 'd2'), ... ] ), ... ] """
         assert dbsession, "FATAL ERROR - must provide dbsession arg"
+
         for item in alist:
+
+            # check item, if this is a string then set k & d as the item
+            # otherwise set k & d according to the item
             if type(item) == str:
                 k = d = item
             else:
                 (k, d) = item[:2]
+
             if d is None:
                 # update/add members of this particular key, assuming the key already
                 # exists in the database
                 ek = EK.search( k, dbsession = dbsession )
-                EK.bulk_insert( item[2], ek, syskey, dbsession = dbsession )
+                EK.bulk_update( item[2], ek, syskey, dbsession = dbsession )
                 continue
             if type(d) == list:
                 d, data = d[0], d[1]
@@ -194,11 +199,16 @@ class EK(BaseMixIn, Base):
                     ek.data = data.encode('UTF-8')
                 else:
                     ek.data = data
-            dbsession.add( ek )
+            db_ek = EK.search( k, dbsession = dbsession, group = parent.key if parent else None )
+            if not db_ek:
+                dbsession.add( ek )
+            else:
+                cerr('Trying to update: %s/%s' % (ek.key, parent.key if parent else ''))
             if len(item) == 3:
                 dbsession.flush()
-                EK.bulk_insert( item[2], ek, syskey, dbsession = dbsession )
+                EK.bulk_update( item[2], ek, syskey, dbsession = dbsession )
 
+    bulk_insert = bulk_update
 
     @staticmethod
     def proxy(attrname, grpname, match_case=False, auto=False):
