@@ -469,7 +469,7 @@ class BaseMixIn(object):
 
     @declared_attr
     def lastuser(cls):
-        return relationship('User', uselist=False)
+        return relationship('User', uselist=False, foreign_keys=[cls.lastuser_id])
 
     @declared_attr
     def stamp(cls):
