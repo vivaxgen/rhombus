@@ -31,14 +31,16 @@ def setup_db( *ops ):
         for op in ops:
             op()
 
-def setup( dbsession ):
+def setup( dbh ):
     """ populate the database with basic, essential data """
 
     if get_datalogger():
         get_clsreg().sync()
         session.commit()
 
-    EK.bulk_insert( ek_initlist, dbsession=dbsession )
+    dbsession = dbh.session()
+
+    EK.bulk_update( ek_initlist, dbsession=dbsession )
     Group.bulk_insert( essential_groups, dbsession=dbsession )
     UserClass.bulk_insert( system_userclass, dbsession=dbsession )
 
