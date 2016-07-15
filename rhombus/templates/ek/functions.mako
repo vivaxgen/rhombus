@@ -71,6 +71,6 @@ ${show_parent(ek)}
 ##
 <%def name="show_parent(ek)">
 % if ek.member_of_id:
-    <p>Member of: <a href="${request.route_url('rhombus.ek-view', id=ek.member_of_id)}">${ek.get(ek.member_of_id).key}</a></p>
+    <p>Member of: <a href="${request.route_url('rhombus.ek-view', id=ek.member_of_id)}">${ek.member_of.key}</a></p>
 % endif
 </%def>
