@@ -160,7 +160,7 @@ def do_initdb(args, dbh, settings):
     from rhombus.scripts.setup import populate_db
     userclass = yaml.load(open(args.initial_userclass)) if args.initial_userclass else None
     groups = yaml.load(open(args.initial_groups)) if args.initial_groups else None
-    populate_db(dbh.session, groups, userclass)
+    populate_db(dbh.session(), groups, userclass)
     cout('INFO - database has been initialized')
 
 
@@ -257,6 +257,6 @@ def do_importgroup(args, dbh, settings):
 
     from rhombus.models.user import UserClass, Group
 
-    Group.bulk_insert(groups, dbsession=dbh.session)
+    Group.bulk_insert(groups, dbsession=dbh.session())
 
 
