@@ -57,8 +57,9 @@ def uq_convention(constraint, table):
     return "_".join( names )
 
 def ck_convention(constraint, table):
-    print(dir(constraint))
-    print('table name:', table.name)
+    # TODO: need more careful implementation here
+    #print(dir(constraint))
+    #print('table name:', table.name)
     return "CK"
 
 
