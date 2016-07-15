@@ -474,3 +474,6 @@ class BaseMixIn(object):
     @declared_attr
     def stamp(cls):
         return Column(types.TIMESTAMP, nullable=False, default=current_timestamp())
+        ## this is reserved for big, incompatible update
+        ## return Column(types.DateTime(timezone=True), nullable=False,
+        ##        server_default=func.now(), server_onupdate=func.utc_timestamp())
