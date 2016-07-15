@@ -60,15 +60,15 @@ class DBHandler(object):
     def get_userclass(self, userclass=None):
 
         if userclass is None:
-            return self.UserClass.query(self.session).all()
+            return self.UserClass.query(self.session()).all()
 
         if type(userclass) == list:
             return [ self.get_userclass(x) for x in userclass ]
 
         if type(userclass) == int:
-            return self.UserClass.get(userclass, self.session)
+            return self.UserClass.get(userclass, self.session())
         else:
-            return self.UserClass.search(userclass, self.session)
+            return self.UserClass.search(userclass, self.session())
 
         raise RuntimeError('ERR: unknown data type for getting UserClass!')
 
@@ -76,15 +76,15 @@ class DBHandler(object):
     def get_user(self, user=None):
 
         if user is None:
-            return self.User.query(self.session).all()
+            return self.User.query(self.session()).all()
 
         if type(user) == list:
             return [ self.get_user(u) for u in user ]
 
         if type(user) == int:
-            return self.User.get(user, self.session)
+            return self.User.get(user, self.session())
 
-        return self.User.search(user, self.session)
+        return self.User.search(user, self.session())
 
 
     def get_group(self, group=None):
@@ -96,30 +96,30 @@ class DBHandler(object):
             return [ self.get_group(g) for g in group ]
 
         if type(group) == int:
-            return self.Group.get(group, self.session)
+            return self.Group.get(group, self.session())
 
-        return self.Group.search(group, self.session)
+        return self.Group.search(group, self.session())
 
 
     def get_groups(self):
         """ return all non-system groups """
 
-        q = user.Group.query(self.session)
+        q = user.Group.query(self.session())
         q = q.filter( ~user.Group.name.startswith('\_', escape='\\') )
         return q.all()
 
 
     def get_user_by_id(self, id):
-        return self.User.get(id)
+        return self.User.get(id, self.session())
 
 
     def get_user_by_email(self, email):
-        q = self.User.query(self.session).filter( self.User.email.ilike(email) )
+        q = self.User.query(self.session()).filter( self.User.email.ilike(email) )
         return q.one()
 
 
     def get_group_by_id(self, id):
-        return self.Group.get(id)
+        return self.Group.get(id, self.session())
 
 
     ## EnumeratedKey methods
@@ -127,14 +127,14 @@ class DBHandler(object):
     def add_ekey(self, ekey, group=None):
         group_ek = None
         if group:
-            group_ek = ek.EK.search(group, dbsession=self.session)
+            group_ek = ek.EK.search(group, dbsession=self.session())
 
 
         if not group_ek and not ekey.startswith('@'):
             raise RuntimeError('ekey must be under a group, or starts with @')
 
         new_ekey = ek.EK( ekey, '-', parent=group_ek)
-        self.session.add(new_ekey)
+        self.session().add(new_ekey)
         return new_ekey
 
 
