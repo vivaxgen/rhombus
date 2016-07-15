@@ -18,7 +18,7 @@ def view(request):
     """ view a EnumKey along with its members """
     ek_id = int(request.matchdict.get('id', -1))
     dbh = get_dbhandler()
-    ek = dbh.EK.get(ek_id)
+    ek = dbh.EK.get(ek_id, dbh.session())
     if not ek:
         return error_page()
 
