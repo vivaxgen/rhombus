@@ -460,6 +460,10 @@ class button(doubletag):
                                 self.label, self._tag ) )
 
 
+class nav(doubletag):
+    _tag = 'nav'
+
+
 ## tables
 
 class table(doubletag):
