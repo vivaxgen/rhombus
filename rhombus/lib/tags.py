@@ -149,9 +149,9 @@ class input_text(htmltag):
     def add_error(self, errmsg):
         self.error = errmsg
 
-    def as_static(self):
+    def as_static(self, value=None):
         return literal( input_static_template.format( name=escape(self.name),
-                        label=escape(self.label), value=escape(self.value),
+                        label=escape(self.label), value=escape(value or self.value),
                         class_div = 'form-group' + (' has-error' if self.error else ''),
                         class_label = 'col-md-%d control-label' % self.offset,
                         class_value = 'col-md-%d' % self.size,
@@ -226,6 +226,13 @@ class input_select(input_text):
         self.extra_control = extra_control
 
     def __str__(self):
+        if self.static:
+            value = ''
+            for (v,l) in self.options:
+                if v == self.value:
+                    value = l
+            return self.as_static(value)
+
         options = []
         for val, label in self.options:
             selected = ''
