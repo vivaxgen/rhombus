@@ -56,7 +56,7 @@ def set_func_userid( func ):
 def get_userid():
     if func_userid:
         return func_userid()
-    return None
+    raise RuntimeError('ERR: get_userid() has not been set')
 
 
 def set_func_groupid( func ):

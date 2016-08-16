@@ -221,7 +221,13 @@ def userobj_factory(auth_cache):
             return None
 
         user_id = user_id.encode('ASCII')
-        return auth_cache.get(user_id, None)
+        userinstance = auth_cache.get(user_id, None)
+        db_session = get_dbhandler().session()
+        if db_session.user and userinstance and db_session.user.id != userinstance.id:
+            raise RuntimeError('FATAL PROGRAMMING ERROR: reuse of db_session.user')
+        if userinstance:
+            db_session.user = userinstance
+        return userinstance
 
     return get_userobj
 

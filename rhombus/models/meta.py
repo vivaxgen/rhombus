@@ -28,6 +28,9 @@ class RhoSession(Session):
         self._ek_keys = {}
         self._ek_ids = {}
 
+        # current user information
+        self.user = None
+
 
     ## EK helpers
 
