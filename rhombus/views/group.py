@@ -74,6 +74,9 @@ def view(request):
     ]
     user_bar = selection_bar('user-ids', action=request.route_url('rhombus.group-action'))
     user_table, user_js = user_bar.render(user_table)
+    user_table = div('User:',
+        user_table
+        )
 
     return render_to_response("rhombus:templates/group/view.mako",
         {   'group': group,
