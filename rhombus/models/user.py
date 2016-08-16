@@ -21,14 +21,28 @@ class UserClass(Base):
     autoadd = Column(types.Boolean, nullable=False, default=False)
     credscheme = Column(YAMLCol(256), nullable=False)  # YAML type data
 
+
     def __repr__(self):
         return "%s" % self.domain
+
+
+    def update(self, d):
+
+        if isinstance(d, dict):
+            self.domain = d['domain']
+            self.desc = d['desc']
+            self.credscheme = d['credscheme']
+
+        else:
+            raise RuntimeError('updating can only be performed using dict ')
+
 
     @staticmethod
     def search(domain, session):
         q = session.query(UserClass).filter(UserClass.domain == domain).all()
         if q: return q[0]
         return None
+
 
     @staticmethod
     def allclasses():
@@ -171,12 +185,30 @@ class User(Base):
         return "%s/%s" % (self.login, str(self.userclass).lower())
 
     def update(self, u):
-        self.lastname = u.lastname
-        self.firstname = u.firstname
-        self.email = u.email
-        self.institution = u.institution
-        self.address = u.address
-        self.contact = u.contact
+        if isinstance(u, dict):
+            if 'lastname' in u:
+                self.lastname = u['lastname']
+            if 'firstname' in u:
+                self.firstname = u['firstname']
+            if 'email' in u:
+                self.email = u['email']
+            if 'institution' in u:
+                self.institution = u['institution']
+            if 'address' in u:
+                self.address = u['address']
+            if 'contact' in u:
+                self.contact = u['contact']
+            if 'primarygroup_id' in u:
+                self.primarygroup_id = u['primarygroup_id']
+
+        else:
+            self.lastname = u.lastname
+            self.firstname = u.firstname
+            self.email = u.email
+            self.institution = u.institution
+            self.address = u.address
+            self.contact = u.contact
+
 
     def fullname(self):
         return '%s, %s' % (self.lastname, self.firstname)
