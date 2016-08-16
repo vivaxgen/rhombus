@@ -1,16 +1,18 @@
 
+from rhombus.lib.utils import cout, cerr
+
 # LDAP data:
 # { 'sys': 'LDAP', 'host': ..., 'DN': ... }
 
 def validate_by_LDAP(username, passwd, scheme):
-    import ldap
-    l = ldap.open(scheme['host'])
-    try:
-        l.simple_bind_s(scheme['DN'] % username, passwd)
-        return True
-    except ldap.INVALID_CREDENTIALS:
-        pass
-    return False
+    import ldap3
+    s = ldap3.Server(host = scheme['host'], get_info=ldap3.ALL)
+    c = ldap3.Connection(s, user=scheme['DN'] % username, password = passwd)
+    if not c.bind():
+        cerr('Failed LDAP authentication for user: %s' % username)
+        return False
+    return True
+
 
 # BasicHTTP:
 # { 'sys': 'BasicHTTP', 'host': ..., 'realm': ..., 'referrer': ..., 'theme': ... }
@@ -54,5 +56,3 @@ def inquire_by_LDAP( username, scheme ):
 
 def inquire_dummy( username, scheme ):
     return ('', '')
-
-
