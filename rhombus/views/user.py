@@ -3,7 +3,7 @@ from rhombus.lib.utils import get_dbhandler
 from rhombus.views import *
 from rhombus.views.generics import error_page
 
-
+@roles(SYSADM)
 def index(request):
 
     dbh = get_dbhandler()
@@ -11,27 +11,152 @@ def index(request):
     users = dbh.get_user()
     user_table = table(class_='table table-condensed table-striped')[
         thead()[
-            th('Username'), th('Userclass/Domain')
+            th('', style='width: 2em'), th('Username'), th('Userclass/Domain')
         ],
         tbody()[
             tuple(
-                [ tr()[ td('%s' % u.login), td('%s' % u.userclass.domain) ]
-                    for u in users ])
+                [ tr()
+                    [   td(),
+                        td(a('%s' % u.login, href=request.route_url('rhombus.user-view', id=u.id))),
+                        td('%s' % u.userclass.domain)
+                    ]   for u in users
+                ]
+            )
         ]
     ]
 
+    add_button = ( 'New user',
+                    request.route_url('rhombus.user-edit', id=0)
+    )
+
+    bar = selection_bar('user-ids', action=request.route_url('rhombus.user-action'),
+                    add = add_button)
+    html, code = bar.render(user_table)
+
     return render_to_response('rhombus:templates/generics/page.mako',
-            { 'content': str(user_table) },
-            request = request )
+            {   'html': html,
+                'code': code
+            }, request = request )
 
 
-
+@roles(SYSADM)
 def view(request):
-    raise NotImplementedError()
+
+    dbh = get_dbhandler()
+    user = dbh.get_user( int(request.matchdict['id']) )
+
+    html = div( div(h3('User View')) )
+
+    eform = edit_form(user, dbh, request, static=True)
+    html.add( eform )
+
+    return render_to_response('rhombus:templates/generics/page.mako',
+        {   'html': html,
+        }, request = request )
 
 
+@roles(SYSADM)
 def edit(request):
+
+    user_id = int(request.matchdict['id'])
+    if user_id < 0:
+        return error_page(request, 'Please provide userclass ID')
+
+    dbh = get_dbhandler()
+
+    if request.method == 'GET':
+
+        if user_id == 0:
+            user = dbh.User()
+            user.id = 0
+
+        else:
+            user = dbh.get_user(user_id)
+
+        editform = edit_form(user, dbh, request)
+
+        return render_to_response( "rhombus:templates/generics/page.mako",
+                {   'html': editform,
+                }, request = request
+        )
+
+    elif request.POST:
+
+        user_d = parse_form( request.POST )
+        if user_d['id'] != user_id:
+            return error_page(request, "Inconsistent data!")
+
+        try:
+            if user_id == 0:
+                user = dbh.User()
+                user.login = user_d['login']
+                user.credential = '{X}'
+                user.userclass_id = user_d['userclass_id']
+                user.update( user_d )
+                dbh.session().add( user )
+                dbh.session().flush()
+                request.session.flash(
+                    (   'success',
+                        'User [%s] has been created.' % user.login )
+                )
+
+            else:
+                user = dbh.get_user(user_id)
+                user.update( user_d )
+                dbh.session().flush()
+
+        except RuntimeError as err:
+            return error_page(request, str(err))
+
+        except:
+            raise
+
+        return HTTPFound(location = request.route_url('rhombus.user-view', id=user.id))
+
     raise NotImplementedError()
+
+
+def edit_form(user, dbh, request, static=False):
+
+    eform = form( name='rhombus/user', method=POST,
+                action=request.route_url('rhombus.user-edit', id=user.id))
+    eform.add(
+        fieldset(
+            input_hidden(name='rhombus-user_id', value=user.id),
+            input_select('rhombus-user_userclass_id', 'User class', value=user.userclass_id,
+                static=static, options = [ (uc.id, uc.domain) for uc in dbh.get_userclass() ]),
+            input_text('rhombus-user_login', 'Login', value=user.login,
+                static=static),
+            input_text('rhombus-user_lastname', 'Lastname', value=user.lastname,
+                static=static),
+            input_text('rhombus-user_firstname', 'Firstname', value=user.firstname,
+                static=static),
+            input_text('rhombus-user_email', 'E-mail', value=user.email,
+                static=static),
+            input_select('rhombus-user_primarygroup_id', 'Primary group', value=user.primarygroup_id,
+                static=static, options = [ (g.id, g.name) for g in dbh.get_group() ]),
+            input_text('rhombus-user_institution', 'Institution', value=user.institution,
+                    static=static),
+            submit_bar() if not static else a('Edit', class_='btn btn-primary col-md-offset-3',
+                            href=request.route_url('rhombus.user-edit', id=user.id)),
+        )
+    )
+
+    return eform
+
+
+def parse_form( f ):
+
+    d = dict()
+    d['id'] = int(f['rhombus-user_id'])
+    d['userclass_id'] = int(f['rhombus-user_userclass_id'])
+    d['login'] = f['rhombus-user_login']
+    d['lastname'] = f['rhombus-user_lastname']
+    d['firstname'] = f['rhombus-user_firstname']
+    d['email'] = f['rhombus-user_email']
+    d['primarygroup_id'] = int(f['rhombus-user_primarygroup_id'])
+    d['institution'] = f['rhombus-user_institution']
+    return d
 
 
 def passwd(request):

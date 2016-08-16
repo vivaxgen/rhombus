@@ -1,6 +1,10 @@
 <%inherit file="rhombus:templates/base.mako" />
 
+% if html:
+${ html }
+% else:
 ${ content | n }
+% endif
 
 ##
 <%def name="stylelink()">
