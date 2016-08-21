@@ -67,3 +67,9 @@ def set_dbhandler_class( class_ ):
     global _DBHANDLER_CLASS_
     cerr('Setting dbhandler class to %s' % str(class_))
     _DBHANDLER_CLASS_ = class_
+
+
+def generic_userid_func():
+    global _DBHANDLER_
+    return _DBHANDLER_.session().user.id
+
