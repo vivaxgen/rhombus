@@ -4,11 +4,13 @@ import sys, os
 import argparse
 import importlib
 from pyramid.paster import get_appsettings, setup_logging
-from rhombus.lib.utils import cout, cinfo, cerr, cexit
+from rhombus.lib.utils import cout, cinfo, cerr, cexit, get_dbhandler
+from rhombus.models.core import set_func_userid
 
 
 PATHS = [ 'rhombus.scripts.' ]
 ENVIRON = 'RHOMBUS_CONFIG'
+USER = 'USER'
 GREET = None
 USAGE = None
 
@@ -92,9 +94,10 @@ def add_script_path( paths ):
 def arg_parser( description = None, parser = None ):
 
     if not parser:
-        parser = argparse.ArgumenParser( description = description )
+        parser = argparse.ArgumentParser( description = description )
 
     parser.add_argument('-c', '--config', default=None)
+    parser.add_argument('-u', '--user', default=None)
 
     return parser
 
@@ -108,5 +111,12 @@ def setup_settings( args ):
 
     setup_logging( configfile )
     settings = get_appsettings( configfile )
+
+    set_func_userid(userid_func)
+    user = args.user or os.environ.get(USER) or None
+
     return settings
 
+
+def userid_func(userid=1):
+    return userid
