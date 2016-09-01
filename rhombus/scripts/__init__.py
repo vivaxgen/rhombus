@@ -94,7 +94,7 @@ def add_script_path( paths ):
 def arg_parser( description = None, parser = None ):
 
     if not parser:
-        parser = argparse.ArgumentParser( description = description )
+        parser = argparse.ArgumentParser( description = description, conflict_handler = 'resolve' )
 
     parser.add_argument('-c', '--config', default=None)
     parser.add_argument('-u', '--user', default=None)
