@@ -143,6 +143,7 @@ ek_initlist = [
             ('application/xml', ''),
             ('application/json', ''),
             ('application/octet-stream', ''),
+            ('application/unknown', ''),
             ('text/plain', ''),
             ('text/html', ''),
             ('text/xml', ''),
