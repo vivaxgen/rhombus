@@ -451,6 +451,9 @@ class ul(doubletag):
                 raise RuntimeError('UL should only have LI content')
             self.contents.append(arg)
 
+class ol(ul):
+    _tag = 'ol'
+
 class li(doubletag):
     _tag = 'li'
 
