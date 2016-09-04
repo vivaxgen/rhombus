@@ -1,7 +1,7 @@
 
-import sys, argparse, yaml, transaction
+import sys, yaml, transaction
 from rhombus.lib.utils import get_dbhandler, cerr, cout, cexit
-from rhombus.scripts import setup_settings
+from rhombus.scripts import setup_settings, arg_parser
 
 ## rbmgr.py
 ##
@@ -12,7 +12,7 @@ from rhombus.scripts import setup_settings
 def init_argparser( parser = None):
 
     if parser is None:
-        p = argparse.ArgumentParser('rbmgr [rhombus]')
+        p = arg_parser('rbmgr [rhombus]')
     else:
         p = parser
 
