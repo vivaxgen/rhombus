@@ -31,6 +31,9 @@ class RhoSession(Session):
         # current user information
         self.user = None
 
+    def close(self):
+        self.user = None
+        super().close()
 
     ## EK helpers
 
