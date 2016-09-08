@@ -71,5 +71,11 @@ def set_dbhandler_class( class_ ):
 
 def generic_userid_func():
     global _DBHANDLER_
+    if not _DBHANDLER_.session().user:
+        if _DBHANDLER_.session().global_user:
+            return _DBHANDLER_.session().global_user.id
+        else:
+            raise RuntimeError('FATAL PROG ERR: user is not set!')
+
     return _DBHANDLER_.session().user.id
 
