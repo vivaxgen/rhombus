@@ -214,8 +214,16 @@ class User(Base):
         return '%s, %s' % (self.lastname, self.firstname)
 
     @staticmethod
-    def search(login, userclass):
-        dbsession = object_session(userclass)
+    def search(login, userclass=None, session=None):
+        if userclass:
+            dbsession = object_session(userclass)
+        elif session:
+            dbsession = session
+        else:
+            raise RuntimeError('ERR: need to provide either userclass or dbsession')
+        if '/' in login:
+            login, domain = login.split('/', 1)
+            userclass = UserClass.search(domain, dbsession)
         q = dbsession.query(User).filter(and_(User.login == login, User.userclass == userclass))
         r = q.all()
         if r: return r[0]
@@ -478,3 +486,14 @@ class UserInstance(object):
                 raise RuntimeError('Group id: %d is not consistent!' % gid)
 
 
+## globals
+
+_DEF_USERCLASS_ = None
+
+def set_default_userclass(userclass):
+    global _DEF_USERCLASS_
+    _DEF_USERCLASS_ = UserClass
+
+def get_default_userclass():
+    global _DEF_USERCLASS_
+    return _DEF_USERCLASS_

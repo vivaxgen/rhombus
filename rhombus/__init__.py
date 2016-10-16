@@ -73,8 +73,9 @@ def includeme( config ):
     add_route_view( config, 'rhombus.views.user', 'rhombus.user',
         '/user',
         '/user/@@action',
+        '/user/@@passwd',
         '/user/{id}@@edit',
-        '/user/{id}@@passwd',
+        #'/user/{id}@@passwd',
         ('/user/{id}', 'view'),
     )
 

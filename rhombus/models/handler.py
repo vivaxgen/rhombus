@@ -84,7 +84,7 @@ class DBHandler(object):
         if type(user) == int:
             return self.User.get(user, self.session())
 
-        return self.User.search(user, self.session())
+        return self.User.search(user, session=self.session())
 
 
     def get_group(self, group=None):

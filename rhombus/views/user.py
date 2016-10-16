@@ -159,36 +159,59 @@ def parse_form( f ):
     return d
 
 
+@roles(PUBLIC)
 def passwd(request):
 
-    user_id = int(request.matchdict.get('id', -1))
+    #user_id = int(request.matchdict.get('id', -1))
     dbh = get_dbhandler()
-    user = dbh.get_user(user_id)
+    #user = dbh.get_user(user_id)
 
-    if user.credential == '{X}':
-        return error_page(request,
-            'ERR: user is using external authentication scheme!')
+    #if request.user.id != user_id and not request.user.has_roles(SYSADM):
+    #    return error_page(request,
+    #        'ERR: except system administrator, user can only change his/her own password')
+
+    #if user.credential == '{X}':
+    #    return error_page(request,
+    #        'ERR: user is using external authentication scheme!')
 
     if request.POST:
-        if user_id != int(request.POST.get('user_id', -1)):
-            raise RuntimeError()
 
-        eform = None
+        user = request.user
+        eform = password_form(user)
+
+        if user.has_roles(SYSADM):
+            # set up variables
+            login = request.POST.get('username')
+            current_user = dbh.get_user(user.id)
+            target_user = dbh.get_user(login)
+            eform.get('username').value = login
+
+            if not target_user:
+                eform.get('username').add_error('User does not exist!')
+                return render_to_response('rhombus:templates/generics/page.mako',
+                        { 'content': str(eform) },
+                        request = request )
+
+        else:
+            target_user = dbh.get_user(int(request.POST.get('user_id', -1)))
+            if target_user.id != user.id:
+                raise RuntimeError('ERR: users can only change their own passwords!')
+            current_user = target_user
+
         curr_pass = request.POST.get('curr_pass', None)
 
-        if user.verify_credential(curr_pass):
+        if current_user.verify_credential(curr_pass):
             new_pass = request.POST.get('new_pass', None)
             if new_pass:
                 if new_pass == request.POST.get('new_pass2', None):
-                    user.set_credential(new_pass)
+                    target_user.set_credential(new_pass)
+                    # reset eform
+                    eform=None
                 else:
-                    eform = password_form(user)
                     eform.get('new_pass2').add_error('Password is not verified!')
             else:
-                eform = password_form(user)
                 eform.get('new_pass').add_error('Please fill the new password!')
         else:
-            eform = password_form(user)
             eform.get('curr_pass').add_error('Incorrect password!')
 
         if eform:
@@ -196,10 +219,11 @@ def passwd(request):
                 { 'content': str(eform) },
                 request = request )
 
-        request.session.flash( ('success', 'Successfully changed password for user %s' % user.login) )
+        request.session.flash( ('success',
+            'Successfully changed password for user %s' % target_user.login) )
         return HTTPFound(location = request.referer or '/')
 
-    eform = password_form(user)
+    eform = password_form(request.user)
 
     return render_to_response('rhombus:templates/generics/page.mako',
             { 'content': str(eform) },
@@ -212,10 +236,12 @@ def password_form(user):
     eform.add(
         fieldset()[
             input_hidden('user_id', value = user.id),
-            input_text('login', 'Login', value = user.login),
+            input_show('login', 'Login', value = user.login),
             input_password('curr_pass', 'Current password'),
         ],
         fieldset()[
+            input_text('username', 'Username', value = user.login)
+                if user.has_roles(SYSADM) else '',
             input_password('new_pass', 'New password'),
             input_password('new_pass2', 'Verify password')
         ],
@@ -247,7 +273,7 @@ def user_menu(request):
                 ],
                 ul(class_='dropdown-menu')[
                     li(a('Change password',
-                            href=request.route_url('rhombus.user-passwd', id=request.user.id)))
+                            href=request.route_url('rhombus.user-passwd')))
                         if not request.user.has_roles(GUEST) else '',
                     li(a('Management', href=request.route_url('rhombus.dashboard')))
                         if request.user.has_roles(SYSADM) else '',
