@@ -88,12 +88,18 @@ def edit(request):
 
         try:
             if user_id == 0:
-                user = dbh.User()
-                user.login = user_d['login']
-                user.credential = '{X}'
-                user.userclass_id = user_d['userclass_id']
-                user.update( user_d )
-                dbh.session().add( user )
+                # create a new user
+
+                userclass = dbh.get_userclass( user_d['userclass_id'])
+                user = userclass.add_user(
+                    login = user_d['login'],
+                    lastname = user_d['lastname'],
+                    firstname = user_d['firstname'],
+                    email = user_d['email'],
+                    primarygroup = user_d['primarygroup_id'],
+
+                )
+                user.institution = user_d['institution']
                 dbh.session().flush()
                 request.session.flash(
                     (   'success',
