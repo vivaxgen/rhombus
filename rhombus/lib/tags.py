@@ -87,6 +87,11 @@ class htmltag(object):
     def __repr__(self):
         return '<%s name=%s>' % (self.__class__.__name__, self.name)
 
+    def div_wrap(self, html):
+        if isinstance(self.container, multi_inputs):
+            return html
+        return str(div(html, class_='form-group'))
+
 
 class form(htmltag):
 
@@ -240,17 +245,17 @@ class input_select(input_text):
                 selected = 'selected="selected"'
             options.append( '<option value="%s" %s>%s</option>' %
                         (escape(val), selected, escape(label) ))
-        return literal( input_select_template.format(
+        html = literal( input_select_template.format(
                     name = escape(self.name), label = escape(self.label),
                     value = escape(self.value),
                     options = '\n'.join(options),
                     multiple = 'multiple="multiple"' if self.multiple else '',
-                    class_div = 'form-group',
                     class_label = 'col-md-%d control-label' % self.offset,
                     class_value = 'col-md-%d' % self.size,
                     class_input = 'form-control',
                     extra_control = literal(self.extra_control) if self.extra_control else '',
                 ))
+        return self.div_wrap(html)
 
     def set(self, options=None, value=None, extra_control=None):
         if options:
@@ -584,6 +589,11 @@ class selection_bar(object):
         return sform, jscode + selection_bar_js % { 'prefix': self.prefix }
 
 
+class multi_inputs(div):
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, class_='form-group', **kwargs)
+
 
 ## Templates
 
@@ -629,7 +639,6 @@ input_textarea_template = '''\
 </div>'''
 
 input_select_template = '''\
-<div class='{class_div}'>
   <label class='{class_label}' for='{name}'>{label}</label>
   <div class='{class_value}'>
     <select id='{name}' name='{name}' class='{class_input}' {multiple}>
@@ -637,7 +646,7 @@ input_select_template = '''\
     </select>
     {extra_control}
   </div>
-</div>'''
+'''
 
 input_file_template = '''\
 <div class='{class_div}'>
