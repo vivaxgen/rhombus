@@ -109,7 +109,10 @@ class UserClass(Base):
                     g.users.append(u)
 
 
-    def add_user(self, login, lastname, firstname, email, primarygroup, groups=[], session=None):
+    def add_user(self, login, lastname, firstname, email, primarygroup, groups=[]):
+        """ add a new user """
+
+        session = object_session(self)
         pri_grp = Group.search(primarygroup, session)
         user_instance = User(login=login, userclass=self,
                             lastname=lastname, firstname=firstname, email=email,
@@ -175,7 +178,7 @@ class User(Base):
     __table_args__ = ( UniqueConstraint('login', 'userclass_id'), {} )
 
     userclass = relationship(UserClass, uselist=False, backref=backref('users', lazy='dynamic'))
-    primarygroup = relationship('Group', uselist=False)
+    primarygroup = relationship('Group', uselist=False, backref=backref('primaryusers'))
     userdata = relationship(UserData,
                     collection_class = column_mapped_collection(UserData.key_id),
                     cascade='all,delete,delete-orphan')
@@ -251,6 +254,23 @@ class User(Base):
         res = dbsession.execute( group_role_table.select( group_role_table.c.group_id.in_( grp_ids ) ).with_only_columns([group_role_table.c.role_id]).distinct())
         role_ids = [ item for sublist in res.fetchall() for item in sublist ]
         return ( grp_ids, role_ids )
+
+    def group_users(self):
+        dbsession = object_session(self)
+        if self.has_roles(SYSADM):
+            return User.query(dbsession).all()
+        group_ids = self.groupids()
+        user_ids = [ x.user_id for u in UserGroup.query(dbsession).filter( UserGroup.group_id.in_( group_ids ))]
+        user_ids += [ dbsession.query(User.id).filter(User.primarygroup_id == self.primarygroup_id)]
+        return [ User.get(u, dbsession) for u in set(user_ids) ]
+
+    def has_roles(self, *roles):
+        grp_ids, role_ids = self.group_role_ids()
+        for role in roles:
+            role_id = EK._id(role)
+            if role_id in role_ids:
+                return True
+        return False
 
     def user_instance(self):
         group_ids, role_ids = self.group_role_ids()
@@ -329,6 +349,8 @@ class Group(Base):
 
     @staticmethod
     def search(grpname, dbsession):
+        if type(grpname) == int:
+            return Group.get(grpname, dbsession)
         q = Group.query(dbsession).filter(Group.name == grpname).all()
         if q: return q[0]
         return None
