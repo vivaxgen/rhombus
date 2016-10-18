@@ -87,10 +87,14 @@ class DBHandler(object):
         return self.User.search(user, session=self.session())
 
 
-    def get_group(self, group=None):
+    def get_group(self, group=None, user_id=None):
 
         if group is None:
-            return self.get_groups()
+            if user_id is None:
+                return self.get_groups()
+            else:
+                # only return groups where the user is a member
+                raise NotImplementedError()
 
         if type(group) == list:
             return [ self.get_group(g) for g in group ]
