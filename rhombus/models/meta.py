@@ -30,6 +30,7 @@ class RhoSession(Session):
 
         # current user information
         self.user = None
+        self.global_user = None	# used for per-process user (eg. in scripts)
 
     def close(self):
         self.user = None
