@@ -55,7 +55,9 @@ def setup( dbh ):
 
 root_password = random_string(16)
 system_userclass = ( '_SYSTEM_', 'Rhombus System', None, {},
-                        [   ('system', '', '', 'root@localhost', '_SysAdm_', root_password, [] ) ] )
+                        [   ('system', '', '', 'root@localhost', '_SysAdm_', root_password, [] ),
+                            ('dataadm', '', '', 'root@localhost', '_DataAdm_', '{X}', [] ),
+                        ] )
 
 
 essential_groups = [
