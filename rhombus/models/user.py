@@ -96,17 +96,13 @@ class UserClass(Base):
         dbsession.add(uc)
         for user in userlist:
             login, lastname, firstname, email, p_grp = user[:5]
-            p_grp_db = Group.search(p_grp, dbsession=dbsession)
-            u = User(login=login, userclass=uc, lastname=lastname, firstname=firstname,
-                        email=email, primarygroup = Group.search(p_grp, dbsession=dbsession))
+            if len(user) >= 7:
+                grps = user[6]
+            else:
+                grps = []
+            u = uc.add_user( login, lastname, firstname, email, p_grp, grps )
             if len(user) >= 6:
                 u.set_credential( user[5] )
-            dbsession.flush()
-            p_grp_db.users.append(u)
-            if len(user) >= 7:
-                for grp in user[6]:
-                    g = Group.search(grp, dbsession=dbsession)
-                    g.users.append(u)
 
 
     def add_user(self, login, lastname, firstname, email, primarygroup, groups=[]):
@@ -260,8 +256,7 @@ class User(Base):
         if self.has_roles(SYSADM):
             return User.query(dbsession).all()
         group_ids = self.groupids()
-        user_ids = [ x.user_id for u in UserGroup.query(dbsession).filter( UserGroup.group_id.in_( group_ids ))]
-        user_ids += [ dbsession.query(User.id).filter(User.primarygroup_id == self.primarygroup_id)]
+        user_ids = [ x.user_id for x in UserGroup.query(dbsession).filter( UserGroup.group_id.in_( group_ids ))]
         return [ User.get(u, dbsession) for u in set(user_ids) ]
 
     def has_roles(self, *roles):
@@ -342,6 +337,17 @@ class Group(Base):
         else:
             return user in self.users
 
+    def is_admin(self, user):
+        if not type(user) == int:
+            user_id = user.id
+        else:
+            user_id = user
+        ug = UserGroup.query().filter( UserGroup.group_id == self.id,
+                    UserGroup.user_id == user_id ).one()
+        if ug and ug.role == 'A':
+            return True
+        return False
+
     def render(self):
         if self.desc:
             return "%s | %s" % (self.name, self.desc)
@@ -411,7 +417,8 @@ class UserGroup(Base):
 
     __table_args__ = ( UniqueConstraint('user_id', 'group_id'), {} )
 
-    user = relationship(User, uselist=False, backref='usergroups')
+    user = relationship(User, uselist=False,
+        backref=backref('usergroups', cascade='all,delete,delete-orphan'))
     group = relationship(Group, uselist=False, backref='usergroups')
 
     def __init__(self, user=None, group=None, role = None):
