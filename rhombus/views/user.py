@@ -16,7 +16,7 @@ def index(request):
         tbody()[
             tuple(
                 [ tr()
-                    [   td(),
+                    [   td(literal('<input type="checkbox" name="user-ids" value="%d">' % u.id)),
                         td(a('%s' % u.login, href=request.route_url('rhombus.user-view', id=u.id))),
                         td('%s' % u.userclass.domain)
                     ]   for u in users
@@ -258,8 +258,52 @@ def password_form(user):
     return eform
 
 
+@roles(PUBLIC)
 def action(request):
-    pass
+
+    if request.POST:
+        return action_post(request)
+    return action_get(request)
+
+
+def action_get(request):
+    raise NotImplementedError()
+
+
+def action_post(request):
+
+    method = request.params.get('_method', None)
+    dbh = get_dbhandler()
+
+    if method == 'delete':
+
+        user_ids = [ int(x) for x in request.params.getall('user-ids') ]
+        users = dbh.get_user( user_ids )
+
+        if len(users) == 0:
+            return Response(modal_error)
+
+        return Response( modal_delete %
+            ''.join( '<li>%s | %s, %s | %s</li>' %
+                (u.login, u.lastname, u.firstname, u.userclass.domain) for u in users))
+
+    elif method == 'delete/confirm':
+
+        user_ids = [ int(x) for x in request.params.getall('user-ids') ]
+        logins = []
+        for user in dbh.get_user( user_ids ):
+            logins.append( user.login )
+            dbh.session().delete(user)
+
+        dbh.session().flush()
+        request.session.flash(
+            ('success', 'User %s has been deleted successfully' % ','.join( logins )))
+
+        return HTTPFound( location = request.referrer or request.route_url( 'rhombus.user'))
+
+
+    raise RuntimeError('FATAL - programming ERROR')
+
 
 
 def user_menu(request):
@@ -297,3 +341,40 @@ def user_menu(request):
     user_menu_html.add( user_menu_list )
 
     return user_menu_html
+
+
+modal_delete = '''
+<div class="modal-dialog" role="document"><div class="modal-content">
+<div class="modal-header">
+    <button type="button" class="close" data-dismiss="modal" aria-hidden="true">×</button>
+    <h3 id="myModalLabel">Deleting Batch(es)</h3>
+</div>
+<div class="modal-body">
+    <p>You are going to delete the following user(s):
+        <ul>
+        %s
+        </ul>
+    </p>
+</div>
+<div class="modal-footer">
+    <button class="btn" data-dismiss="modal" aria-hidden="true">Cancel</button>
+    <button class="btn btn-danger" type="submit" name="_method" value="delete/confirm">Confirm Delete</button>
+</div>
+</div></div>
+'''
+
+modal_error = '''
+<div class="modal-dialog" role="document"><div class="modal-content">
+<div class="modal-header">
+    <button type="button" class="close" data-dismiss="modal" aria-hidden="true">×</button>
+    <h3 id="myModalLabel">Error</h3>
+</div>
+<div class="modal-body">
+    <p>Please select user(s) to be removed</p>
+</div>
+<div class="modal-footer">
+    <button class="btn" data-dismiss="modal" aria-hidden="true">Close</button>
+</div>
+</div></div>
+'''
+
