@@ -34,7 +34,7 @@ def login(request):
     """
 
     msg = None
-    referrer = request.url
+    referrer = request.referrer
     came_from = request.params.get('came_from', referrer)
     userclass_name = request.params.get('userclass', None)
     if came_from == '/login':
