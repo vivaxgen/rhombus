@@ -118,5 +118,5 @@ def setup_settings( args ):
     return settings
 
 
-def userid_func(userid=1):
+def userid_func(userid=None):
     return userid
