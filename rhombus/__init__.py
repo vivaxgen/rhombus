@@ -74,6 +74,7 @@ def includeme( config ):
         '/user',
         '/user/@@action',
         '/user/@@passwd',
+        ('/user/@@lookup', 'lookup', 'json'),
         '/user/{id}@@edit',
         #'/user/{id}@@passwd',
         ('/user/{id}', 'view'),
