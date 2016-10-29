@@ -17,6 +17,7 @@ class DBHandler(object):
     Group = user.Group
     User = user.User
     UserClass = user.UserClass
+    UserGroup = user.UserGroup
 
 
     def __init__(self, settings, tag='sqlalchemy.', initial = False):
