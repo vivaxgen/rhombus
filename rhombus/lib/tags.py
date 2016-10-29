@@ -543,12 +543,13 @@ class custom_submit_bar(htmltag):
 
 class selection_bar(object):
 
-    def __init__(self, prefix, action, add=None, others=''):
+    def __init__(self, prefix, action, add=None, others='', hiddens=[]):
         super().__init__()
         self.prefix = prefix
         self.action = action
         self.add = add
         self.others = others
+        self.hiddens = hiddens
 
     def render(self, html, jscode=''):
 
@@ -579,11 +580,22 @@ class selection_bar(object):
                 div(class_='btn-group')[ self.others ]
             )
 
+        if self.hiddens:
+            hiddens = div()
+            for (k, v) in self.hiddens:
+                hiddens.add(
+                    literal('<input type="hidden" name="%s" value="%s" />'
+                    % (k, v))
+                    )
+        else:
+            hiddens = ''
+
         sform = form(name="selection_bar", method='post', action=self.action)
         sform.add(
             div(id=self.prefix + '-modal', class_='modal fade', role='dialog', tabindex='-1'),
             button_bar,
-            html
+            html,
+            hiddens
         )
 
         return sform, jscode + selection_bar_js % { 'prefix': self.prefix }
