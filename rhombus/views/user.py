@@ -3,6 +3,8 @@ from rhombus.lib.utils import get_dbhandler
 from rhombus.views import *
 from rhombus.views.generics import error_page
 
+from sqlalchemy import or_
+
 @roles(SYSADM)
 def index(request):
 
@@ -304,6 +306,28 @@ def action_post(request):
 
     raise RuntimeError('FATAL - programming ERROR')
 
+
+@roles(PUBLIC)
+def lookup(request):
+    """ return JSON for autocomplete """
+    q = request.params.get('q')
+
+    if not q:
+        return error_page()
+
+    q = '%' + q.lower() + '%'
+
+    dbh = get_dbhandler()
+    users = dbh.User.query(dbh.session()).filter( or_( dbh.User.login.ilike(q),
+            dbh.User.lastname.ilike(q), dbh.User.firstname.ilike(q)) )
+
+    # formating for select2 consumption
+
+    result = [
+        { 'id': u.id, 'text': u.render()}
+        for u in users]
+    print(result)
+    return result
 
 
 def user_menu(request):
