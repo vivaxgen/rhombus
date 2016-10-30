@@ -48,6 +48,8 @@ def includeme( config ):
     add_route_view( config, 'rhombus.views.group', 'rhombus.group',
         '/group',
         '/group/@@action',
+        '/group/@@user_action',
+        '/group/@@role_action',
         '/group/@@lookup',
         '/group/{id}@@edit',
         '/group/{id}@@save',

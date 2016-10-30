@@ -1,7 +1,13 @@
 
 from rhombus.views import *
+from rhombus.lib.tags import button
+from rhombus.lib.modals import popup, modal_delete
 
 from rhombus.models.user import Group
+
+from pyramid.renderers import render
+
+from sqlalchemy import exc
 
 import json
 
@@ -72,11 +78,68 @@ def view(request):
                     ] for u in group.users ])
         ]
     ]
-    user_bar = selection_bar('user-ids', action=request.route_url('rhombus.group-action'))
+    user_bar = selection_bar('user-ids', action=request.route_url('rhombus.group-user_action'),
+            others = button(label="Add member",
+                        class_="btn btn-sm btn-success", id='group-add-member',
+                        name='_method', value='add-member', type='button'),
+            hiddens=[('group_id', group.id), ])
     user_table, user_js = user_bar.render(user_table)
-    user_table = div('User:',
+
+    content = div(class_='form-group')
+    content.add(
+            div('Login',
+                literal('''<select id="useradd_id" name="useradd_id" class='form-control' style='width:100%;'></select>'''),
+                 class_='col-md-7 col-md-offset-1'),
+            div('Role',
+                literal("<select id='useradd_role' name='useradd_role' class='form-control'>"
+                        "<option value='M' default>Member</option>"
+                        "<option value='A'>Admin</option>"
+                        "</select>"),
+                class_='col-md-3')
+        )
+    submit_button = submit_bar('Add member', 'add-member')
+
+    add_member_form = form( name='add-member-form', method='POST',
+                            action=request.route_url('rhombus.group-user_action'),
+                        )[  content,
+                            literal('<input type="hidden" name="group_id" value="%d"/>'
+                                % group.id),
+                            submit_button ]
+
+    user_table = div(
+        div(
+            literal( render("rhombus:templates/generics/popup.mako",
+            {   'title': 'Add group member',
+                'content': add_member_form,
+                'buttons': '',
+            }, request = request )),
+            id='add-member-modal', class_='modal fade', tabindex='-1', role='dialog'
+        ),
+        #add_user_html,
         user_table
         )
+
+    user_js = user_js + '''
+
+$.fn.modal.Constructor.prototype.enforceFocus = function () {};
+
+$('#group-add-member').click( function(e) {
+    $('#add-member-modal').modal('show');
+});
+
+''' +  '''
+  $('#useradd_id').select2( {
+        minimumInputLength: 3,
+        ajax: {
+            url: "%s",
+            dataType: 'json',
+            placeholder: 'Type name here',
+            data: function(params) { return { q: params.term }; },
+            processResults: function(data, params) { return { results: data }; }
+        },
+    });
+''' % request.route_url('rhombus.user-lookup')
+
 
     return render_to_response("rhombus:templates/group/view.mako",
         {   'group': group,
@@ -152,8 +215,181 @@ def save(request):
     raise NotImplementedError
 
 
-def action(requst):
-    raise NotImplementedError
+@roles(SYSADM)
+def action(request):
+
+    if request.POST:
+        return action_post(request)
+    return action_get(request)
+
+
+def action_get(request):
+    raise NotImplementedError()
+
+
+def action_post(request):
+
+    method = request.params.get('_method', None)
+    dbh = get_dbhandler()
+
+    if method == 'delete':
+
+        group_ids = [ int(x) for x in request.params.getall('group-ids') ]
+        groups = dbh.get_group( group_ids )
+
+        if len(groups) == 0:
+            return Response(modal_error)
+
+        return Response(
+            modal_delete(
+                title = 'Deleting Group(s)',
+                content = literal(
+                    'You are going to delete the following group(s):'
+                    '<ul>' +
+                    ''.join( '<li>%s | %s</li>' % (g.name, len(g.users))
+                                        for g in groups ) +
+                    '</ul>'
+                ),
+                request = request
+            ),
+            request = request
+        )
+
+    elif method == 'delete/confirm':
+
+        group_ids = [ int(x) for x in request.params.getall('group-ids') ]
+        group_names = []
+        for group in dbh.get_group( group_ids ):
+            group_names.append( group.name )
+            dbh.session().delete(group)
+
+        dbh.session().flush()
+        request.session.flash(
+            ('success', 'Group %s has been deleted successfully' % ','.join( group_names )))
+
+        return HTTPFound( location = request.referrer or request.route_url( 'rhombus.group'))
+
+    raise RuntimeError('FATAL - programming ERROR')
+
+
+@roles(SYSADM)
+def user_action(request):
+
+    method = request.params.get('_method', None)
+    dbh = get_dbhandler()
+
+    if request.POST and method == 'add-member':
+
+        useradd_id = int(request.params.get('useradd_id'))
+        group_id = int(request.params.get('group_id'))
+        role = request.params.get('useradd_role').upper()
+
+        user = dbh.get_user(useradd_id)
+        group = dbh.get_group(group_id)
+        user_login = user.login
+        group_name = group.name
+
+        try:
+            ug = dbh.UserGroup(user, group, role)
+            dbh.session().flush( [ug] )
+            request.session.flash(
+                ('success', 'User %s has been added to group %s as %s.' %
+                (user_login, group_name, { 'A': 'an admin', 'M': 'a member'}[role]) )
+            )
+
+
+        except exc.IntegrityError:
+            request.session.flash(
+                ('warning', 'User %s is already in the group %s.' %
+                    (user_login, group_name))
+            )
+
+        return HTTPFound(
+                location = request.referrer or request.route_url('rhombus.group'))
+
+    elif request.POST and method == 'delete':
+
+        user_ids = [ int(x) for x in request.params.getall('user-ids') ]
+        group_id = int(request.params.get('group_id'))
+
+        usergroups = dbh.UserGroup.query(dbh.session()).filter(
+            dbh.UserGroup.user_id.in_( user_ids), dbh.UserGroup.group_id == group_id)
+
+
+        if usergroups.count() == 0:
+            return Response(modal_error)
+
+        return Response(
+            modal_delete(
+                title = 'Removing Member(s)',
+                content = literal(
+                    'You are going to remove the following user(s) from group:'
+                    '<ul>' +
+                    ''.join( '<li>%s</li>' % ug.user.render() for ug in usergroups ) +
+                    '</ul>'
+                ),
+                request = request
+            ),
+            request = request
+        )
+
+    elif request.POST and method == 'delete/confirm':
+
+        user_ids = [ int(x) for x in request.params.getall('user-ids') ]
+        group_id = int(request.params.get('group_id'))
+
+        usergroups = dbh.UserGroup.query(dbh.session()).filter(
+            dbh.UserGroup.user_id.in_( user_ids), dbh.UserGroup.group_id == group_id)
+
+        logins = []
+        for ug in usergroups:
+            logins.append( ug.user.render() )
+            dbh.session().delete( ug )
+
+        dbh.session.flush()
+        request.session.flash(
+            ('success', 'User(s) %s has been removed successfully' % '; '.join( logins )))
+
+        return HTTPFound( location = request.referrer or request.route_url( 'rhombus.group'))
+
+    raise RuntimeError('FATAL - programming ERROR')
+
+
+@roles(SYSADM)
+def role_action(request):
+
+    method = request.params.get('_method', None)
+    dbh = get_dbhandler()
+
+    if request.POST and method == 'add-role':
+
+        roleadd_id = int(request.params.get('roleadd_id'))
+        group_id = int(request.params.get('group_id'))
+
+        user = dbh.get_user(useradd_id)
+        group = dbh.get_group(group_id)
+        user_login = user.login
+        group_name = group.name
+
+        try:
+            ug = dbh.UserGroup(user, group, role)
+            dbh.session().flush( [ug] )
+            request.session.flash(
+                ('success', 'User %s has been added to group %s as %s.' %
+                (user_login, group_name, { 'A': 'an admin', 'M': 'a member'}[role]) )
+            )
+
+
+        except exc.IntegrityError:
+            request.session.flash(
+                ('warning', 'User %s is already in the group %s.' %
+                    (user_login, group_name))
+            )
+
+        return HTTPFound(
+                location = request.referrer or request.route_url('rhombus.group'))
+
+    raise RuntimeError('FATAL - programming ERROR')
 
 
 def lookup(request):
