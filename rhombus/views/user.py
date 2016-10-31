@@ -313,7 +313,7 @@ def lookup(request):
     q = request.params.get('q')
 
     if not q:
-        return error_page()
+        return error_page(request)
 
     q = '%' + q.lower() + '%'
 
@@ -326,7 +326,7 @@ def lookup(request):
     result = [
         { 'id': u.id, 'text': u.render()}
         for u in users]
-    print(result)
+
     return result
 
 
