@@ -1,5 +1,6 @@
 
 from rhombus.views import *
+from rhombus.views.generics import error_page
 
 
 @roles( PUBLIC )
@@ -20,7 +21,7 @@ def view(request):
     dbh = get_dbhandler()
     ek = dbh.EK.get(ek_id, dbh.session())
     if not ek:
-        return error_page()
+        return error_page(request)
 
     return render_to_response('rhombus:templates/ek/view.mako',
             { 'ek': ek }, request = request )
@@ -35,7 +36,7 @@ def edit(request):
     dbh = get_dbhandler()
     ek_id = int(request.matchdict.get('id', -1))
     if ek_id < 0:
-        return error_page()
+        return error_page(request)
     if ek_id == 0:
         ek = dbh.EK()
         ek.id = 0
@@ -63,7 +64,7 @@ def save(request):
     else:
         db_ek = dbh.EK.get(ek_id)
         if not db_ek:
-            return error_page()
+            return error_page(request)
         db_ek.update( ek )
 
     if ek_id != 0:
@@ -111,8 +112,32 @@ def parse_form( d, dbh ):
     return ek
 
 
+@roles( SYSADM )
 def lookup(request):
-    raise NotImplementedError
+    """ return JSON for autocomplete """
+    q = request.params.get('q')
+    g = request.params.get('g','')
+    dbh = get_dbhandler()
+    g_key = dbh.get_ekey(g)
+
+    if not g_key:
+        return error_page(request, "Parent EK not found!")
+
+    if not q:
+        return error_page(request, "Please provide the query as q.")
+
+    q = '%' + q.lower() + '%'
+
+    ekeys = dbh.EK.query(dbh.session()).filter( dbh.EK.key.ilike(q),
+            dbh.EK.member_of_id == g_key.id)
+
+    # formating for select2 consumption
+
+    result = [
+        { 'id': k.id, 'text': '%s [ %s ]' % (k.key, k.desc) }
+        for k in ekeys]
+
+    return result
 
 
 @roles( SYSADM, EK_MODIFY, EK_DELETE )

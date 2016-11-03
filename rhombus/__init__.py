@@ -59,7 +59,7 @@ def includeme( config ):
     add_route_view( config, 'rhombus.views.ek', 'rhombus.ek',
         '/ek',
         '/ek/@@action',
-        '/ek/@@lookup',
+        ('/ek/@@lookup', 'lookup', 'json'),
         '/ek/{id}@@edit',
         '/ek/{id}@@save',
         ('/ek/{id}', 'view'),
