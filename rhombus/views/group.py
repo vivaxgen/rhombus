@@ -61,8 +61,60 @@ def view(request):
             ])
         ]
     ]
-    role_bar = selection_bar('role-ids', action=request.route_url('rhombus.group-action'))
+    role_bar = selection_bar('role-ids', action=request.route_url('rhombus.group-role_action'),
+            others = button(label="Add role",
+                        class_="btn btn-sm btn-success", id='group-add-role',
+                        name='_method', value='add-role', type='button'),
+            hiddens=[('group_id', group.id), ])
     role_table, role_js = role_bar.render(role_table)
+
+    role_content = div(class_='form-group')
+    role_content.add(
+            div('Role',
+                literal('''<select id="roleadd_id" name="roleadd_id" class='form-control' style='width:100%;'></select>'''),
+                 class_='col-md-9 col-md-offset-1'),
+        )
+    submit_button = submit_bar('Add role', 'add-role')
+
+    add_role_form = form( name='add-role-form', method='POST',
+                            action=request.route_url('rhombus.group-role_action'),
+                        )[  role_content,
+                            literal('<input type="hidden" name="group_id" value="%d"/>'
+                                % group.id),
+                            submit_button ]
+
+    role_table = div(
+        div(
+            literal( render("rhombus:templates/generics/popup.mako",
+            {   'title': 'Add role',
+                'content': add_role_form,
+                'buttons': '',
+            }, request = request )),
+            id='add-role-modal', class_='modal fade', tabindex='-1', role='dialog'
+        ),
+        role_table
+    )
+
+    role_js = role_js + '''
+
+$.fn.modal.Constructor.prototype.enforceFocus = function () {};
+
+$('#group-add-role').click( function(e) {
+    $('#add-role-modal').modal('show');
+});
+
+''' +  '''
+  $('#roleadd_id').select2( {
+        minimumInputLength: 3,
+        ajax: {
+            url: "%s",
+            dataType: 'json',
+            placeholder: 'Type role here',
+            data: function(params) { return { q: params.term, g: "@ROLES" }; },
+            processResults: function(data, params) { return { results: data }; }
+        },
+    });
+''' % request.route_url('rhombus.ek-lookup')
 
     user_table = table(class_='table table-condensed table-striped')[
         thead()[
@@ -366,28 +418,73 @@ def role_action(request):
         roleadd_id = int(request.params.get('roleadd_id'))
         group_id = int(request.params.get('group_id'))
 
-        user = dbh.get_user(useradd_id)
+        ek = dbh.EK.get(roleadd_id, dbh.session())
         group = dbh.get_group(group_id)
-        user_login = user.login
+        ek_key = ek.key
         group_name = group.name
 
         try:
-            ug = dbh.UserGroup(user, group, role)
-            dbh.session().flush( [ug] )
+            group.roles.append( ek )
+            dbh.session().flush( [group] )
             request.session.flash(
-                ('success', 'User %s has been added to group %s as %s.' %
-                (user_login, group_name, { 'A': 'an admin', 'M': 'a member'}[role]) )
+                ('success', 'Role %s has been added to group %s.' %
+                    (ek_key, group_name))
             )
 
 
         except exc.IntegrityError:
             request.session.flash(
-                ('warning', 'User %s is already in the group %s.' %
-                    (user_login, group_name))
+                ('warning', 'Role %s is already in the group %s.' %
+                    (ek_key, group_name))
             )
 
         return HTTPFound(
                 location = request.referrer or request.route_url('rhombus.group'))
+
+    elif request.POST and method == 'delete':
+
+        role_ids = [ int(x) for x in request.params.getall('role-ids') ]
+        group_id = int(request.params.get('group_id'))
+
+        eks = [ dbh.EK.get(role_id, dbh.session()) for role_id in role_ids ]
+
+
+        if len(eks) == 0:
+            return Response(modal_error)
+
+        return Response(
+            modal_delete(
+                title = 'Removing Role(s)',
+                content = literal(
+                    'You are going to remove the following role(s) from group:'
+                    '<ul>' +
+                    ''.join( '<li>%s</li>' % ek.key for ek in eks ) +
+                    '</ul>'
+                ),
+                request = request
+            ),
+            request = request
+        )
+
+    elif request.POST and method == 'delete/confirm':
+
+        role_ids = [ int(x) for x in request.params.getall('role-ids') ]
+        group_id = int(request.params.get('group_id'))
+
+        eks = [ dbh.EK.get(role_id, dbh.session()) for role_id in role_ids ]
+        group = dbh.get_group(group_id)
+
+        removes = []
+        for ek in eks:
+            group.roles.remove( ek )
+            removes.append( ek.key )
+
+        dbh.session.flush([group])
+        request.session.flash(
+            ('success', 'Role(s) %s has been removed successfully' % '; '.join( removes )))
+
+        return HTTPFound( location = request.referrer or request.route_url( 'rhombus.group'))
+
 
     raise RuntimeError('FATAL - programming ERROR')
 
