@@ -90,9 +90,36 @@ class UUID(types.TypeDecorator):
         else:
             return value.bytes
 
+    @staticmethod
+    def _coerce(value):
+        if value and not isinstance(value, uuid.UUID):
+            try:
+                value = uuid.UUID(value)
+
+            except (TypeError, ValueError):
+                value = uuid.UUID(bytes=value)
+
+        return value
+
+    def process_bind_param(self, value, dialect):
+        if value is None:
+            return value
+
+        if not isinstance(value, uuid.UUID):
+            value = self._coerce(value)
+
+        if dialect.name == 'postgresql':
+            return str(value)
+
+        return value.bytes #if self.binary else value.hex
+
     def process_result_value(self, value, dialect):
         if value is None:
             return value
+
+        if dialect.name == 'postgresql':
+            if isinstance(value, uuid.UUID):
+                return value
         else:
             return uuid.UUID(bytes=value)
 
