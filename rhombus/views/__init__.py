@@ -11,22 +11,32 @@ from rhombus.lib.utils import get_dbhandler
 from rhombus.lib.tags import *
 
 
+class not_roles(object):
+
+    def __init__(self, *role_list):
+        self.not_roles = role_list
+
 
 class roles(object):
 
     def __init__(self, *role_list):
-        if role_list:
-            self.roles = role_list
-        else:
-            self.roles = ()
+        self.allowed = []
+        self.disallowed = []
+        for role in role_list:
+            if isinstance(role, not_roles):
+                self.disallowed.extend(role.not_roles)
+            else:
+                self.allowed.append(role)
 
     def __call__(self, wrapped):
-        if self.roles:
+        if self.allowed or self.disallowed:
             # need to check the roles
             def _view_with_roles(request, **kw):
-                if PUBLIC in self.roles and request.user:
+                if request.user and request.user.has_roles(*self.disallowed):
+                    return Response('Forbidden')
+                if PUBLIC in self.allowed and request.user:
                     return wrapped(request, **kw)
-                if not (request.user and request.user.has_roles(*self.roles)):
+                if not (request.user and request.user.has_roles(*self.allowed)):
                     return Response('Forbidden')
                 return wrapped(request, **kw)
             return _view_with_roles
