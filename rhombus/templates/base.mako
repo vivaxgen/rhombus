@@ -9,6 +9,7 @@
   </script>
 
 % else:
+<%! from rhombus.views.user import user_menu %>
 <!DOCTYPE html>
 <html lang="en">
   <head>
@@ -26,8 +27,37 @@
 
   </head>
   <body>
+
+    <!-- Static navbar -->
+    <nav class="navbar navbar-default navbar-static-top">
+      <div class="container-fluid">
+        <div class="navbar-header">
+          <button type="button" class="navbar-toggle collapsed" data-toggle="collapse" data-target="#navbar" aria-expanded="false" aria-controls="navbar">
+            <span class="sr-only">Toggle navigation</span>
+            <span class="icon-bar"></span>
+            <span class="icon-bar"></span>
+            <span class="icon-bar"></span>
+          </button>
+          <a class="navbar-brand" href="/">${request.get_resource('rhombus.title', 'RHOMBUS')}</a>
+        </div>
+
+
+        <div id="navbar" class="navbar-collapse collapse">
+          ${user_menu(request)}
+        </div><!--/.nav-collapse -->
+      </div>
+    </nav>
+
     <div class="container-fluid">
-    ${next.body()}
+
+      <div class="row">
+      ${flash_msg()}
+      </div>
+
+      <div class="row"><div class="col-md-12">
+        ${next.body()}
+      </div>
+
     </div>
 
   ${self.scriptlinks()}
