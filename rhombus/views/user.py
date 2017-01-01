@@ -332,6 +332,9 @@ def lookup(request):
 
 def user_menu(request):
     """ return a HTML for user menu, bootstrap-based """
+    authhost = request.registry.settings.get('rhombus.authhost', '')
+    url_login = authhost + '/login'
+    url_logout = authhost + '/logout'
     user_menu_html = ul(class_ = 'nav navbar-nav navbar-right')
     if request.user:
         user_menu_list = li(class_ = "active dropdown" )[
@@ -348,16 +351,16 @@ def user_menu(request):
                 ul(class_='dropdown-menu')[
                     li(a('Change password',
                             href=request.route_url('rhombus.user-passwd')))
-                        if not request.user.has_roles(GUEST) else '',
+                        if not (request.user.has_roles(GUEST) or authhost) else '',
                     li(a('Management', href=request.route_url('rhombus.dashboard')))
                         if request.user.has_roles(SYSADM) else '',
-                    li(a('Logout', href='/logout'))
+                    li(a('Logout', href=url_logout))
                 ]
 
             ]
     else:
         user_menu_list = li(class_ = 'active dropdown')[
-                a(href='/login')[
+                a(href=url_login)[
                     span(class_='fa fa-sign-in'),
                     ' Login '
                 ]
