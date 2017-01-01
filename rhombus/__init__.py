@@ -21,6 +21,8 @@ import dogpile.cache.util
 from rhombus.lib.utils import cout, cerr, get_dbhandler
 from rhombus.lib import helpers as h
 
+from rhombus.scripts import run
+
 
 def includeme( config ):
 
@@ -43,7 +45,9 @@ def includeme( config ):
 
     if config.route_prefix:
         config.add_route('rhombus.dashboard', '/')
-        config.add_view('rhombus.views.dashboard.index', route_name = 'rhombus.dashboard')
+    else:
+        config.add_route('rhombus.dashboard', '/dashboard')
+    config.add_view('rhombus.views.dashboard.index', route_name='rhombus.dashboard')
 
     add_route_view( config, 'rhombus.views.group', 'rhombus.group',
         '/group',
@@ -81,6 +85,12 @@ def includeme( config ):
         #'/user/{id}@@passwd',
         ('/user/{id}', 'view'),
     )
+
+    # check if we are running as master
+    if settings.get('rhombus.authmode', None) == 'master':
+        config.add_route('confirm', '/confirm')
+        config.add_view('rhombus.views.home.confirm', route_name = 'confirm',
+                renderer = 'json')
 
 
 def add_route_view( config, view_module, prefix_name, *routelist):
@@ -132,18 +142,24 @@ def init_app(global_config, settings, prefix=None, dbhandler_factory = get_dbhan
     # init database
     dbh = dbhandler_factory( settings )
 
+    parent_domain = True if ( settings.get('rhombus.authmode', None) == 'master' or
+                    settings.get('rhombus.authhost', None) ) else False
+
     auth_policy = AuthTktAuthenticationPolicy(
         secret = settings['rhombus.authsecret'],
-        callback = lambda req, uid: req.user(),
+        callback = authenticate_user,
+        parent_domain = parent_domain,
         hashalg = 'sha512' )
 
     config = Configurator(settings = settings,
         authentication_policy = auth_policy)
 
     config.set_request_factory(RhoRequest)
-    config.add_request_method(userobj_factory(authcache), 'user', reify=True)
-    config.add_request_method(userobj_setter(authcache), 'set_user')
-    config.add_request_method(userobj_deleter(authcache), 'del_user')
+    config.add_request_method(auth_cache_factory(authcache), 'auth_cache', reify=True)
+    config.add_request_method(get_userobj, 'user', reify=True)
+    config.add_request_method(set_userobj, 'set_user')
+    config.add_request_method(del_userobj, 'del_user')
+    config.add_request_method(get_authenticated_userobj, 'get_authenticated_userobj')
 
     config.add_subscriber( add_global, BeforeRender )
 
@@ -215,6 +231,92 @@ class RhoRequest(Request):
         return self.registry.settings.get(resource_name, default)
 
 
+def authenticate_user(user_id, request):
+    """ this will only be called during request.authenticated_userid """
+
+    return request.get_authenticated_userobj(user_id)
+
+
+def auth_cache_factory(auth_cache):
+
+    def get_auth_cache(request):
+
+        return auth_cache
+
+    return get_auth_cache
+
+
+def get_authenticated_userobj(request, user_id):
+
+    dbh = get_dbhandler()
+    db_session = dbh.session()
+    if user_id is None:
+        db_session.user = None
+        return None
+
+    # get userinstance from current dogpile.cache
+    auth_cache = request.auth_cache
+    key = user_id.encode('ASCII')
+    userinstance = auth_cache.get(key, None)
+    if not userinstance and 'rhombus.authhost' in request.registry.settings:
+        # in slave mode - check user existence here first
+        login, userclass, stamp = user_id.split('|')
+        user = dbh.get_user('%s/%s' % (login, userclass))
+        if user.userclass.domain != userclass:
+            raise RuntimeError('Error 3439')
+
+        # verify to authentication host
+        confirmation = confirm_userid(request.registry.settings['rhombus.authhost'], user_id)
+        if confirmation[0]:
+            # set user
+            userinstance = user.user_instance()
+            auth_cache.set(key, userinstance)
+    db_session.user = userinstance or None
+
+    return userinstance
+
+
+def get_userobj(request):
+
+    if request.authenticated_userid:
+        user_id = request.authenticated_userid
+        ui = get_dbhandler().session().user
+        return ui
+
+    return None
+
+
+def set_userobj(request, user_id, userinstance):
+
+    if request.registry.settings.get('rhombus.authmode',None) != 'master':
+        raise RuntimeError( 'ERR: only server with Rhombus authmode as master can set '
+                            'user instance!')
+
+    user_id = user_id.encode('ASCII')
+    request.auth_cache.set(user_id, userinstance)
+
+
+def del_userobj(request):
+
+    if request.registry.settings['rhombus.authmode'] != 'master':
+        raise RuntimeError( 'ERR: only server with Rhombus authmode as master can delete '
+                            'user instance!')
+
+    user_id = request.unauthenticated_userid
+    if user_id is None:
+        return
+
+    user_id = user_id.encode('ASCII')
+    request.auth_cache.delete(user_id)
+
+
+def hasrole_userobj(request, *roles):
+
+    userinstance = request.user
+    if userinstance:
+        return userinstance.has_role( *roles )
+    return False
+
 
 def userobj_factory(auth_cache):
 
@@ -241,7 +343,7 @@ def userobj_setter(auth_cache):
 
     def set_userobj(request, user_id, userinstance):
 
-        if request.registry.settings['rhombus.authmode'] != 'master':
+        if request.registry.settings.get('rhombus.authmode',None) != 'master':
             raise RuntimeError( 'ERR: only server with Rhombus authmode as master can set '
                                 'user instance!')
 
@@ -279,6 +381,12 @@ def userobj_checker(auth_cache):
         return False
 
     return hasrole_userobj
+
+
+def confirm_userid(url, userid):
+    import requests
+    r = requests.get(url+'/confirm', params = { 'principal': userid })
+    return r.json()
 
 
 def override_assets( config, settings, asset_list ):
