@@ -11,6 +11,7 @@ from pyramid.paster import (
 
 from rhombus.scripts import execute, set_config, get_greet, get_usage
 from rhombus.models import init_db
+from rhombus.models.handler import DBHandler
 
 def greet():
     print('rhombus-run - Rhombus script utility')
@@ -21,7 +22,7 @@ def usage():
     print('\t%s scriptname [options]' % sys.argv[0])
     sys.exit(0)
 
-set_config( greet = greet, usage = usage )
+set_config( environ='RHOMBUS_CONFIG', greet = greet, usage = usage, dbhandler_class = DBHandler )
 
 
 def main():
