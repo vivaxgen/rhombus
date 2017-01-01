@@ -56,7 +56,7 @@ def login(request):
         userinstance = userclass.auth_user( login, passwd )
 
         if userinstance is not None:
-            login = userinstance.login + '|' + str(time.time())
+            login = userinstance.login + '|' + userclass_name + '|' + str(time.time())
             request.set_user(login, userinstance)
             headers = remember(request, login)
             return HTTPFound( location = came_from,
@@ -73,6 +73,36 @@ def login(request):
 def logout(request):
     request.del_user()
     headers = forget(request)
+    if request.registry.settings.get('rhombus.authmode', None) == 'master':
+        redirect = request.params.get('redirect', None)
+        if not redirect:
+            redirect = request.referrer or '/'
+        return HTTPFound( location = redirect, headers = headers )
     return HTTPFound( location='/',
                         headers = headers )
+
+
+def confirm(request):
+
+    principal = request.params.get('principal', '')
+    print('confirmation request for:', principal)
+    userinfo = request.params.get('userinfo', 0)
+    if not principal:
+        return [False, []]
+
+    key = principal.encode('ASCII')
+    userinstance = request.get_auth_cache().get(key, None)
+
+    if not userinstance:
+        return [False, []]
+
+    if userinfo and userinstance:
+        dbh = get_dbhandler()
+        user = dbh.get_user( userinstance.id )
+        userinfo = [ user.lastname, user.firstname, user.email, user.institution ]
+    else:
+        userinfo = []
+
+    return [True, userinfo]
+
 
