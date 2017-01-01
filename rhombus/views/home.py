@@ -78,7 +78,8 @@ def logout(request):
         if not redirect:
             redirect = request.referrer or '/'
         return HTTPFound( location = redirect, headers = headers )
-    return HTTPFound( location='/',
+    redirect = request.referrer or '/'
+    return HTTPFound( location=redirect,
                         headers = headers )
 
 
@@ -91,7 +92,7 @@ def confirm(request):
         return [False, []]
 
     key = principal.encode('ASCII')
-    userinstance = request.get_auth_cache().get(key, None)
+    userinstance = request.auth_cache.get(key, None)
 
     if not userinstance:
         return [False, []]
