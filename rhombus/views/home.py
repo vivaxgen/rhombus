@@ -107,3 +107,20 @@ def confirm(request):
     return [True, userinfo]
 
 
+def rhombus_css(request):
+
+    user = request.user
+    if user:
+        # unauthenticated_userid == autheticated_userid
+        key = request.unauthenticated_userid.decode('ASCII')
+        # refresh cache expiration
+        request.auth_cache.set(key, user)
+
+    return ""
+
+
+def rhombus_js(request):
+
+    return rhombus_css(request)
+
+
