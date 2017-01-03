@@ -91,6 +91,12 @@ def includeme( config ):
         config.add_route('confirm', '/confirm')
         config.add_view('rhombus.views.home.confirm', route_name = 'confirm',
                 renderer = 'json')
+        config.add_route('rhombus_js', '/auth-stamp.js')
+        config.add_view('rhombus.views.home.rhombus_js', route_name = 'rhombus_js'.
+                renderer = 'string')
+        config.add_route('rhombus_css', '/auth-stamp.css')
+        config.add_view('rhombus.views.home.rhombus_js', route_name = 'rhombus_css'.
+                renderer = 'string')
 
 
 def add_route_view( config, view_module, prefix_name, *routelist):
