@@ -198,7 +198,7 @@ class User(Base):
             if 'contact' in u:
                 self.contact = u['contact']
             if 'primarygroup_id' in u:
-                self.primarygroup_id = u['primarygroup_id']
+                self.set_primarygroup(u['primarygroup_id'])
 
         else:
             self.lastname = u.lastname
@@ -207,10 +207,32 @@ class User(Base):
             self.institution = u.institution
             self.address = u.address
             self.contact = u.contact
+            if u.primarygroup_id:
+                self.set_primarygroup(u.primarygroup_id)
 
 
     def fullname(self):
         return '%s, %s' % (self.lastname, self.firstname)
+
+
+    def set_primarygroup(self, grp):
+        if type(grp) == int:
+            primarygroup_id = grp
+        else:
+            primarygroup_id = grp.id
+
+        session = object_session(self)
+
+        if self.primarygroup_id:
+            if self.primarygroup_id == primarygroup_id:
+                return
+
+            # remove from previous group
+            UserGroup.delete(session, self.id, self.primarygroup_id)
+
+        self.primarygroup_id = primarygroup_id
+        UserGroup.add(session, self.id, primarygroup_id)
+
 
     @staticmethod
     def search(login, userclass=None, session=None):
@@ -425,6 +447,22 @@ class UserGroup(Base):
         self.user = user
         self.group = group
         self.role = role
+
+    @staticmethod
+    def add(session, user, group, role='M'):
+        if type(user) == int:
+            user = User.get(user, session)
+        if type(group) == int:
+            group = Group.get(group, session)
+        ug = UserGroup(user, group, role)
+        session.add( ug )
+
+
+    @staticmethod
+    def delete(session, user_id, group_id):
+        ug = UserGroup.query(session).filter(UserGroup.user_id == user_id,
+                    UserGroup.group_id == group_id).one()
+        session.delete( ug )
 
 
 @registered
