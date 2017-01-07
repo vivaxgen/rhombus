@@ -394,11 +394,19 @@ def user_action(request):
             dbh.UserGroup.user_id.in_( user_ids), dbh.UserGroup.group_id == group_id)
 
         logins = []
+        failed_logins = []
         for ug in usergroups:
+            if ug.user.primarygroup_id == ug.group_id:
+                failed_logins.append(
+                    'Warning: cannot remove user %s because group %s is the primary group'
+                    % (ug.user.login, ug.group.name))
+                continue
             logins.append( ug.user.render() )
             dbh.session().delete( ug )
 
         dbh.session.flush()
+        for failed_login in failed_logins:
+            request.session.flash('error', failed_login)
         request.session.flash(
             ('success', 'User(s) %s has been removed successfully' % '; '.join( logins )))
 
