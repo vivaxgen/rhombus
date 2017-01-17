@@ -100,6 +100,13 @@ def includeme( config ):
     config.add_view('rhombus.views.home.rhombus_js', route_name = 'rhombus_css',
             renderer = 'string')
 
+    # for override assets
+    override_assets( config, settings,
+        [
+        ('override.loginpage', 'rhombus:templates/login.mako'),
+        ]
+    )
+
 
 def add_route_view( config, view_module, prefix_name, *routelist):
     for route_args in routelist:
@@ -405,8 +412,10 @@ def override_assets( config, settings, asset_list ):
                 be override using config file
     """
 
-    for cfg, asset, default_override in asset_list:
-        override = settings.get(cfg, default_override)
+    for cfg, asset in asset_list:
+        override = settings.get(cfg, asset)
+        if override == asset:
+            continue
         print("Overriding asset [%s] with [%s]" % (asset, override))
         config.override_asset(
                 to_override = asset,
