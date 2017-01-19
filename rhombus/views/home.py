@@ -35,7 +35,7 @@ def login(request):
 
     msg = None
     referrer = request.referrer
-    came_from = request.params.get('came_from', referrer)
+    came_from = request.params.get('came_from', referrer) or '/'
     userclass_name = request.params.get('userclass', None)
     if came_from == '/login':
         came_from = '/'
@@ -43,7 +43,7 @@ def login(request):
     if '/' in login:
         login, userclass_name = login.split('/')
     elif userclass_name is None:
-        userclass_name = '_SYSTEM_'
+        userclass_name = request.registry.settings.get('default.userclass','_SYSTEM_')
 
     dbh = get_dbhandler()
 
