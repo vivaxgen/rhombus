@@ -39,7 +39,9 @@ def includeme( config ):
     # configure exception views if debugtoolbar is not enabled
     settings = config.get_settings()
     if 'debugtoolbar.includes' not in settings:
+        cerr('WARN: setting up in full deployment configuration!')
         config.add_view('rhombus.views.generics.usererror_page', context=RuntimeError)
+        config.add_view('rhombus.views.generics.syserror_page', context=Exception)
 
     # configure routes & views
 

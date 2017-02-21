@@ -15,7 +15,7 @@ def syserror_page(exc, request):
     transaction.abort()
     text = exc.args[0] if exc.args else ""
     return render_to_response('rhombus:templates/generics/syserror_page.mako',
-        { 'text': text } )
+        { 'text': text }, request = request )
 
 def usererror_page(exc, request):
     transaction.abort()
