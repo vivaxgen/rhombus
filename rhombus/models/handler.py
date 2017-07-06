@@ -3,7 +3,7 @@ import sys
 
 from rhombus.lib.utils import cerr, cout
 from rhombus.models import (core, meta, ek, user, actionlog, filemgr)
-from sqlalchemy import engine_from_config
+from sqlalchemy import engine_from_config, event
 
 cinfo = print
 
@@ -25,6 +25,10 @@ class DBHandler(object):
         cinfo("Connecting to database..")
 
         self.engine = engine_from_config(settings, tag)
+
+        # check if SQLite, then set pragma
+        if self.engine.name.startswith('sqlite'):
+            event.listen(self.engine, 'connect', meta.set_sqlite_pragma)
 
         use_logger = False
         if 'rhombus.data_logger' in settings:
