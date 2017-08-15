@@ -17,3 +17,8 @@
   </body>
 </html>
 
+##
+<%def name='jscode()'>
+</%def>
+
+
