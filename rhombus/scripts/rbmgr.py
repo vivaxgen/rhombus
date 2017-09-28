@@ -43,6 +43,12 @@ def init_argparser( parser = None):
     p.add_argument('--exportenumkey', default=False,
         help = 'export enumerated key to YAML file')
 
+    p.add_argument('--listuserclass', default=False, action='store_true',
+        help = 'list user class(es)')
+
+    p.add_argument('--listuser', default=False, action='store_true',
+        help = 'list user(s) from a userclass')
+
     # ekeys
 
     p.add_argument('--listenumkey', default=False, action='store_true')
@@ -143,6 +149,12 @@ def do_rbmgr(args, settings, dbh = None):
 
     elif args.addenumkey:
         do_addenumkey(args, dbh, settings)
+
+    elif args.listuserclass:
+        do_listuserclass(args, dbh, settings)
+
+    elif args.listuser:
+        do_listuser(args, dbh, settings)
 
     else:
         return False
@@ -260,3 +272,17 @@ def do_importgroup(args, dbh, settings):
     Group.bulk_insert(groups, dbsession=dbh.session())
 
 
+def do_listuserclass(args, dbh, settings):
+
+    cerr('List user class(es):')
+
+    for uc in dbh.UserClass.query(dbh.session()):
+        cout(' %s' % uc.domain)
+
+
+def do_listuser(args, dbh, settings):
+
+    cerr('List user from user class: %s' % args.userclass)
+
+    for u in dbh.get_userclass(args.userclass).users:
+        cout(' %s' % u.login)
