@@ -59,13 +59,16 @@ class htmltag(object):
         return identifier in self.elements
 
 
-    def attributes(self):
+    def attributes(self, attrs_only=False):
         attrs = []
-        if self.name or self.id:
-            attrs.append('name="%s" id="%s"' % (escape(self.name or self.id),
-                        escape(self.id or self.name)))
-        if self.class_:
-            attrs.append('class="%s"' % escape(self.class_))
+        if not attrs_only:
+
+            if self.name or self.id:
+                attrs.append('name="%s" id="%s"' % (escape(self.name or self.id),
+                            escape(self.id or self.name)))
+            if self.class_:
+                attrs.append('class="%s"' % escape(self.class_))
+                
         for (key, val) in self.attrs.items():
             attrs.append('%s="%s"' % (escape(key), escape(val)))
         return ' '.join(attrs)
@@ -253,6 +256,7 @@ class input_select(input_text):
                     class_label = 'col-md-%d control-label' % self.offset,
                     class_value = 'col-md-%d' % self.size,
                     class_input = 'form-control',
+                    attrs = self.attributes(attrs_only=True),
                     extra_control = literal(self.extra_control) if self.extra_control else '',
                 ))
         return self.div_wrap(html)
@@ -653,7 +657,7 @@ input_textarea_template = '''\
 input_select_template = '''\
   <label class='{class_label}' for='{name}'>{label}</label>
   <div class='{class_value}'>
-    <select id='{name}' name='{name}' class='{class_input}' {multiple}>
+    <select id='{name}' name='{name}' class='{class_input}' {multiple} {attrs}>
     {options}
     </select>
     {extra_control}
