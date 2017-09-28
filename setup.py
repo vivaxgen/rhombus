@@ -21,7 +21,9 @@ requires = [
     'PyYAML',
     'passlib',
     'dogpile.cache',
-    'webhelpers2'
+    'webhelpers2',
+    'pyramid_exclog',
+    'requests',
     ]
 
 setup(name='rhombus',
@@ -48,5 +50,8 @@ setup(name='rhombus',
       main = rhombus:main
       [console_scripts]
       rhombus-run = rhombus.scripts.run:main
+
+      [pyramid.scaffold]
+      rhombus = rhombus.scaffolds:RhombusTemplate
       """,
       )
