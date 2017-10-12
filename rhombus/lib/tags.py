@@ -8,9 +8,9 @@ GET = 'get'
 class htmltag(object):
 
     def __init__(self, **kwargs):
-        self.name = kwargs.get('name', '').strip()
+        self.set_name(kwargs.get('name', '').strip())
         self.class_ = escape(kwargs.get('class_', ''))
-        self.id = kwargs.get('id', '').strip()
+        self.set_name(kwargs.get('id', '').strip())
         if not self.id:
             self.id = self.name
         self.container = None
@@ -22,6 +22,16 @@ class htmltag(object):
             if key in ['name', 'class_', 'id']:
                 continue
             self.attrs[key] = val
+
+
+    def set_name(self, name):
+        self.name = name
+
+
+    def set_id(self, an_id):
+        self.id = an_id
+        if not self.id:
+            self.id = self.name
 
 
     def get_container(self):
@@ -527,13 +537,18 @@ class custom_submit_bar(htmltag):
         super().__init__()
         self.buttons = args
         self.offset=3
+        self.hide = False
 
     def set_offset(self, offset):
         self.offset = offset
         return self
 
+    def set_hide(self, flag):
+        self.hide = flag
+        return self
+
     def __str__(self):
-        html = div(class_='form-group')
+        html = div(class_='form-group', style='display: none' if self.hide else '')
         buttons = div(class_='col-md-10 col-md-offset-%d' % self.offset)
         for b in self.buttons:
             buttons.add(
