@@ -10,9 +10,9 @@ class htmltag(object):
     def __init__(self, **kwargs):
         self.set_name(kwargs.get('name', '').strip())
         self.class_ = escape(kwargs.get('class_', ''))
-        self.set_name(kwargs.get('id', '').strip())
-        if not self.id:
-            self.id = self.name
+        self.set_id(kwargs.get('id', '').strip())
+        #if not self.id:
+        #    self.id = self.name
         self.container = None
         self.contents = []
         self.elements = {}
