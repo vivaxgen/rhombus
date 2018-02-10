@@ -109,6 +109,14 @@ def includeme( config ):
         ]
     )
 
+    if 'override.assets' in settings:
+        assets = settings['override.assets']
+        for asset in assets.split('\n'):
+            if not asset: continue
+            asset_pair = [ a.strip() for a in asset.split('>') ]
+            print('overriding: %s >> %s' % (asset_pair[0], asset_pair[1]) )
+            config.override_asset( asset_pair[0], asset_pair[1] )
+
 
 def add_route_view( config, view_module, prefix_name, *routelist):
     for route_args in routelist:
@@ -135,7 +143,8 @@ def add_route_view( config, view_module, prefix_name, *routelist):
 
 
 
-def init_app(global_config, settings, prefix=None, dbhandler_factory = get_dbhandler):
+def init_app(global_config, settings, prefix=None, dbhandler_factory = get_dbhandler
+                , include = None, include_tags = None):
     """ initialize application
 
         it is encouraged to execute the following method first if it is demeed necessary
@@ -181,6 +190,18 @@ def init_app(global_config, settings, prefix=None, dbhandler_factory = get_dbhan
     config.add_subscriber( add_global, BeforeRender )
 
     config.include( includeme, prefix )
+
+    if include:
+        config.include(include)
+
+    if include_tags:
+        import importlib
+        for tag in include_tags:
+            for include_module in settings[tag].split():
+                if not include_module: continue
+                print('importing: ', include_module)
+                M = importlib.import_module(include_module)
+                config.include( getattr(M, 'includeme') )
 
     return config
 

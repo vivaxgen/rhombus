@@ -10,15 +10,19 @@ from rhombus.models.core import set_func_userid
 
 PATHS = [ 'rhombus.scripts.' ]
 ENVIRON = 'RHOMBUS_CONFIG'
+INCLUDES = []
 USER = 'USER'
 GREET = None
 USAGE = None
 
-def set_config( environ=None, paths=None, greet=None, usage=None, dbhandler_class=None ):
+def set_config( environ=None, paths=None, greet=None, usage=None, dbhandler_class=None, includes=None ):
     global PATHS, ENVIRON, GREET, USAGE
 
     if environ:
         ENVIRON = environ
+
+    if includes:
+        INCLUDES.extend( includes )
 
     if paths:
         for script_path in paths:
@@ -104,6 +108,8 @@ def arg_parser( description = None, parser = None ):
 
 def setup_settings( args ):
 
+    print('rhombus: setup_settings()')
+
     configfile = args.config or os.environ.get(ENVIRON)
 
     if not configfile:
@@ -114,6 +120,13 @@ def setup_settings( args ):
 
     set_func_userid(userid_func)
     user = args.user or os.environ.get(USER) or None
+
+    if INCLUDES:
+        for include_tag in INCLUDES:
+            modules = settings[include_tag].split()
+            for module_path in modules:
+                print('importing module: ', module_path)
+                M = importlib.import_module(module_path)
 
     return settings
 
