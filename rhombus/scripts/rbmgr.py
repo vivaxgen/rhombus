@@ -220,6 +220,9 @@ def do_adduser(args, dbh, settings):
 
 def do_setcred(args, dbh, settings):
 
+    if '/' in args.login:
+        args.login, args.userclass = args.login.split('/', 1)
+
     if not args.userclass:
         cexit('ERR - please provide userclass')
 
@@ -281,6 +284,9 @@ def do_listuserclass(args, dbh, settings):
 
 
 def do_listuser(args, dbh, settings):
+
+    if not args.userclass:
+        cexit('ERR: Please provide --userclass')
 
     cerr('List user from user class: %s' % args.userclass)
 
