@@ -12,3 +12,9 @@ ${ content | n }
   <link href="${request.static_url('rhombus:static/rst/theme.css')}" rel="stylesheet" />
 </%def>
 ##
+##
+<%def name="jscode()">
+  ${code | n}
+</%def>
+##
+##
