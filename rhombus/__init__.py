@@ -286,6 +286,8 @@ def auth_cache_factory(auth_cache):
 
 def get_authenticated_userobj(request, user_id):
 
+    #raise RuntimeError
+
     dbh = get_dbhandler()
     db_session = dbh.session()
     if user_id is None:
@@ -300,6 +302,14 @@ def get_authenticated_userobj(request, user_id):
         # in slave mode - check user existence here first
         login, userclass, stamp = user_id.split('|')
         user = dbh.get_user('%s/%s' % (login, userclass))
+        if user is None:
+            print('should write to flash message')
+            request.session.flash( (
+                'danger',
+                'Warning: your current login [%s] is not registered in this system!'
+                % login
+            ) )
+            return None
         if user.userclass.domain != userclass:
             raise RuntimeError('Error 3439')
 
@@ -310,14 +320,15 @@ def get_authenticated_userobj(request, user_id):
             userinstance = user.user_instance()
             auth_cache.set(key, userinstance)
     db_session.user = userinstance or None
+    request.session.flash( ('success', 'Welcome %s!' % userinstance.login) )
 
     return userinstance
 
 
 def get_userobj(request):
 
-    if request.authenticated_userid:
-        user_id = request.authenticated_userid
+    user_id = request.authenticated_userid
+    if user_id:
         ui = get_dbhandler().session().user
         return ui
 
