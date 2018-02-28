@@ -303,7 +303,6 @@ def get_authenticated_userobj(request, user_id):
         login, userclass, stamp = user_id.split('|')
         user = dbh.get_user('%s/%s' % (login, userclass))
         if user is None:
-            print('should write to flash message')
             request.session.flash( (
                 'danger',
                 'Warning: your current login [%s] is not registered in this system!'
@@ -319,9 +318,12 @@ def get_authenticated_userobj(request, user_id):
             # set user
             userinstance = user.user_instance()
             auth_cache.set(key, userinstance)
+        if userinstance:
+            request.session.flash(
+                (   'success',
+                    'You have been authenticated remotely as %s!' % userinstance.login
+            ) )
     db_session.user = userinstance or None
-    if userinstance:
-        request.session.flash( ('success', 'Welcome %s!' % userinstance.login) )
 
     return userinstance
 
@@ -340,7 +342,7 @@ def set_userobj(request, user_id, userinstance):
 
     if request.registry.settings.get('rhombus.authmode',None) != 'master':
         raise RuntimeError( 'ERR: only server with Rhombus authmode as master can set '
-                            'user instance!')
+                            'user instance! Otherwise, please add rhombus.authmode = master.')
 
     user_id = user_id.encode('ASCII')
     request.auth_cache.set(user_id, userinstance)
