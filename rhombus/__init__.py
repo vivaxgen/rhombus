@@ -320,7 +320,8 @@ def get_authenticated_userobj(request, user_id):
             userinstance = user.user_instance()
             auth_cache.set(key, userinstance)
     db_session.user = userinstance or None
-    request.session.flash( ('success', 'Welcome %s!' % userinstance.login) )
+    if userinstance:
+        request.session.flash( ('success', 'Welcome %s!' % userinstance.login) )
 
     return userinstance
 
