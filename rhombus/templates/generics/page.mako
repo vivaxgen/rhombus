@@ -14,7 +14,7 @@ ${ content | n }
 ##
 ##
 <%def name="jscode()">
-  ${code | n}
+  ${code or '' | n}
 </%def>
 ##
 ##
