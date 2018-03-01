@@ -197,6 +197,8 @@ def init_app(global_config, settings, prefix=None, dbhandler_factory = get_dbhan
     if include_tags:
         import importlib
         for tag in include_tags:
+            if tag not in settings:
+                continue
             for include_module in settings[tag].split():
                 if not include_module: continue
                 print('importing: ', include_module)

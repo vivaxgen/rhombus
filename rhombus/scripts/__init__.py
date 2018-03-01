@@ -123,6 +123,8 @@ def setup_settings( args ):
 
     if INCLUDES:
         for include_tag in INCLUDES:
+            if include_tag not in settings:
+                continue
             modules = settings[include_tag].split()
             for module_path in modules:
                 print('importing module: ', module_path)
