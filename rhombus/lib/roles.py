@@ -6,8 +6,6 @@ DATAVIEW = '~r|data-viewer'
 PUBLIC = '~r|public'
 USER = '~r|user'
 GUEST = '~r|guest'
-EDITOR = '~r|editor'
-REVIEWER = '~r|reviewer'
 
 EK_CREATE = '~r|ek|create'
 EK_MODIFY = '~r|ek|modify'

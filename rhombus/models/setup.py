@@ -72,8 +72,6 @@ essential_groups = [
             ( '_LogViewer_', [] ),
             ( '_MasterViewer_', [ SYSVIEW ] ),
             ( '_User_', [ USER ] ),
-            ( '_Editor_', [ EDITOR ]),
-            ( '_Reviewer_', [ REVIEWER ]),
             ]
 
 ek_initlist = [
@@ -90,8 +88,6 @@ ek_initlist = [
             (PUBLIC, 'public role - all visitor'),
             (USER, 'authenticated user role'),
             (GUEST, 'guest / anonymous user role'),
-            (EDITOR, 'editor role'),
-            (REVIEWER, 'reviewer role'),
             (EK_CREATE, 'create new EnumKey (EK)'),
             (EK_MODIFY, 'modify EnumKey(EK)'),
             (EK_VIEW, 'view EnumKey(EK)'),
