@@ -12,6 +12,7 @@ from rhombus.lib.roles import SYSADM, SYSVIEW
 from rhombus.models.user import UserClass
 from rhombus.lib.utils import get_dbhandler
 
+from urllib.parse import urlparse
 import time
 
 
@@ -59,6 +60,13 @@ def login(request):
             login = userinstance.login + '|' + userclass_name + '|' + str(time.time())
             request.set_user(login, userinstance)
             headers = remember(request, login)
+            if came_from:
+                o1 = urlparse(came_from)
+                o2 = urlparse(request.host_url)
+                if o1.netloc.lower() == o2.netloc.lower():
+                    request.session.flash(
+                        ('success', 'Welcome %s!' % userinstance.login)
+                    )
             return HTTPFound( location = came_from,
                                 headers = headers )
 

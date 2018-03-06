@@ -342,9 +342,10 @@ def get_userobj(request):
 
 def set_userobj(request, user_id, userinstance):
 
-    if request.registry.settings.get('rhombus.authmode',None) != 'master':
-        raise RuntimeError( 'ERR: only server with Rhombus authmode as master can set '
-                            'user instance! Otherwise, please add rhombus.authmode = master.')
+    if request.registry.settings.get('rhombus.authhost', None) != None:
+        raise RuntimeError( 'ERR: only server without Rhombus rhombus.authhost can set '
+                            'user instance! Otherwise, please add rhombus.authmode = master '
+                            'and remove rhombus.authhost setting.')
 
     user_id = user_id.encode('ASCII')
     request.auth_cache.set(user_id, userinstance)
@@ -352,8 +353,8 @@ def set_userobj(request, user_id, userinstance):
 
 def del_userobj(request):
 
-    if request.registry.settings['rhombus.authmode'] != 'master':
-        raise RuntimeError( 'ERR: only server with Rhombus authmode as master can delete '
+    if request.registry.settings.get('rhombus.authhost', None) != None:
+        raise RuntimeError( 'ERR: only server without Rhombus rhombus.authhost can delete '
                             'user instance!')
 
     user_id = request.unauthenticated_userid
