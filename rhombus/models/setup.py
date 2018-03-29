@@ -151,6 +151,7 @@ ek_initlist = [
             ('text/xml', ''),
             ('text/x-rst', 'mimetype reStructuredText'),         # reStructuredText
             ('text/x-markdown', 'mimeype MarkDown'),    # markdown
+            ('text/x-mako', 'mimetype Mako template'),
         ]),
 ]
 
