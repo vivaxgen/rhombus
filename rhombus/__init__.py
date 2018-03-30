@@ -191,6 +191,10 @@ def init_app(global_config, settings, prefix=None, dbhandler_factory = get_dbhan
 
     config.include( includeme, prefix )
 
+    # add static assets directory
+    if 'assets.directory' in settings:
+        config.add_static_view(name='assets', path=settings['assets.directory'])
+
     if include:
         config.include(include)
 
