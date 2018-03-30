@@ -311,10 +311,11 @@ class input_file(input_text):
 
 class checkboxes(htmltag):
 
-    def __init__(self, name, label, boxes, static=False):
+    def __init__(self, name, label, boxes, offset=3, static=False, **kwargs):
         """ boxes: list of [ (name, label, value), ... ] """
-        super().__init__( name = name )
+        super().__init__( name = name, **kwargs )
         self.label = label
+        self.offset = offset
         self.static = static
         for (box_name, box_label, box_value) in boxes:
             self.add( checkbox_item(box_name, box_label, box_value, static ) )
@@ -322,7 +323,7 @@ class checkboxes(htmltag):
     def __str__(self):
         return literal( checkboxes_template.format(
                 class_div = 'form-group',
-                class_label = 'col-md-3 control-label',
+                class_label = 'col-md-%d control-label' % self.offset,
                 class_value = 'col-md-8',
                 label = self.label,
                 boxes = '\n'.join( str(item) for item in self.contents )
