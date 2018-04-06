@@ -58,6 +58,12 @@ def clear_session_cache(session, tx):
     session.clear_keys()
 
 
+@event.listens_for(mapper, 'before_update')
+def update_lastuser(mapper, conn, instance):
+    if hasattr(instance, '__before_update__'):
+        instance.__before_update__()
+
+
 def uq_convention(constraint, table):
     names = [ table.name]
     names += [ str(c).split('.')[-1] for c in constraint.columns ]

@@ -26,7 +26,7 @@ from sqlalchemy.orm.exc import NoResultFound
 from sqlalchemy.exc import OperationalError, IntegrityError
 from sqlalchemy.ext.associationproxy import association_proxy
 from sqlalchemy.ext.declarative import declared_attr
-from sqlalchemy.sql.functions import current_timestamp
+from sqlalchemy.sql.functions import current_timestamp, now
 from sqlalchemy.dialects.postgresql import base as pg
 
 import uuid, json, yaml, copy
@@ -500,7 +500,15 @@ class BaseMixIn(object):
 
     @declared_attr
     def stamp(cls):
-        return Column(types.TIMESTAMP, nullable=False, default=current_timestamp())
+        return Column(types.TIMESTAMP, nullable=False, default=current_timestamp(),
+            onupdate = now())
         ## this is reserved for big, incompatible update
         ## return Column(types.DateTime(timezone=True), nullable=False,
         ##        server_default=func.now(), server_onupdate=func.utc_timestamp())
+
+
+    def __before_update__(self):
+        # this is to force some database backend to change the values
+        # during update
+        self.lastuser_id = get_userid()
+        self.stamp = now()
