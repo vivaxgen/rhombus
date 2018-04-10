@@ -17,6 +17,31 @@ pyramid.includes =
 
 sqlalchemy.url = sqlite:///%(here)s/db/{{project}}.sqlite
 
+# set this to true if you want data logger
+rhombus.data_logger = false
+
+# put a secret paraphrase here
+rhombus.authsecret = XXXXXXX
+
+# set authmode to master or slave for remote authentication
+#rhombus.authmode = master
+
+rhombus.authcache.backend = dogpile.cache.dbm
+rhombus.authcache.expiration_time = 10000
+rhombus.authcache.arguments.filename = %(here)s/db/authcache.dbm
+
+mako.directories = %(here)s/templates
+
+# set below for overiding assets
+#override.assets =
+#       rhombus:templates/base.mako > custom_base.mako
+#       rhombus:templates/plainbase.mako > custom_plainbase.mako
+
+dogpile.cache.backend = dogpile.cache.dbm
+dogpile.cache.expiration_time = 10000
+dogpile.cache.arguments.filename = %(here)s/db/cache.dbm
+
+
 # By default, the toolbar only appears for clients from IP addresses
 # '127.0.0.1' and '::1'.
 # debugtoolbar.hosts = 127.0.0.1 ::1
