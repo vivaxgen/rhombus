@@ -44,7 +44,7 @@ def login(request):
     if '/' in login:
         login, userclass_name = login.split('/')
     elif userclass_name is None:
-        userclass_name = request.registry.settings.get('default.userclass','_SYSTEM_')
+        userclass_name = request.registry.settings.get('rhombus.default.userclass','_SYSTEM_')
 
     dbh = get_dbhandler()
 
@@ -74,7 +74,7 @@ def login(request):
 
     return render_to_response("rhombus:templates/login.mako",
                 {   'msg': msg, 'came_from': came_from,
-                    'login': '%s/%s' % (login, userclass_name) },
+                    'login': '%s' % (login) },
                 request = request)
 
 
