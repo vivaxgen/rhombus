@@ -468,4 +468,6 @@ def override_assets( config, settings, asset_list ):
 
 
 def add_global(event):
+    from rhombus.views.user import user_menu
     event['h'] = h
+    event['user_menu'] = user_menu
