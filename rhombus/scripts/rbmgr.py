@@ -292,3 +292,12 @@ def do_listuser(args, dbh, settings):
 
     for u in dbh.get_userclass(args.userclass).users:
         cout(' %s' % u.login)
+
+
+def do_syncuserclass(args, dbh, settings):
+
+    if not args.userclass:
+        cexit('ERR: Please provide --userclass')
+
+    if not args.synctoken:
+        cexit('ERR: Please provide --synctoken')

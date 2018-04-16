@@ -127,6 +127,10 @@ def edit(request):
     raise NotImplementedError()
 
 
+def getusers(request):
+    pass
+
+
 def action(request):
     raise NotImplementedError()
 
@@ -161,3 +165,14 @@ def parse_form( f ):
     d['credscheme'] = yaml.load(io.StringIO(f['rhombus-userclass_credscheme']))
 
     return d
+
+# in-memory data
+
+_SYNCTOKENS_ = []   # [ (token, create_time), ...]
+
+
+def get_token():
+    pass
+
+def validate_token( token ):
+    pass
