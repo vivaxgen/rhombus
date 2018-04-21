@@ -1,0 +1,21 @@
+
+/*
+@media (min-width: 768px) {
+  .form-group.row > .col-form-label {
+    text-align: right;
+    justify-content: flex-end;
+  }
+}
+*/
+
+div.form-inline label.col-md-4 {
+  justify-content: flex-end;
+}
+
+div.form-inline label.col-md-3 {
+  justify-content: flex-end; 
+}
+
+div.form-inline label.col-md-2 {
+  justify-content: flex-end; 
+}
