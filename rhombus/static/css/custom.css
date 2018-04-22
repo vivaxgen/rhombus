@@ -19,3 +19,7 @@ div.form-inline label.col-md-3 {
 div.form-inline label.col-md-2 {
   justify-content: flex-end; 
 }
+
+div.form-inline label.col-md-1 {
+  justify-content: flex-end; 
+}
