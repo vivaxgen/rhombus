@@ -330,7 +330,7 @@ def lookup(request):
     return result
 
 
-def user_menu(request):
+def user_menu_xxx(request):
     """ return a HTML for user menu, bootstrap-based """
     authhost = request.registry.settings.get('rhombus.authhost', '')
     url_login = authhost + '/login'
@@ -361,6 +361,45 @@ def user_menu(request):
     else:
         user_menu_list = li(class_ = 'active dropdown')[
                 a(href=url_login)[
+                    span(class_='fa fa-sign-in'),
+                    ' Login '
+                ]
+            ]
+    user_menu_html.add( user_menu_list )
+
+    return user_menu_html
+
+def user_menu(request):
+    """ return a HTML for user menu, bootstrap-based """
+    authhost = request.registry.settings.get('rhombus.authhost', '')
+    url_login = authhost + '/login'
+    url_logout = authhost + '/logout'
+    user_menu_html = ul(class_ = 'nav navbar-nav navbar-right')
+    if request.user:
+        user_menu_list = li(class_ = "nav-item active dropdown" )[
+                a(class_='nav-link dropdown-toggle', id="navbarUsermenu",
+                    **  { 'data-toggle': 'dropdown',
+                            'aria-haspopup': 'true',
+                            'aria-expanded': 'false',
+                        }
+                )[
+                    span(class_='fa fa-user'),
+                    ' ' + request.user.login,
+                ],
+                div(class_='dropdown-menu dropdown-menu-right', ** { 'aria-labelledby': 'navbarUsermenu'} )[
+                    a('Change password', class_='dropdown-item',
+                            href=request.route_url('rhombus.user-passwd'))
+                        if not (request.user.has_roles(GUEST) or authhost) else '',
+                    a('Management', class_='dropdown-item',
+                            href=request.route_url('rhombus.dashboard'))
+                        if request.user.has_roles(SYSADM) else '',
+                    a('Logout', class_='dropdown-item', href=url_logout)
+                ]
+
+            ]
+    else:
+        user_menu_list = li(class_ = 'nav-item active')[
+                a(class_='nav-link', href=url_login)[
                     span(class_='fa fa-sign-in'),
                     ' Login '
                 ]
