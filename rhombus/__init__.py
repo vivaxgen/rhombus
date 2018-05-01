@@ -23,6 +23,7 @@ from rhombus.lib import helpers as h
 
 from rhombus.scripts import run
 
+_TITLE_ = ''
 
 def includeme( config ):
 
@@ -86,6 +87,10 @@ def includeme( config ):
         '/user/{id}@@edit',
         #'/user/{id}@@passwd',
         ('/user/{id}', 'view'),
+    )
+
+    add_route_view( config, 'rhombus.views.gallery', 'rhombus.gallery',
+        '/gallery',
     )
 
     # check if we are running as master
@@ -208,6 +213,10 @@ def init_app(global_config, settings, prefix=None, dbhandler_factory = get_dbhan
                 print('importing: ', include_module)
                 M = importlib.import_module(include_module)
                 config.include( getattr(M, 'includeme') )
+
+    if 'rhombus.title' in settings:
+        global _TITLE_
+        _TITLE_ = settings['rhombus.title']
 
     return config
 
@@ -470,4 +479,5 @@ def override_assets( config, settings, asset_list ):
 def add_global(event):
     from rhombus.views.user import user_menu
     event['h'] = h
+    event['title'] = _TITLE_ or 'Rhombus'
     event['user_menu'] = user_menu

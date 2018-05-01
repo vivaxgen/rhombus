@@ -103,7 +103,7 @@ class htmltag(object):
     def div_wrap(self, html):
         if isinstance(self.container, multi_inputs):
             return html
-        return str(div(html, class_='form-group'))
+        return str(div(html, class_='form-group form-inline row'))
 
 
 class form(htmltag):
@@ -218,7 +218,7 @@ class input_textarea(input_text):
                         rows = rows,
                         class_input = 'form-control',
                         extra_control = literal(self.extra_control) if self.extra_control else '',
-                        style = 'style="font-family:monospace;"'
+                        style = 'style="font-family:monospace; width:100%;"'
                     ) )
 
 class input_hidden(htmltag):
@@ -254,8 +254,14 @@ class input_select(input_text):
         options = []
         for val, label in self.options:
             selected = ''
-            if self.value and self.value == val:
-                selected = 'selected="selected"'
+            if self.value:
+                if self.multiple:
+                    if type(self.value) != list:
+                        raise RuntimeError('input_select() with multiple options needs a list as value')
+                    if val in self.value:
+                        selected = 'selected="selected"'
+                elif val == self.value:
+                    selected = 'selected="selected"'
             options.append( '<option value="%s" %s>%s</option>' %
                         (escape(val), selected, escape(label) ))
         html = literal( input_select_template.format(
@@ -340,9 +346,10 @@ class checkbox_item(htmltag):
 
     def __str__(self):
         return literal(
-            '<div class="checkbox">'
-                '<label><input type="checkbox" name="%s" id="%s" %s />%s</label>'
-            '</div>' % ( self.name, self.id, 'checked' if self.value else '', self.label )
+            '<div class="form-check form-check-inline justify-content-start">'
+                '<input type="checkbox" class="form-check-input" name="%s" id="%s" %s />'
+                '<label class="form-check-label" for="%s">%s</label>'
+            '</div>' % ( self.name, self.id, 'checked' if self.value else '', self.id, self.label )
             )
 
 
@@ -624,36 +631,36 @@ class selection_bar(object):
 class multi_inputs(div):
 
     def __init__(self, *args, **kwargs):
-        super().__init__(*args, class_='form-group', **kwargs)
+        super().__init__(*args, class_='form-group form-inline row', **kwargs)
 
 
 ## Templates
 
 input_text_template = '''\
-<div class='{class_div}'>
+<div class='{class_div} form-inline row'>
   <label class='{class_label}' for='{name}'>{label}</label>
   <div class='{class_value}'>
-    <input type='text' id='{name}' name='{name}' value='{value}' class='{class_input}'/>
+    <input type='text' id='{name}' name='{name}' value='{value}' class='{class_input}' style='width:100%'/>
     {help_span}
   </div>
   {info}
 </div>'''
 
 input_password_template = '''\
-<div class='{class_div}'>
+<div class='{class_div} form-inline row'>
   <label class='{class_label}' for='{name}'>{label}</label>
   <div class='{class_value}'>
-    <input type='password' id='{name}' name='{name}' value='{value}' class='{class_input}'/>
+    <input type='password' id='{name}' name='{name}' value='{value}' class='{class_input}' style='width:100%'/>
     {help_span}
   </div>
   {info}
 </div>'''
 
 input_static_template = '''\
-<div class='{class_div}'>
+<div class='{class_div} form-inline row'>
   <label class='{class_label}' for='{name}'>{label}</label>
   <div class='{class_value}'>
-    <p class='form-control-static'>{value}</p>
+    <p class='form-control-plaintext'>{value}</p>
   </div>
 </div>'''
 
@@ -662,8 +669,8 @@ input_hidden_template = '''\
 '''
 
 input_textarea_template = '''\
-<div class='{class_div}'>
-  <label class='{class_label}' for='{name}'>{label}</label>
+<div class='{class_div} form-inline row'>
+  <label class='{class_label} align-self-baseline pt-2' for='{name}'>{label}</label>
   <div class='{class_value}'>
     <textarea id='{name}' name='{name}' class='{class_input}' rows='{rows}' {style}>{value}</textarea>
     {extra_control}
@@ -671,9 +678,9 @@ input_textarea_template = '''\
 </div>'''
 
 input_select_template = '''\
-  <label class='{class_label}' for='{name}'>{label}</label>
+  <label class='{class_label} align-self-start pt-2' for='{name}'>{label}</label>
   <div class='{class_value}'>
-    <select id='{name}' name='{name}' class='{class_input}' {multiple} {attrs}>
+    <select id='{name}' name='{name}' class='{class_input}' {multiple} {attrs} style='width:100%'>
     {options}
     </select>
     {extra_control}
@@ -692,8 +699,8 @@ input_file_template = '''\
 </div>'''
 
 checkboxes_template = '''\
-<div class='{class_div}'>
-  <label class='{class_label}'>{label}</label>
+<div class='{class_div} form-inline row'>
+  <label class='{class_label} align-self-baseline pt-2'>{label}</label>
   <div class='{class_value}'>
     {boxes}
   </div>
@@ -701,7 +708,7 @@ checkboxes_template = '''\
 
 radioboxes_template = '''\
 <div class='{class_div}'>
-  <label class='{class_label'}>{label}</label>
+  <label class='{class_label} justify-content-baseline pt-2'>{label}</label>
   <div class='{class_value}'>
     {boxes}
   </div>
@@ -721,8 +728,8 @@ radioboxes_template_xxx = '''\
 </div>'''
 
 submit_bar_template = '''\
-<div class='form-group'>
-  <div class='col-md-10 col-md-offset-3'>
+<div class='form-group row'>
+  <div class='col-md-10 offset-md-3'>
     <button class='btn btn-primary' type='submit' name='_method' value='{val}'>{label}</button>
     <button class='btn' type='reset'>Reset</button>
   </div>
@@ -742,7 +749,9 @@ selection_bar_js = '''\
     });
 
   $('#%(prefix)s-select-none').click( function() {
-        $('input[name="%(prefix)s"]').attr("checked", false);
+        $('input[name="%(prefix)s"]').each( function() {
+            this.checked = false;
+        });
     });
 
   $('#%(prefix)s-select-inverse').click( function() {
