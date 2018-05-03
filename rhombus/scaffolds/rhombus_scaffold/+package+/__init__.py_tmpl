@@ -7,6 +7,9 @@ from rhombus.lib.utils import cerr, cout
 # set configuration and dbhandler
 from {{package}}.scripts import run
 
+# initialize view
+from {{package}}.views import *
+
 
 def includeme( config ):
     """ this configuration must be included as the last order
@@ -37,10 +40,8 @@ def main(global_config, **settings):
 
     cerr('{{project}} main() is running...')
 
-    # attach rhombus to /mgr url
-    config = init_app(global_config, settings, prefix='/mgr')
-
-    # include custom configuration
-    config.include( includeme )
+    # attach rhombus to /mgr url, include custom configuration
+    config = init_app(global_config, settings, prefix='/mgr'
+                    , includeme = includeme, include_tags = [ '{{package}}.includes' ])
 
     return config.make_wsgi_app()
