@@ -168,7 +168,8 @@ def do_initdb(args, dbh, settings):
     print('do_initdb()')
 
     dbh.initdb(create_table = (not args.no_create_table),
-            init_data = (not args.no_init_data))
+            init_data = (not args.no_init_data),
+            rootpasswd = args.credential or None)
     from rhombus.scripts.setup import populate_db
     userclass = yaml.load(open(args.initial_userclass)) if args.initial_userclass else None
     groups = yaml.load(open(args.initial_groups)) if args.initial_groups else None

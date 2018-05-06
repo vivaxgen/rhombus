@@ -47,7 +47,7 @@ class DBHandler(object):
 
 
 
-    def initdb(self, create_table=True, init_data=True):
+    def initdb(self, create_table=True, init_data=True, rootpasswd=None):
         """ prepare the database for the first time by initializing it with
             necessary, basic, default data set """
 
@@ -58,7 +58,7 @@ class DBHandler(object):
 
         if init_data:
             from rhombus.models.setup import setup
-            setup( self )
+            setup( self, rootpasswd )
             cerr('[rhombus] Database has been initialized.')
 
 

@@ -31,12 +31,17 @@ def setup_db( *ops ):
         for op in ops:
             op()
 
-def setup( dbh ):
+def setup( dbh, rootpasswd=None ):
     """ populate the database with basic, essential data """
+
+    global root_password
 
     if get_datalogger():
         get_clsreg().sync()
         session.commit()
+
+    if rootpasswd:
+        root_password = rootpasswd
 
     dbsession = dbh.session()
 
