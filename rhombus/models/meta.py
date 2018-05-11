@@ -17,7 +17,7 @@ from sqlalchemy import event, MetaData
 
 from zope.sqlalchemy import ZopeTransactionExtension
 
-__all__ = ['get_base', 'get_dbsession', 'set_datalogger']
+__all__ = ['get_base', 'get_dbsession', 'set_datalogger', 'set_before_update_flag']
 
 class RhoSession(Session):
 
@@ -57,10 +57,15 @@ class RhoSession(Session):
 def clear_session_cache(session, tx):
     session.clear_keys()
 
+_before_update_flag_ = True
+def set_before_update_flag(value):
+    global _before_update_flag_
+    _before_update_flag_ = value
+
 
 @event.listens_for(mapper, 'before_update')
 def update_lastuser(mapper, conn, instance):
-    if hasattr(instance, '__before_update__'):
+    if hasattr(instance, '__before_update__') and _before_update_flag_:
         instance.__before_update__()
 
 
