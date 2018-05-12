@@ -529,7 +529,7 @@ def format_usertable(group, request):
             hiddens=[('group_id', group.id), ])
     user_table, user_js = user_bar.render(user_table)
 
-    content = div(class_='form-group')
+    content = div(class_='form-group form-inline')
     content.add(
             div('Login',
                 literal('''<select id="useradd_id" name="useradd_id" class='form-control' style='width:100%;'></select>'''),
