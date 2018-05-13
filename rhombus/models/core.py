@@ -510,5 +510,8 @@ class BaseMixIn(object):
     def __before_update__(self):
         # this is to force some database backend to change the values
         # during update
+        session = object_session(self)
+        if not session.before_update_event or getattr(self, 'ignore_before_update', False):
+            return
         self.lastuser_id = get_userid()
         self.stamp = now()

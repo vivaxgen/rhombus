@@ -32,6 +32,9 @@ class RhoSession(Session):
         self.user = None
         self.global_user = None	# used for per-process user (eg. in scripts)
 
+        # set flags
+        self.before_update_event = True
+
     def close(self):
         self.user = None
         super().close()
@@ -52,20 +55,18 @@ class RhoSession(Session):
         self._ek_keys.clear()
         self._ek_ids.clear()
 
+    def set_before_update_event(self, value=True):
+        self.before_update_event = value
+
 
 @event.listens_for(RhoSession, 'after_transaction_end')
 def clear_session_cache(session, tx):
     session.clear_keys()
 
-_before_update_flag_ = True
-def set_before_update_flag(value):
-    global _before_update_flag_
-    _before_update_flag_ = value
-
 
 @event.listens_for(mapper, 'before_update')
 def update_lastuser(mapper, conn, instance):
-    if hasattr(instance, '__before_update__') and _before_update_flag_:
+    if hasattr(instance, '__before_update__'):
         instance.__before_update__()
 
 
