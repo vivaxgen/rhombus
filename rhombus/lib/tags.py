@@ -39,11 +39,28 @@ class htmltag(object):
             return self.container.get_container()
         return self
 
+    def register_element(self, el):
+        root = self.get_container()
+        if not isinstance(el, htmltag):
+            return
+        if el.id:
+            identifier = el.id
+            if identifier in root.elements:
+                raise RuntimeError('duplicate element id/name: %s' % identifier)
+            root.elements[identifier] = el
+        for (identifier, value) in el.elements.items():
+            if identifier in root.elements:
+                raise RuntimeError('duplicate element id/name: %s' % identifier)
+            root.elements[identifier] = value
+        el.container = self
+
 
     def add(self, *args):
         root = self.get_container()
-        for el in args:
-            self.contents.append( el )
+        for element in args:
+            self.contents.append( element )
+            self.register_element( element )
+            continue
             if not isinstance(el, htmltag):
                 continue
             if el.id:
@@ -58,6 +75,12 @@ class htmltag(object):
             el.container = self
 
         # to accomodate chaining
+        return self
+
+
+    def insert(self, index, element):
+        self.contents.insert(index, element)
+        self.register_element( element )
         return self
 
 
@@ -557,7 +580,7 @@ class custom_submit_bar(htmltag):
 
     def __str__(self):
         html = div(class_='form-group', style='display: none' if self.hide else '')
-        buttons = div(class_='col-md-10 col-md-offset-%d' % self.offset)
+        buttons = div(class_='col-md-10 offset-md-%d' % self.offset)
         for b in self.buttons:
             buttons.add(
                 button(class_="btn btn-primary", type="submit", name="_method",
