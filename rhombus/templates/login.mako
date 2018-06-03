@@ -4,7 +4,7 @@
     <p>${msg}</p>
 %endif
 
-    <div class="row"><div class="col-md-10 col-md-offset-1"
+    <div class="row"><div class="col-md-10 col-md-offset-1">
     <div class="bottom">
       <form action="" method="post" class="form-horizontal">
         <input type="hidden" name="came_from" value="${came_from}"/>
