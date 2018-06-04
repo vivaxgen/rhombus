@@ -42,7 +42,7 @@ def edit(request):
         ek.id = 0
         ek.member_of_id = int(request.params.get('member_of_id', 0))
     else:
-        ek = dbh.EK.get(ek_id)
+        ek = dbh.EK.get(ek_id, dbh.session())
 
     eform = edit_form(ek, dbh, request)
 
