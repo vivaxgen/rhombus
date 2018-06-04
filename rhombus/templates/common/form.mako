@@ -123,11 +123,11 @@ ${selection( name, label,
 
 
 ##
-<%def name="input_show(label, value, class_='form-group', class_span = 'input-large')">
+<%def name="input_show(label, value, class_='form-group form-inline row', class_span = 'input-large')">
 <div class='${class_}'>
-  <label class='col-md-2 control-label'>${label}</label>
-  <div class='col-md-10'>
-    <span ${("class='%s uneditable-input'" % class_ if class_.startswith('span') else "class='%s uneditable-input'" % class_span) | n} >${value or ""}</span>
+  <label class='col-md-3 control-label'>${label}</label>
+  <div class='col-md-9'>
+    <span ${("class='%s form-control-plaintext'" % class_ if class_.startswith('span') else "class='%s uneditable-input'" % class_span) | n} >${value or ""}</span>
   </div>
 </div>
 </%def>
