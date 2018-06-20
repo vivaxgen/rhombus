@@ -66,6 +66,20 @@ class EK(BaseMixIn, Base):
         ek.data = d.get('data', None)
         ek.syskey = d.get('syskey', None)
 
+        db_ek = EK.search(ek.key, dbsession=dbsession)
+        if db_ek and update:
+            db_ek.update( ek )
+        else:
+            dbsession.add( ek )
+            dbsession.flush()
+            db_ek = ek
+
+        for m in d.get('members', []):
+            m_ek = EK.from_dict(m, update, dbsession)
+            m_ek.member_of = db_ek
+
+        return db_ek
+
         if update:
             db_ek = EK.search(ek.key, dbsession=dbsession)
             db_ek.update( ek )

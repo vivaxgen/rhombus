@@ -85,6 +85,9 @@ def init_argparser( parser = None):
 
     # general options here
 
+    p.add_argument('--infile', default='-')
+    p.add_argument('--outfile', default='-')
+
     return db_argparser(p)
 
 
@@ -143,6 +146,12 @@ def do_rbmgr(args, settings, dbh = None):
 
     elif args.importgroup:
         do_importgroup(args, dbh, settings)
+
+    elif args.exportenumkey:
+        do_exportenumkey(args, dbh, settings)
+
+    elif args.importenumkey:
+        do_importenumkey(args, dbh, settings)
 
     elif args.listenumkey:
         do_listenumkey(args, dbh, settings)
@@ -264,6 +273,34 @@ def do_listenumkey(args, dbh, settings):
     ekeys = dbh.list_ekeys(group = args.ekeygroup)
     for ek in ekeys:
         cout('%s' % ek.key)
+
+
+def do_exportenumkey(args, dbh, settings):
+
+    cerr('Exporting enumkey')
+    import yaml
+    ekey_list = []
+    ekeys = []
+    if args.exportenumkey:
+        for ekey_code in args.exportenumkey.split(','):
+            cerr('Getting [%s]' % ekey_code)
+            ekeys.append( dbh.get_ekey(ekey_code) )
+    else:
+        ekeys = dbh.list_ekeys()
+
+    for ekey in ekeys:
+            ekey_list.append(ekey.as_dict())
+
+    if args.outfile != '-':
+        open(args.outfile, 'w').write( yaml.dump( ekey_list) )
+
+
+def do_importenumkey(args, dbh, settings):
+
+    cerr('Importing enumkey')
+    ekeys = yaml.load(open(args.infile))
+    for ek_data in ekeys:
+        dbh.EK.from_dict(ek_data, False, dbh.session())
 
 
 def do_importgroup(args, dbh, settings):
