@@ -40,9 +40,6 @@ def setup( dbh, rootpasswd=None ):
         get_clsreg().sync()
         session.commit()
 
-    if rootpasswd:
-        root_password = rootpasswd
-
     dbsession = dbh.session()
 
     EK.bulk_update( ek_initlist, dbsession=dbsession )
@@ -54,6 +51,13 @@ def setup( dbh, rootpasswd=None ):
     dbsession.add( file )
     file.type = 'file/folder'
     file.mimetype = 'application/x-directory'
+
+    if rootpasswd:
+        # set system password
+
+        sysuser = dbh.get_user('system/_SYSTEM_')
+        sysuser.set_credential(rootpasswd)
+        root_password = rootpasswd
 
     cerr('INFO: root password is %s\n' % root_password)
 
