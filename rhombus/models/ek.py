@@ -67,8 +67,9 @@ class EK(BaseMixIn, Base):
         ek.syskey = d.get('syskey', None)
 
         db_ek = EK.search(ek.key, dbsession=dbsession)
-        if db_ek and update:
-            db_ek.update( ek )
+        if db_ek:
+            if update:
+                db_ek.update( ek )
         else:
             dbsession.add( ek )
             dbsession.flush()
