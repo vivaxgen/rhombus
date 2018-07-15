@@ -22,6 +22,7 @@ class htmltag(object):
             if key in ['name', 'class_', 'id']:
                 continue
             self.attrs[key] = val
+        self.enabled = True
 
 
     def set_name(self, name):
@@ -78,9 +79,10 @@ class htmltag(object):
         return self
 
 
-    def insert(self, index, element):
-        self.contents.insert(index, element)
-        self.register_element( element )
+    def insert(self, index, *elements):
+        for element in reversed(elements):
+            self.contents.insert(index, element)
+            self.register_element( element )
         return self
 
 
@@ -111,6 +113,8 @@ class htmltag(object):
         return str(self)
 
     def __html__(self):
+        if not self.enabled:
+            return ''
         return literal( str(self) )
 
     def __getitem__(self, arg):
@@ -127,6 +131,9 @@ class htmltag(object):
         if isinstance(self.container, multi_inputs):
             return html
         return str(div(html, class_='form-group form-inline row'))
+
+    def enable(self, flag=True):
+        self.enabled = flag
 
 
 class form(htmltag):
@@ -663,7 +670,7 @@ class multi_inputs(div):
 
 input_text_template = '''\
 <div class='{class_div} form-inline row'>
-  <label class='{class_label}' for='{name}'>{label}</label>
+  <label class='{class_label} align-self-start pt-2' for='{name}'>{label}</label>
   <div class='{class_value}'>
     <input type='text' id='{name}' name='{name}' value='{value}' class='{class_input}' style='width:100%'/>
     {help_span}
