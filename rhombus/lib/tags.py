@@ -155,10 +155,11 @@ class form(htmltag):
 class input_text(htmltag):
 
     def __init__(self, name, label, value='', info=None, size=8, offset=3,
-                    extra_control=None, static=False, **kwargs):
+                    extra_control=None, static=False, placeholder='', **kwargs):
         super().__init__( name = name, **kwargs )
         self.label = label
         self.value = value
+        self.placeholder = placeholder
         self.error = None
         self.info = info
         self.size = size
@@ -181,6 +182,7 @@ class input_text(htmltag):
             info = ''
         return literal( input_text_template.format( name=escape(self.name),
                         label=escape(self.label), value=escape(self.value),
+                        placeholder = self.placeholder,
                         class_div = 'form-group' + (' has-error' if self.error else ''),
                         class_label = 'col-md-%d control-label' % self.offset,
                         class_value = 'col-md-%d' % self.size,
@@ -672,7 +674,7 @@ input_text_template = '''\
 <div class='{class_div} form-inline row'>
   <label class='{class_label} align-self-start pt-2' for='{name}'>{label}</label>
   <div class='{class_value}'>
-    <input type='text' id='{name}' name='{name}' value='{value}' class='{class_input}' style='width:100%'/>
+    <input type='text' id='{name}' name='{name}' value='{value}' class='{class_input}' placeholder='{placeholder}'style='width:100%'/>
     {help_span}
   </div>
   {info}
