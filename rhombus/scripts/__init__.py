@@ -110,7 +110,7 @@ def setup_settings( args ):
 
     print('rhombus: setup_settings()')
 
-    configfile = args.config or os.environ.get(ENVIRON)
+    configfile = (args.config if args else None) or os.environ.get(ENVIRON)
 
     if not configfile:
         cexit('need -c or --config option, or set %s environment' % ENVIRON)
@@ -119,7 +119,7 @@ def setup_settings( args ):
     settings = get_appsettings( configfile )
 
     set_func_userid(userid_func)
-    user = args.user or os.environ.get(USER) or None
+    user = (args.user if args else None) or os.environ.get(USER) or None
 
     if INCLUDES:
         for include_tag in INCLUDES:
