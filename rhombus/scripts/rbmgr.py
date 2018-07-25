@@ -27,7 +27,7 @@ def init_argparser( parser = None):
     p.add_argument('--importuserclass', default=False,
         help = 'import userclass from YAML file')
 
-    p.add_argument('--exportuserclass', default=False,
+    p.add_argument('--exportuserclass', default=False, action='store_true',
         help = 'export userclass to YAML file')
     # exported YAML file need to contain certain field for format recognizition
 
@@ -164,6 +164,9 @@ def do_rbmgr(args, settings, dbh = None):
 
     elif args.listuser:
         do_listuser(args, dbh, settings)
+
+    elif args.exportuserclass:
+        do_exportuserclass(args, dbh, settings)
 
     else:
         return False
@@ -330,6 +333,17 @@ def do_listuser(args, dbh, settings):
 
     for u in dbh.get_userclass(args.userclass).users:
         cout(' %s' % u.login)
+
+
+def do_exportuserclass(args, dbh, settings):
+
+    if args.userclass:
+        userclasses = dbh.get_userclass([args.userclass])
+    else:
+        userclasses = dbh.get_userclass()
+
+    outfile = open(args.outfile, 'w')
+    dbh.UserClass.dump( outfile, userclasses )
 
 
 def do_syncuserclass(args, dbh, settings):

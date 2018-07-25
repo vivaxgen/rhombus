@@ -32,6 +32,12 @@ class UserClass(Base):
             self.domain = d['domain']
             self.desc = d['desc']
             self.credscheme = d['credscheme']
+            if 'referer' in d:
+                self.referer = d['referer']
+            if 'autoadd' in d:
+                self.autoadd = d['autoadd']
+            if 'credscheme' in d:
+                self.credscheme = d['credscheme']
 
         else:
             raise RuntimeError('updating can only be performed using dict ')
@@ -131,11 +137,26 @@ class UserClass(Base):
         return User.search(login, self)
 
 
+    @classmethod
+    def from_dict(cls, d):
+        uc = UserClass()
+        uc.update(d)
+
+        from rhombus.lib.utils import get_dbhandler
+
+        get_dbhandler().session().add(uc)
+
+        if 'users' in d:
+            for user_dict in d['users']:
+                user = User.from_dict(user_dict, userclass = uc)
+
+        return uc
+
+
     @staticmethod
-    def dump(out):
+    def dump(out, userclasses):
         """ dump data to YAML-formatted file """
-        q = UserClass.query()
-        yaml.safe_dump_all( ( x.as_dict() for x in q ), out, default_flow_style=False )
+        yaml.safe_dump_all( ( x.as_dict() for x in userclasses ), out, default_flow_style=False )
 
 
 @registered
@@ -302,7 +323,7 @@ class User(Base):
                 lastlogin = self.lastlogin, userclass = self.userclass.domain,
                 lastname = self.lastname, firstname = self.firstname,
                 institution = self.institution, address = self.address, contact = self.contact,
-                status = self.status )
+                status = self.status, primarygroup = self.primarygroup.name )
 
     def set_credential(self, passwd):
         if passwd == '{X}':
