@@ -323,7 +323,8 @@ class User(Base):
                 lastlogin = self.lastlogin, userclass = self.userclass.domain,
                 lastname = self.lastname, firstname = self.firstname,
                 institution = self.institution, address = self.address, contact = self.contact,
-                status = self.status, primarygroup = self.primarygroup.name )
+                status = self.status, primarygroup = self.primarygroup.name,
+                groups = [ [ug.group.name, ug.role] for ug in self.usergroups ] )
 
     def set_credential(self, passwd):
         if passwd == '{X}':
