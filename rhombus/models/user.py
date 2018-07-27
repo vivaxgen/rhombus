@@ -378,6 +378,8 @@ class Group(Base):
         if type(user) == int:
             user_ids = [ x.user_id for x in UserGroup.query().filter( UserGroup.group_id == self.id ).all() ]
             return user in user_ids
+        elif type(user) == UserInstance:
+            return user.in_group(self)
         else:
             return user in self.users
 
@@ -386,7 +388,7 @@ class Group(Base):
             user_id = user.id
         else:
             user_id = user
-        ug = UserGroup.query().filter( UserGroup.group_id == self.id,
+        ug = UserGroup.query(object_session(self)).filter( UserGroup.group_id == self.id,
                     UserGroup.user_id == user_id ).one()
         if ug and ug.role == 'A':
             return True
