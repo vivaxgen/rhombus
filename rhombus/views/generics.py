@@ -37,10 +37,10 @@ def error_page(request, text=''):
     return render_to_response('rhombus:templates/generics/error_page.mako',
 	{ 'text': text }, request = request )
 
-def not_authorized(text=''):
+def not_authorized(request, text=''):
     transaction.abort()
     return render_to_response('rhombus:templates/generics/not_authorized.mako',
-        { 'text': text } )
+        { 'text': text }, request = request )
 
 
 # pages with forwarding / refreshing
