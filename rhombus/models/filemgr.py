@@ -36,6 +36,9 @@ class File(BaseMixIn, Base):
     permanent = Column(types.Boolean, nullable=False, default=False)
     """ whether this is permanent file or temporary file """
 
+    flags = Column(types.Integer, nullable=False, server_default='0')
+    """ optional flags """
+
     acl = Column(types.Integer, nullable=False, server_default='0')
     """ acl follows basic UNIX permission model:
              0 ~ follow parent,

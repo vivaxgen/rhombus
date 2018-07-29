@@ -20,6 +20,7 @@ class UserClass(Base):
     referer = Column(types.String(128), nullable=False, server_default='')
     autoadd = Column(types.Boolean, nullable=False, default=False)
     credscheme = Column(YAMLCol(256), nullable=False)  # YAML type data
+    flags = Column(types.Integer, nullable=False, server_default='0')
 
 
     def __repr__(self):
@@ -188,6 +189,7 @@ class User(Base):
     address = Column(types.String(128), nullable=False, server_default='')
     contact = Column(types.String(64), nullable=False, server_default='')
     status = Column(types.String(1), nullable=False, server_default='A')
+    flags = Column(types.Integer, nullable=False, server_default='0')
 
     primarygroup_id = Column(types.Integer, ForeignKey('groups.id'), nullable=False, index=True)
 
@@ -366,17 +368,30 @@ class Group(Base):
     name = Column(types.String(32), nullable=False, unique=True)
     desc = Column(types.String(128), nullable=False, server_default='')
     scheme = Column(YAMLCol(256), nullable=False, server_default='')
+    flags= Column(types.Integer, nullable=False, server_default='0')
 
     #users = relationship(User, secondary=user_group_table, backref=backref('groups'))
     users = association_proxy('usergroups', 'user', creator=_create_ug_by_user)
     roles = relationship(EK, secondary=group_role_table, order_by = EK.key)
+
+    # flags
+    f_composite_group = 1 << 0
 
     def __repr__(self):
         return "<Group: %s>" % self.name
 
     def has_member(self, user):
         if type(user) == int:
-            user_ids = [ x.user_id for x in UserGroup.query().filter( UserGroup.group_id == self.id ).all() ]
+            if (self.flags & self.f_composite_group):
+                # join UserGroup and AssociatedGroup
+                user_ids = [ x[0] for x in list(AssociatedGroup.get_usergroup_info_query(self, 'C'))
+                ]
+            else:
+                user_ids = [ x[0] for x in
+                                object_session(self).query(UserGroup.user_id).\
+                                filter( UserGroup.group_id == self.id)
+                ]
+                #user_ids = [ x.user_id for x in UserGroup.query().filter( UserGroup.group_id == self.id ).all() ]
             return user in user_ids
         elif type(user) == UserInstance:
             return user.in_group(self)
@@ -388,11 +403,24 @@ class Group(Base):
             user_id = user.id
         else:
             user_id = user
+
+        if (self.flags & self.f_composite_group):
+            uginfo = AssociatedGroup.get_usergroup_info_query(self, 'C').filter( UserGroup.user_id == user_id).one()
+            if ug and uginfo[1] == 'A':
+                return True
+            return False
+
         ug = UserGroup.query(object_session(self)).filter( UserGroup.group_id == self.id,
                     UserGroup.user_id == user_id ).one()
         if ug and ug.role == 'A':
             return True
         return False
+
+    def check_flags(self, flag):
+        return self.flags & flag
+
+    def set_flags(self, flag, val):
+        self.flags = (self.flags | flag) if val == True else (self.flags & ~flag)
 
     def render(self):
         if self.desc:
@@ -434,6 +462,13 @@ class Group(Base):
             self.name = obj['name']
             self.desc = obj['desc']
             self.scheme = obj['scheme']
+
+            # flags
+            if 'flags-on' in obj:
+                self.flags |= obj['flags-on']
+            if 'flags-off' in obj:
+                self.flags &= ~ obj['flags-off']
+
             return
 
         self.name = obj.name
@@ -501,6 +536,16 @@ class AssociatedGroup(Base):
 
     __table_args__ = (UniqueConstraint('group_id', 'assoc_group_id'), {})
 
+
+    @classmethod
+    def get_usergroup_info_query(cls, group, role=None):
+        """ return tuples of (user_id, group_id, role) for those associated with the group
+        """
+        q = object_session(group).query( UserGroup.user_id, UserGroup.role, UserGroup.group_id, cls.role ).\
+                filter( UserGroup.group_id == cls.assoc_group_id, cls.group_id == group.id)
+        if role:
+            q = q.filter( cls.role == role )
+        return q
 
 #
 # helpers
