@@ -9,12 +9,18 @@ from pyramid.httpexceptions import HTTPFound
 from rhombus.lib.roles import *
 from rhombus.lib.utils import get_dbhandler
 from rhombus.lib.tags import *
+from rhombus.views.generics import not_authorized
 
 
 class not_roles(object):
 
     def __init__(self, *role_list):
         self.not_roles = role_list
+
+msg_0 = 'Please log in first.'
+
+msg_1 = 'Please notify the administrator if you believe that '\
+        'you should be able to access this resource.'
 
 
 class roles(object):
@@ -33,11 +39,11 @@ class roles(object):
             # need to check the roles
             def _view_with_roles(request, **kw):
                 if request.user and request.user.has_roles(*self.disallowed):
-                    return Response('Forbidden')
+                    return not_authorized(request, msg_1)
                 if PUBLIC in self.allowed and request.user:
                     return wrapped(request, **kw)
                 if not (request.user and request.user.has_roles(*self.allowed)):
-                    return Response('Forbidden')
+                    return not_authorized(request, msg_0)
                 return wrapped(request, **kw)
             return _view_with_roles
 
