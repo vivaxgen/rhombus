@@ -674,7 +674,7 @@ input_text_template = '''\
 <div class='{class_div} form-inline row'>
   <label class='{class_label} align-self-start pt-2' for='{name}'>{label}</label>
   <div class='{class_value}'>
-    <input type='text' id='{name}' name='{name}' value='{value}' class='{class_input}' placeholder='{placeholder}'style='width:100%'/>
+    <input type='text' id='{name}' name='{name}' value='{value}' class='{class_input}' placeholder='{placeholder}' style='width:100%'/>
     {help_span}
   </div>
   {info}
