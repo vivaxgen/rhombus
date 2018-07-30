@@ -469,6 +469,17 @@ class Group(Base):
             if 'flags-off' in obj:
                 self.flags &= ~ obj['flags-off']
 
+            if 'composite_ids' in obj:
+                if not self.id:
+                    # this is new object, so we can just attach using SqlAlchemy relationship mechanism
+                    session = get_dbhandler().session()
+                    with session.no_autoflush:
+                        for ag_id in obj['composite_ids']:
+                            AssociatedGroup.add(self.id, ag_id, 'C', session)
+
+                    #raise RuntimeError('FATAL ERR: node does not have id while performing tagging')
+                else:
+                    AssociatedGroup.sync( self.id, obj['composite_ids'], session = object_session(self) )
             return
 
         self.name = obj.name
@@ -534,6 +545,10 @@ class AssociatedGroup(Base):
     assoc_group_id = Column(types.Integer, ForeignKey('groups.id'), nullable=False)
     role = Column(types.String(1), nullable=False, server_default='R')
 
+    group = relationship(Group, uselist=False, foreign_keys=[ group_id ],
+                backref=backref('associated_groups', cascade='all,delete,delete-orphan'))
+    associated_group = relationship(Group, uselist=False, foreign_keys=[ assoc_group_id ])
+
     __table_args__ = (UniqueConstraint('group_id', 'assoc_group_id'), {})
 
 
@@ -546,6 +561,54 @@ class AssociatedGroup(Base):
         if role:
             q = q.filter( cls.role == role )
         return q
+
+    @classmethod
+    def sync(cls, group_id, group_ids, role='C', session = None):
+        # synchronize node_id and tag_ids
+
+        # check sanity
+        assert type(group_id) == int
+        for id in group_ids:
+            if type(id) != int:
+                raise RuntimeError('FATAL ERR: tag_ids must contain ony integers')
+
+        if not session:
+            session = get_dbhandler().session()
+
+        ags = cls.query(session).filter(cls.group_id == group_id)
+        in_sync = []
+        for ag in ags:
+            if ag.assoc_group_id in group_ids:
+                in_sync.append( ag.assoc_group_id )
+            else:
+                # remove this tag
+                session.delete(ag)
+
+        print(in_sync)
+        for grp_id in group_ids:
+            if grp_id in in_sync: continue
+            print('add %d' % grp_id)
+            cls.add(group_id, grp_id, role, session)
+
+
+    @classmethod
+    def add(cls, group_id, grp_id, role='C', session=None):
+        assert type(group_id) == int
+
+        if not session:
+            session = get_dbhandler().session()
+        if type(grp_id) == int:
+            ag = cls(group_id = group_id, assoc_group_id = grp_id, role = role)
+        else:
+            raise RuntimeError('FATAL PROG/ERR: Need integers for all group arguments!')
+            #tag = cls(group = group_id, assoc_group = grp_id, role = role)
+        session.add(ag)
+
+
+    @classmethod
+    def remove(cls, group_id, grp_id, session):
+        ag = cls.query().filter(cls.group_id == group_id, cls.assoc_group_id == grp_id).one()
+        session.delete(ag)
 
 #
 # helpers

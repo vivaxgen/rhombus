@@ -45,7 +45,7 @@ def view(request):
     grp_id = int(request.matchdict.get('id'))
     group = dbh.get_group_by_id(grp_id)
 
-    grp_form = edit_form(group, dbh, request, static=True)
+    grp_form, grp_js = edit_form(group, dbh, request, static=True)
 
     if request.user.has_roles(SYSADM, GROUP_CREATE, GROUP_MODIFY, GROUP_DELETE):
         role_table, role_js = format_roletable(group, request)
@@ -85,10 +85,11 @@ def edit(request):
         else:
             group = dbh.get_group(grp_id)
 
-        editform = edit_form(group, dbh, request)
+        editform, editjs = edit_form(group, dbh, request)
 
         return render_to_response( "rhombus:templates/generics/page.mako",
                 {   'content': str(editform),
+                    'code': editjs,
                 }, request = request
         )
 
@@ -362,11 +363,37 @@ def role_action(request):
     raise RuntimeError('FATAL - programming ERROR')
 
 
+@roles(PUBLIC)
 def lookup(request):
-    raise NotImplementedError
+    q = request.params.get('q')
+
+    if not q:
+        return error_page(request)
+
+    q = '%' + q.lower() + '%'
+
+    dbh = get_dbhandler()
+    groups = dbh.Group.query(dbh.session()).filter(dbh.Group.name.ilike(q))
+
+    # formating for select2 consumption
+
+    result = [
+        { 'id': g.id, 'text': g.name}
+        for g in groups]
+
+    return result
 
 
 def edit_form(group, dbh, request, static=False):
+
+    if group.check_flags(group.f_composite_group):
+        # prepare composite list
+        ags = [ ag for ag in group.associated_groups if ag.role == 'C' ]
+        composite_ids = [ ag.assoc_group_id for ag in ags ]
+        composite_options = [ (ag.associated_group.id, '%s' % ag.associated_group.name) 
+                            for ag in ags ]
+    else:
+        composite_ids = composite_options = []
 
     eform = form( name='rhombus/group', method=POST,
                 action=request.route_url('rhombus.group-edit', id=group.id))
@@ -379,12 +406,26 @@ def edit_form(group, dbh, request, static=False):
                 static=static),
             input_textarea('rhombus-group_scheme', 'Scheme', value=group.scheme,
                     static=static),
+            input_hidden(name='rhombus-group_options', value=1),
+            checkboxes('rhombus-group_options_fields', "Options", [
+                    ('rhombus-group_composite', 'Composite',
+                            group.check_flags(group.f_composite_group))]),
+            input_select('rhombus-group_composite_ids', 'Composite of', multiple=True,
+                            options = composite_options, value = composite_ids),
             submit_bar() if not static else a('Edit', class_='btn btn-primary',
                             href=request.route_url('rhombus.group-edit', id=group.id)),
+            name="rhombus-group-fieldset"
         )
     )
 
-    return eform
+    jscode = select2_template(tag="rhombus-group_composite_ids", minlen=3,
+                placeholder="Type a group name",
+                parenttag="rhombus-group-fieldset",
+                url=request.route_url('rhombus.group-lookup')
+
+    )
+
+    return (eform, jscode)
 
 
 def parse_form( f ):
@@ -394,6 +435,17 @@ def parse_form( f ):
     d['name'] = f['rhombus-group_name']
     d['desc'] = f['rhombus-group_desc']
     d['scheme'] = f['rhombus-group_scheme']
+
+    if 'rhombus-group_options' in f:
+        d['flags-on'] = d['flags-off'] = 0
+        if 'rhombus-group_composite' in f:
+            d['flags-on'] = d['flags-on'] | Group.f_composite_group
+            if 'rhombus-group_composite_ids' in f:
+                d['composite_ids'] = [ int(i) for i in f.getall('rhombus-group_composite_ids') ]
+            else:
+                d['composite_ids'] = []
+        else:
+            d['flags-off'] = d['flags-off'] | Group.f_composite_group
 
     return d
 
@@ -584,3 +636,20 @@ $('#group-add-member').click( function(e) {
 ''' % request.route_url('rhombus.user-lookup')
 
     return (user_table, user_js)
+
+
+def select2_template(**keywords):
+    return  '''
+  $('#%(tag)s').select2( {
+        minimumInputLength: %(minlen)d,
+        placeholder: '%(placeholder)s',
+        dropdownParent: $("#%(parenttag)s"),
+        ajax: {
+            url: "%(url)s",
+            dataType: 'json',
+            data: function(params) { return { q: params.term }; },
+            processResults: function(data, params) { return { results: data }; }
+        },
+    });
+''' % keywords
+

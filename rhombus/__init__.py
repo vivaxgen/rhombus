@@ -57,7 +57,7 @@ def includeme( config ):
         '/group/@@action',
         '/group/@@user_action',
         '/group/@@role_action',
-        '/group/@@lookup',
+        ('/group/@@lookup', 'lookup', 'json'),
         '/group/{id}@@edit',
         '/group/{id}@@save',
         ('/group/{id}', 'view'),
