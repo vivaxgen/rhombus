@@ -9,18 +9,18 @@ with open(os.path.join(here, 'CHANGES.md')) as f:
     CHANGES = f.read()
 
 requires = [
+    'SQLAlchemy',
+    'zope.sqlalchemy',
+    'transaction',
+    'dogpile.cache',
     'pyramid',
     'pyramid_mako',
     'pyramid_chameleon',
     'pyramid_debugtoolbar',
     'pyramid_tm',
-    'SQLAlchemy',
-    'transaction',
-    'zope.sqlalchemy',
     'waitress',
     'PyYAML',
     'passlib',
-    'dogpile.cache',
     'webhelpers2',
     'pyramid_exclog',
     'requests',
