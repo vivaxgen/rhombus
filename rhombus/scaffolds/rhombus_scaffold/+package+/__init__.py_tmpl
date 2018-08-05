@@ -42,6 +42,6 @@ def main(global_config, **settings):
 
     # attach rhombus to /mgr url, include custom configuration
     config = init_app(global_config, settings, prefix='/mgr'
-                    , includeme = includeme, include_tags = [ '{{package}}.includes' ])
+                    , include = includeme, include_tags = [ '{{package}}.includes' ])
 
     return config.make_wsgi_app()

@@ -10,9 +10,9 @@ class DBHandler(rhombus_handler.DBHandler):
     Post = post.Post
 
 
-    def initdb(self, create_table=True, init_data=True):
+    def initdb(self, create_table=True, init_data=True, rootpasswd=None):
         """ initialize database """
-        super().initdb(create_table, init_data)
+        super().initdb(create_table, init_data, rootpasswd)
         if init_data:
             from .setup import setup
             setup(self)
