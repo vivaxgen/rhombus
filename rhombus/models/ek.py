@@ -1,7 +1,7 @@
 
 
 from .core import *
-from rhombus.lib.utils import get_dbhandler
+from rhombus.lib.utils import get_dbhandler, cerr
 
 @registered
 class EK(BaseMixIn, Base):
