@@ -22,7 +22,8 @@ set_config( environ='RHOMBUS_CONFIG',
             paths = ['{{package}}.scripts.'],
             greet = greet,
             usage = usage,
-            dbhandler_class = DBHandler
+            dbhandler_class = DBHandler,
+            includes = ['{{package}}.includes'],
 )
 
 main = rhombus_main
