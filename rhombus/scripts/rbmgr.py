@@ -24,7 +24,7 @@ def init_argparser( parser = None):
 
     # import/export to YAML
 
-    p.add_argument('--importuserclass', default=False,
+    p.add_argument('--importuserclass', default=False, action='store_true',
         help = 'import userclass from YAML file')
 
     p.add_argument('--exportuserclass', default=False, action='store_true',
