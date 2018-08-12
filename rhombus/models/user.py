@@ -368,7 +368,7 @@ class Group(Base):
     name = Column(types.String(32), nullable=False, unique=True)
     desc = Column(types.String(128), nullable=False, server_default='')
     scheme = Column(YAMLCol(256), nullable=False, server_default='')
-    flags= Column(types.Integer, nullable=False, server_default='0')
+    flags= Column(types.Integer, nullable=False, server_default='0', default=0)
 
     #users = relationship(User, secondary=user_group_table, backref=backref('groups'))
     users = association_proxy('usergroups', 'user', creator=_create_ug_by_user)

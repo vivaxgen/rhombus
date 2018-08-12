@@ -79,7 +79,7 @@ def edit(request):
     if request.method == 'GET':
 
         if grp_id == 0:
-            group = dbh.Group()
+            group = dbh.Group(flags=0)
             group.id = 0
 
         else:
@@ -101,7 +101,7 @@ def edit(request):
 
         try:
             if grp_id == 0:
-                group = dbh.Group()
+                group = dbh.Group(flags=0)
                 group.update( group_d )
                 dbh.session().add( group )
                 dbh.session().flush()
