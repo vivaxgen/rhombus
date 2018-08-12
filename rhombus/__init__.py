@@ -1,7 +1,7 @@
 __copyright__ = '''
 __init__.py - Rhombus SQLAlchemy main init module
 
-(c) 2011 - 2015 Hidayat Trimarsanto <anto@eijkman.go.id> <trimarsanto@gmail.com>
+(c) 2011 - 2018 Hidayat Trimarsanto <anto@eijkman.go.id> <trimarsanto@gmail.com>
 
 All right reserved.
 This software is licensed under LGPL v3 or later version.
@@ -147,6 +147,29 @@ def add_route_view( config, view_module, prefix_name, *routelist):
                 renderer = renderer )
 
 
+def add_route_view_class( config, view_class, prefix_name, *routelist ):
+    for route_args in routelist:
+        renderer = None
+        if type(route_args) == str:
+            url = route_args
+            if '@@' in route_args:
+                view_name = route_args.split('@@')[-1]
+                route_name = '%s-%s' % (prefix_name, view_name)
+            else:
+                view_name = 'index'
+                route_name = prefix_name
+        else:
+            url = route_args[0]
+            view_name = route_args[1]
+            route_name = '%s-%s' % (prefix_name, view_name)
+            if len(route_args) > 2:
+                renderer = route_args[2]
+
+        config.add_route(route_name, url)
+        config.add_view( view_class,
+                attr = view_name,
+                route_name = route_name,
+                renderer = renderer )
 
 def init_app(global_config, settings, prefix=None, dbhandler_factory = get_dbhandler
                 , include = None, include_tags = None):

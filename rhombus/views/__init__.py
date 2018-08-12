@@ -52,6 +52,28 @@ class roles(object):
             return wrapped
 
 
+class m_roles(roles):
+
+    def __call__(self, wrapped):
+        if self.allowed or self.disallowed:
+            # need to check the roles
+            def _view_with_roles(inst, **kw):
+                request = inst.request
+                if request.user and request.user.has_roles(*self.disallowed):
+                    return not_authorized(request, msg_1)
+                if PUBLIC in self.allowed and request.user:
+                    return wrapped(inst, **kw)
+                if not (request.user and request.user.has_roles(*self.allowed)):
+                    return not_authorized(request, msg_0)
+                return wrapped(inst, **kw)
+            return _view_with_roles
+
+        else:
+            # no roles, just return the function
+            return wrapped
+
+
+
 
 CLASS = 'class_'
 
