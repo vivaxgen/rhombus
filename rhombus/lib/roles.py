@@ -32,5 +32,7 @@ GROUP_DELUSER = '~r|group|del-user'
 
 def is_sysadm(user):
 
+    return user.has_roles(SYSADM)
+
     raise NotImplementedError('Need to think about this')
     return True
