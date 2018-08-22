@@ -184,6 +184,7 @@ def init_app(global_config, settings, prefix=None, dbhandler_factory = get_dbhan
     """
 
     # init dogpile.cache
+    global session_expiration_time
 
     authcache = dogpile.cache.make_region(
                 key_mangler = dogpile.cache.util.sha1_mangle_key)
@@ -191,6 +192,7 @@ def init_app(global_config, settings, prefix=None, dbhandler_factory = get_dbhan
                 key_mangler = dogpile.cache.util.sha1_mangle_key)
 
     authcache.configure_from_config( settings, 'rhombus.authcache.' )
+    session_expiration_time = int(settings['rhombus.authcache.expiration_time'])
     cache.configure_from_config( settings, 'dogpile.cache.' )
 
     # init database
@@ -273,6 +275,7 @@ def main(global_config, **settings):
 
 
 SESS_TICKET = '_rb_tkt-'
+session_expiration_time = None
 
 class RhoRequest(Request):
 
@@ -335,7 +338,7 @@ def get_authenticated_userobj(request, user_id):
     # get userinstance from current dogpile.cache
     auth_cache = request.auth_cache
     key = user_id.encode('ASCII')
-    userinstance = auth_cache.get(key, None)
+    userinstance = auth_cache.get(key, session_expiration_time)
     if not userinstance and 'rhombus.authhost' in request.registry.settings:
         # in slave mode - check user existence here first
         login, userclass, stamp = user_id.split('|')
