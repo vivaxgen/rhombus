@@ -54,23 +54,29 @@ def login(request):
         userclass_id = int(request.params.get('domain', 1))
 
         userclass = dbh.get_userclass( userclass_name )
-        userinstance = userclass.auth_user( login, passwd )
 
-        if userinstance is not None:
-            login = userinstance.login + '|' + userclass_name + '|' + str(time.time())
-            request.set_user(login, userinstance)
-            headers = remember(request, login)
-            if came_from:
-                o1 = urlparse(came_from)
-                o2 = urlparse(request.host_url)
-                if o1.netloc.lower() == o2.netloc.lower():
-                    request.session.flash(
-                        ('success', 'Welcome %s!' % userinstance.login)
-                    )
-            return HTTPFound( location = came_from,
+        if userclass:
+
+            userinstance = userclass.auth_user( login, passwd )
+
+            if userinstance is not None:
+                login = userinstance.login + '|' + userclass_name + '|' + str(time.time())
+                request.set_user(login, userinstance)
+                headers = remember(request, login)
+                if came_from:
+                    o1 = urlparse(came_from)
+                    o2 = urlparse(request.host_url)
+                    if o1.netloc.lower() == o2.netloc.lower():
+                        request.session.flash(
+                            ('success', 'Welcome %s!' % userinstance.login)
+                        )
+                return HTTPFound( location = came_from,
                                 headers = headers )
 
-        msg = 'Invalid username or password!'
+            msg = 'Invalid username or password!'
+
+        else:
+            msg = 'Invalid userclass'
 
     return render_to_response("rhombus:templates/login.mako",
                 {   'msg': msg, 'came_from': came_from,
