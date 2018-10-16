@@ -206,6 +206,9 @@ class User(Base):
     def __repr__(self):
         return "%s/%s" % (self.login, str(self.userclass).lower())
 
+    def get_login(self):
+        return "%s/%s" % (self.login, self.userclass.domain)
+
     def update(self, u):
         if isinstance(u, dict):
             if 'lastname' in u:
