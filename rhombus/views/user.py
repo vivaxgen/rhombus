@@ -5,6 +5,8 @@ from rhombus.views.generics import error_page
 
 from sqlalchemy import or_
 
+import urllib.parse
+
 @roles(SYSADM)
 def index(request):
 
@@ -372,8 +374,8 @@ def user_menu_xxx(request):
 def user_menu(request):
     """ return a HTML for user menu, bootstrap-based """
     authhost = request.registry.settings.get('rhombus.authhost', '')
-    url_login = authhost + '/login'
-    url_logout = authhost + '/logout'
+    url_login = authhost + '/login?'
+    url_logout = authhost + '/logout?'
     user_menu_html = ul(class_ = 'nav navbar-nav navbar-right')
     if request.user:
         user_menu_list = li(class_ = "nav-item active dropdown" )[
@@ -399,7 +401,8 @@ def user_menu(request):
             ]
     else:
         user_menu_list = li(class_ = 'nav-item active')[
-                a(class_='nav-link', href=url_login)[
+                a(class_='nav-link',
+                    href=url_login + urllib.parse.urlencode({'came_from': request.url}))[
                     span(class_='fa fa-sign-in'),
                     ' Login '
                 ]
