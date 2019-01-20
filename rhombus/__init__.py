@@ -205,6 +205,7 @@ def init_app(global_config, settings, prefix=None, dbhandler_factory = get_dbhan
         secret = settings['rhombus.authsecret'],
         callback = authenticate_user,
         parent_domain = parent_domain,
+        cookie_name = settings.get('rhombus.authcookie', 'rb_auth_tkt'),
         hashalg = 'sha512' )
 
     config = Configurator(settings = settings,
