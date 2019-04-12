@@ -2,7 +2,7 @@
 
 import sys, os
 import argparse
-import importlib
+import importlib, importlib.util
 from pyramid.paster import get_appsettings, setup_logging
 from rhombus.lib.utils import cout, cinfo, cerr, cexit, get_dbhandler
 from rhombus.models.core import set_func_userid
@@ -45,28 +45,38 @@ def get_usage():
     return USAGE
 
 
-def execute(command, run_args):
+def load_module(command):
 
-    print('paths:', PATHS)
+    if command.endswith('.py') or '/' in command:
+        module_name = 'SCRIPT'
+
+        spec = importlib.util.spec_from_file_location(module_name, command)
+        module = importlib.util.module_from_spec(spec)
+        spec.loader.exec_module(module)
+        return module
 
     M = None
     for module_path in PATHS:
         try:
-            print(module_path)
             M = importlib.import_module(module_path + command)
+            cerr('Importing <%s> from path: %s' % (command, module_path))
             break
         except ImportError as exc:
             pass
     if M is None:
         cexit('Cannot locate script name: %s' % command)
 
-    print(M)
+    return M
 
+
+def execute(command, run_args):
+
+    M = load_module(command)
     if hasattr(M, 'init_argparser'):
         parser = M.init_argparser()
         assert parser, "FATAL ERROR - init_argparser() does not return an instance"
     else:
-        print('Use default arg parser!')
+        cerr('WARN: Using default arg parser!')
         parser = arg_parser()
 
     args = parser.parse_args(run_args)
@@ -83,7 +93,10 @@ def execute(command, run_args):
     #init_db( settings )
 
     cerr('Running module: %s' % command)
-
+    if M.__name__ == 'SCRIPT':
+       settings = setup_settings( args )
+       dbh = get_dbhandler( settings )
+ 
     M.main( args )
 
 
@@ -108,7 +121,7 @@ def arg_parser( description = None, parser = None ):
 
 def setup_settings( args ):
 
-    print('rhombus: setup_settings()')
+    cerr('rhombus: setup_settings()')
 
     configfile = (args.config if args else None) or os.environ.get(ENVIRON)
 
@@ -127,7 +140,7 @@ def setup_settings( args ):
                 continue
             modules = settings[include_tag].split()
             for module_path in modules:
-                print('importing module: ', module_path)
+                cerr('rhombus: importing module: ', module_path)
                 M = importlib.import_module(module_path)
 
     return settings
