@@ -15,7 +15,7 @@ from sqlalchemy.orm import scoped_session, sessionmaker, mapper, Session
 from sqlalchemy.engine import Engine
 from sqlalchemy import event, MetaData
 
-from zope.sqlalchemy import ZopeTransactionExtension
+from zope.sqlalchemy import register
 
 __all__ = ['get_base', 'get_dbsession', 'set_datalogger', 'set_before_update_flag']
 
@@ -95,8 +95,8 @@ convention = {
 }
 
 _metadata = MetaData(naming_convention=convention)
-_dbsession = scoped_session(sessionmaker(class_ = RhoSession,
-                                        extension = ZopeTransactionExtension()))
+_dbsession = scoped_session(sessionmaker(class_ = RhoSession))
+register(_dbsession)
 _base = declarative_base(metadata=_metadata)
 
 # this is necessary for SQLite to use FOREIGN KEY support (as well as ON DELETE CASCADE)
