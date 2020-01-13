@@ -7,6 +7,8 @@ class Post(Base, BaseMixIn):
         BaseMixIn ensures the id, lastuser_id and stamp
     """
 
+    __tablename__ = 'posts'
+
     user_id = Column(types.Integer, ForeignKey('users.id'), nullable=False)
     group_id = Column(types.Integer, ForeignKey('groups.id'), nullable=False)
     title = Column(types.String(256), nullable=False, server_default='')
