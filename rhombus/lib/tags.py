@@ -103,7 +103,7 @@ class htmltag(object):
                             escape(self.id or self.name)))
             if self.class_:
                 attrs.append('class="%s"' % escape(self.class_))
-                
+
         for (key, val) in self.attrs.items():
             attrs.append('%s="%s"' % (escape(key), escape(val)))
         return ' '.join(attrs)
@@ -321,6 +321,8 @@ class input_select(input_text):
 class input_select_ek(input_select):
 
     def __init__(self, name, label, value, parent_ek, group=None, **kwargs):
+        if parent_ek is None:
+            raise RuntimeError('parent_ek cannot be None')
         super().__init__( name, label, value, multiple=False, **kwargs )
         self.options = [ (ek.id, ek.key) for ek in parent_ek.members ]
 
