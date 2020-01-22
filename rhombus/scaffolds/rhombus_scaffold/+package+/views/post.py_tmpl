@@ -2,33 +2,162 @@
 ## simple example of typical rhombus viewer
 
 from {{package}}.views import *
+from rhombus.lib.utils import random_string
 
-def index( request ):
-    pass
+class PostViewer(object):
 
-@roles( PUBLIC )
-def edit( request ):
-    pass
+    def __init__(self, request):
+        self.request = request
+        self.dbh = get_dbhandler()
+        self.post = None
 
-@roles( PUBLIC )
-def add( request ):
-    pass
+    def index( self ):
 
-@roles( PUBLIC )
-def action(request):
-    pass
+        content = div()
+        self.post = self.dbh.get_post( int(self.request.matchdict.get('id', 0)))
+
+        content.add( h2(self.post.title) )
+        content.add( div(self.post.content) )
+
+        return render_to_response('{{package}}:templates/generic_page.mako',
+                    {
+                        'html': content,
+                    }, request = self.request
+        )
+
+    @m_roles( PUBLIC )
+    def edit( self ):
+        pass
+
+
+    @m_roles( PUBLIC )
+    def add( self ):
+        req = self.request
+        post = self.dbh.Post()
+
+        if req.method == 'POST':
+
+            post.update( self.parse_form(req.params) )
+            self.dbh.session().add(post)
+
+            return HTTPFound(location = '/')
+
+        content = div()
+        content.add( self.edit_form(post))
+
+        return render_to_response('{{package}}:templates/generic_page.mako',
+                    {
+                        'html': content,
+                    }, request = req
+        )
+
+
+    @m_roles( PUBLIC )
+    def action(self):
+        pass
+
+
+
+    def edit_form(self, post, create=False):
+        """ return HTML form populated by post's data """
+
+        dbh = self.dbh
+        request = self.request
+
+        eform = form( name='{{package}}/post', method=POST )
+        eform.add(
+
+            self.hidden_fields( self.request, post ),
+
+            fieldset(
+                multi_inputs(name='{{package}}-group-user-type')[
+                input_select('{{package}}-group_id', 'Group', value=post.group_id, offset=1, size=2,
+                    options = [ (g.id, g.name) for g in dbh.get_group() ]),
+                input_select('{{package}}-user_id', 'User', value=post.user_id, offset=1, size=2,
+                    options = [ (u.id, u.login) for u in dbh.get_user(request.user.id).group_users() ]),
+                input_select_ek('{{package}}-posttype_id', 'Post type', value=post.posttype_id,
+                    parent_ek = dbh.get_ekey('@POSTTYPE'), offset=1, size=2),
+                ],
+                name='{{package}}.post-header'
+
+            ),
+
+            fieldset(
+                input_text('{{package}}-title', 'Title', value=post.title, offset=1),
+                input_textarea('{{package}}-content', 'Content', value=post.content, offset=1, size="18x8"),
+                name='{{package}}.post-main'
+            ),
+
+            fieldset(
+                custom_submit_bar(('Save', 'save')).set_hide(False).set_offset(2)
+            ),
+        )
+
+        return eform
+
+
+    def hidden_fields(self, request, post=None):
+        """ return hidden fields for validating a form """
+
+        post = post or self.post
+        return fieldset (
+            # stamp is used to check whether a post has been updated since the time it was being fetched
+            input_hidden(name='{{package}}-stamp', value='%15f' % post.stamp.timestamp() if post.stamp else -1),
+
+            # a special session key to check whether the user and the post are still the same
+            input_hidden(name='{{package}}-sesskey', value=generate_sesskey(request.user.id, post.id)),
+
+            name="{{package}}.post-hidden"
+        )
+
+
+    def parse_form(self, f, d=None):
+
+        d = d or dict()
+
+        d['_stamp_'] = float(f['{{package}}-stamp'])
+
+        if '{{package}}-title' in f:
+            d['title'] = f['{{package}}-title']
+        if '{{package}}-content' in f:
+            d['content'] = f['{{package}}-content']
+
+        if '{{package}}-group_id' in f:
+            d['group_id'] = int(f.get('{{package}}-group_id'))
+        if '{{package}}-user_id' in f:
+            d['user_id'] = int(f.get('{{package}}-user_id'))
+        if '{{package}}-posttype_id' in f:
+            d['posttype_id'] = int(f.get('{{package}}-posttype_id'))
+
+        return d
+
+
+
 
 
 def list_posts( request ):
 
     dbh = get_dbhandler()
 
-    posts = dbh.get_post()
+    posts = dbh.get_posts()
+
+    content = div()
+    content.add(
+                a('+ New post', class_='btn btn-success',
+                    href=request.route_url('post-add')
+                ),
+            )
+
+    if len(posts) == 0:
+        content.add( div("No posts!"))
+        return content
 
     body = tbody()
 
+    #raise RuntimeError
+
     for post in posts:
-        tbody.add(
+        body.add(
             tr(
                 td( a(post.title, href=request.route_url('post-view', id=post.id)) ),
             )
@@ -44,4 +173,14 @@ def list_posts( request ):
 
     table_posts.add( body )
 
-    return table_posts
+    content.add( table_posts)
+    return content
+
+
+def generate_sesskey(user_id, post_id=None):
+    if post_id:
+        post_id_part = '%08x' % post_id
+    else:
+        post_id_part = 'XXXXXXXX'
+
+    return '%08x%s%s' % (user_id, random_string(8), post_id_part)

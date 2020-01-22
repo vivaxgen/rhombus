@@ -1,4 +1,4 @@
-<%inherit file="rhombus:templates/base.mako">
+<%inherit file="rhombus:templates/base.mako" />
 
 ${ html }
 

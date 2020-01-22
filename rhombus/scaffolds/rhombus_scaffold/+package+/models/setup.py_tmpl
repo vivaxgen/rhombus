@@ -15,4 +15,10 @@ ek_initlist = [
             ( '{{package}}'.upper(), '{{package}}' ),
         ]
     ),
+    (   '@POSTTYPE', 'Post types',
+        [
+            ( 'Article', 'article'),
+            ( 'News', 'news')
+        ]
+    ),
 ]
