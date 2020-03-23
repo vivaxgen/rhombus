@@ -488,6 +488,9 @@ class a(doubletag):
 class b(doubletag):
     _tag = 'b'
 
+class i(doubletag):
+    _tag = 'i'
+
 class div(doubletag):
     _tag = 'div'
 
