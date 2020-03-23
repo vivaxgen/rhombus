@@ -385,7 +385,7 @@ def user_menu(request):
                             'aria-expanded': 'false',
                         }
                 )[
-                    span(class_='fa fa-user'),
+                    i(class_='fas fa-user-circle'),
                     ' ' + request.user.login,
                 ],
                 div(class_='dropdown-menu dropdown-menu-right', ** { 'aria-labelledby': 'navbarUsermenu'} )[
