@@ -34,6 +34,8 @@ def login(request):
             came_from
     """
 
+    dbh = get_dbhandler()
+
     msg = None
     referrer = request.referrer
     came_from = request.params.get('came_from', referrer) or '/'
@@ -43,12 +45,18 @@ def login(request):
     login = request.params.get('login', '')
     if '/' in login:
         login, userclass_name = login.split('/')
+    elif '@' in login:
+        # find based on email
+        users = dbh.get_user_by_email(login)
+        if len(users) > 1:
+            # email is used by more than 1 users
+            msg = 'Email address is used by multiple users!'
+        else:
+            login, userclass_name = user.login, user.userclass.domain
     elif userclass_name is None:
         userclass_name = request.registry.settings.get('rhombus.default.userclass','_SYSTEM_')
 
-    dbh = get_dbhandler()
-
-    if request.POST:
+    if request.POST and msg is None:
 
         passwd = request.params.get('password', '')
         userclass_id = int(request.params.get('domain', 1))

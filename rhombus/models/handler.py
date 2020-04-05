@@ -124,7 +124,7 @@ class DBHandler(object):
 
     def get_user_by_email(self, email):
         q = self.User.query(self.session()).filter( self.User.email.ilike(email) )
-        return q.one()
+        return q.all()
 
 
     def get_group_by_id(self, id):
