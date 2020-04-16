@@ -26,11 +26,16 @@ rhombus.authsecret = XXXXXXX
 # set authmode to master or slave for remote authentication
 #rhombus.authmode = master
 
+# web session caching
 rhombus.authcache.backend = dogpile.cache.dbm
 rhombus.authcache.expiration_time = 10000
 rhombus.authcache.arguments.filename = %(here)s/db/authcache.dbm
 
+# additional templates to override default templates
 mako.directories = %(here)s/templates
+
+# assets directory (for CSS/JS library, etc) whose content can
+# be served directly by front-end web server such as nginx
 assets.directory = %(here)s/assets
 
 # set below for overiding assets
@@ -38,6 +43,7 @@ assets.directory = %(here)s/assets
 #       rhombus:templates/base.mako > custom_base.mako
 #       rhombus:templates/plainbase.mako > custom_plainbase.mako
 
+# general caching
 dogpile.cache.backend = dogpile.cache.dbm
 dogpile.cache.expiration_time = 10000
 dogpile.cache.arguments.filename = %(here)s/db/cache.dbm
