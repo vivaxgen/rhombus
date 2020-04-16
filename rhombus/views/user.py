@@ -403,7 +403,7 @@ def user_menu(request):
         user_menu_list = li(class_ = 'nav-item active')[
                 a(class_='nav-link',
                     href=url_login + urllib.parse.urlencode({'came_from': request.url}))[
-                    span(class_='fa fa-sign-in'),
+                    i(class_='fas fa-sign-in-alt'),
                     ' Login '
                 ]
             ]
