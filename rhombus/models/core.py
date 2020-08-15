@@ -165,7 +165,7 @@ class YAMLCol(types.TypeDecorator):
     def process_result_value(self, value, dialect):
         if value is None:
             return None
-        return yaml.load(value)
+        return yaml.load(value, yaml.SafeLoader)
 
     def copy_value(self, value):
         return copy.deepcopy(value)
