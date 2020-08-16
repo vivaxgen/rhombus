@@ -213,6 +213,7 @@ def init_app(global_config, settings, prefix=None, dbhandler_factory = get_dbhan
 
     config.set_request_factory(RhoRequest)
     config.add_request_method(auth_cache_factory(authcache), 'auth_cache', reify=True)
+    config.add_request_method(auth_cache_factory(cache), 'cache', reify=True)
     config.add_request_method(get_userobj, 'user', reify=True)
     config.add_request_method(set_userobj, 'set_user')
     config.add_request_method(del_userobj, 'del_user')
@@ -271,6 +272,12 @@ def main(global_config, **settings):
     config.add_route('logout', '/logout')
     config.add_view('rhombus.views.home.logout', route_name = 'logout')
 
+    config.add_route('g_login', '/g_login')
+    config.add_view('rhombus.views.google.g_login', route_name='g_login')
+
+    config.add_route('g_callback', '/g_callback')
+    config.add_view('rhombus.views.google.g_callback', route_name='g_callback')
+
     return config.make_wsgi_app()
 
 
@@ -283,7 +290,7 @@ class RhoRequest(Request):
 
     # override authentication mechanism
 
-    # ticket-based data storage
+    # ticket-based data storage, using separate dogpile.cache
 
     def get_sess_ticket(self, ticket=None):
         if ticket == None:
