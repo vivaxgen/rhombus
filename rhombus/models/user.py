@@ -317,8 +317,8 @@ class User(Base):
 
     def user_instance(self):
         group_ids, role_ids = self.group_role_ids()
-        return UserInstance( self.login, self.id, self.primarygroup_id, group_ids, role_ids,
-                dbsession = object_session(self) )
+        return UserInstance( self.login, self.id, self.primarygroup_id,
+                self.userclass.domain, group_ids, role_ids, dbsession = object_session(self) )
 
     def render(self):
         return "%s | %s" % (str(self), self.fullname())
@@ -622,7 +622,8 @@ class UserInstance(object):
     """ UserInstance is a pickled-able instance that can be transported between processes
     """
 
-    def __init__(self, login, id, primarygroup_id, groups=None, roles=None, dbsession=None):
+    def __init__(self, login, id, primarygroup_id, domain=None, groups=None,
+                roles=None, dbsession=None):
         """ login: string, id: int, primarygroup_id: int,
             primarygroup_id: group_id,
             groups: [ list of group_ids as Group ]
@@ -631,6 +632,7 @@ class UserInstance(object):
         assert dbsession
         self.login = login
         self.id = id
+        self.domain = domain
         self.primarygroup_id = primarygroup_id
         self.groups = [ (g.name, g.id) for g in [ Group.get(gid, dbsession) for gid in groups ] ]
         self.roles = [ (EK._key(rid, dbsession=dbsession), rid) for rid in roles ]
