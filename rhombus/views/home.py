@@ -9,7 +9,7 @@ from pyramid.httpexceptions import HTTPFound, HTTPNotFound
 
 from rhombus.views import roles
 from rhombus.lib.roles import SYSADM, SYSVIEW
-from rhombus.models.user import UserClass
+from rhombus.models.user import UserClass, UserInstance
 from rhombus.lib.utils import get_dbhandler
 
 from urllib.parse import urlparse
@@ -38,10 +38,20 @@ def login(request):
 
     msg = None
     referrer = request.referrer
+
+    # set came_from
     came_from = request.params.get('came_from', referrer) or '/'
     userclass_name = request.params.get('userclass', None)
     if came_from == '/login':
         came_from = '/'
+
+    # override with came_from in session
+    came_from_session = request.session.get('came_from', None)
+    if came_from_session:
+        came_from = came_from_session
+    else:
+        request.session['came_from'] = came_from
+
     login = request.params.get('login', '')
     if '/' in login:
         login, userclass_name = login.split('/')
@@ -68,9 +78,7 @@ def login(request):
             userinstance = userclass.auth_user( login, passwd )
 
             if userinstance is not None:
-                login = userinstance.login + '|' + userclass_name + '|' + str(time.time())
-                request.set_user(login, userinstance)
-                headers = remember(request, login)
+                headers = set_user_headers(userinstance, request)
                 if came_from:
                     o1 = urlparse(came_from)
                     o2 = urlparse(request.host_url)
@@ -78,6 +86,7 @@ def login(request):
                         request.session.flash(
                             ('success', 'Welcome %s!' % userinstance.login)
                         )
+                del request.session['came_from']
                 return HTTPFound( location = came_from,
                                 headers = headers )
 
@@ -130,6 +139,7 @@ def confirm(request):
 
 
 def rhombus_css(request):
+    """ this will update session, preventing time-out """
 
     user = request.user
     if user:
@@ -146,3 +156,10 @@ def rhombus_js(request):
     return rhombus_css(request)
 
 
+def set_user_headers(userinstance, request):
+    """ set user and return http header """
+
+    assert isinstance(userinstance, UserInstance)
+    login = userinstance.login + '|' + userinstance.domain + '|' + str(time.time())
+    request.set_user(login, userinstance)
+    return remember(request, login)
