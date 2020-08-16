@@ -97,7 +97,7 @@ def g_callback(request):
 
     userinstance = users[0].user_instance()
     headers = set_user_headers(userinstance, request)
-    came_from = request.params.get('came_from', '/')
+    came_from = request.session.get('came_from', request.params.get('came_from', '/'))
     if came_from:
         o1 = urlparse(came_from)
         o2 = urlparse(request.host_url)
