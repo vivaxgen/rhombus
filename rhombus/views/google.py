@@ -70,8 +70,7 @@ def g_callback(request):
     redirect_uri = request.registry.settings.get('rhombus.oauth2.google.redirect_uri', None)
 
     authresp = request.params.get('authresp', request.url)
-    authresp = "https://authn.eijkman.go.id/g_callback?state=TjR2LaNgCqkoeLFR4i3EVOKJlJjPil&code=4%2F3AESq0uxV-HDRCwNCByz5cHFbxUtweRaZB6RmG7Yeb0RGALwQ_FApgBwDrQ0cqS-SpX_KnxV84yFFGZD5SitFS4&scope=email+profile+https%3A%2F%2Fwww.googleapis.com%2Fauth%2Fuserinfo.profile+https%3A%2F%2Fwww.googleapis.com%2Fauth%2Fuserinfo.email+openid&authuser=0&prompt=none"
-    print(authresp)
+    print("google authresp:", authresp)
     print(request.session['oauth2_state'])
 
     google = OAuth2Session(client_id, scope=g_scope, redirect_uri=redirect_uri,
