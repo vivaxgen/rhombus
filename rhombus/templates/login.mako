@@ -26,5 +26,11 @@
           </div>
         </div>
       </form>
+      <button class="btn">
+        <a class="btn btn-outline-dark" href="/g_login" role="button" style="text-transform:none">
+          <img width="20px" style="margin-bottom:3px; margin-right:5px" alt="Google sign-in" src="${request.static_url('rhombus:static/google-g-logo.svg')}" />
+                Login with Google
+        </a>
+      </button>
     </div>
     </div></div>
