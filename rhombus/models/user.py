@@ -413,10 +413,14 @@ class Group(Base):
                 return True
             return False
 
-        ug = UserGroup.query(object_session(self)).filter( UserGroup.group_id == self.id,
+        try:
+            ug = UserGroup.query(object_session(self)).filter( UserGroup.group_id == self.id,
                     UserGroup.user_id == user_id ).one()
-        if ug and ug.role == 'A':
-            return True
+            if ug and ug.role == 'A':
+                return True
+        except NoResultFound:
+            pass
+
         return False
 
     def check_flags(self, flag):
