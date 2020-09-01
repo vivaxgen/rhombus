@@ -93,19 +93,6 @@ def includeme( config ):
         '/gallery',
     )
 
-    # check if we are running as master
-    if settings.get('rhombus.authmode', None) == 'master':
-        config.add_route('confirm', '/confirm')
-        config.add_view('rhombus.views.home.confirm', route_name = 'confirm',
-                renderer = 'json')
-
-    # for authentication expiration time / stamp purpose
-    config.add_route('rhombus_js', '/auth-stamp.js')
-    config.add_view('rhombus.views.home.rhombus_js', route_name = 'rhombus_js',
-            renderer = 'string')
-    config.add_route('rhombus_css', '/auth-stamp.css')
-    config.add_view('rhombus.views.home.rhombus_js', route_name = 'rhombus_css',
-            renderer = 'string')
 
     # for override assets
     override_assets( config, settings,
@@ -263,6 +250,8 @@ def main(global_config, **settings):
     #config.add_route('home', '/')
     #config.scan()
 
+    # Routes below needs to be replicated by library users as necessary
+
     config.add_route('home', '/')
     config.add_view('rhombus.views.home.index', route_name = 'home')
 
@@ -277,6 +266,22 @@ def main(global_config, **settings):
 
     config.add_route('g_callback', '/g_callback')
     config.add_view('rhombus.views.google.g_callback', route_name='g_callback')
+
+    # check if we are running as master
+    if settings.get('rhombus.authmode', None) == 'master':
+
+        # add confirmation url
+        config.add_route('confirm', '/confirm')
+        config.add_view('rhombus.views.home.confirm', route_name = 'confirm',
+                renderer = 'json')
+
+        # for authentication expiration time / stamp purpose
+        config.add_route('rhombus_js', '/auth-stamp.js')
+        config.add_view('rhombus.views.home.rhombus_js', route_name = 'rhombus_js',
+                renderer = 'string')
+        config.add_route('rhombus_css', '/auth-stamp.css')
+        config.add_view('rhombus.views.home.rhombus_js', route_name = 'rhombus_css',
+                renderer = 'string')
 
     return config.make_wsgi_app()
 
