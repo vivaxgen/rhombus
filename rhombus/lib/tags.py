@@ -521,6 +521,15 @@ class ol(ul):
 class li(doubletag):
     _tag = 'li'
 
+class dl(doubletag):
+    _tag = 'dl'
+
+class dt(doubletag):
+    _tag = 'dt'
+
+class dd(doubletag):
+    _tag = 'dd'
+
 
 class button(doubletag):
     _tag = 'button'
