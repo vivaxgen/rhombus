@@ -21,7 +21,6 @@ from sqlalchemy import and_, or_, schema, types, MetaData, Sequence, Column, For
 from sqlalchemy.orm import relationship, backref, dynamic_loader, deferred
 from sqlalchemy.orm.collections import column_mapped_collection, attribute_mapped_collection
 from sqlalchemy.orm.session import object_session
-from sqlalchemy.orm.interfaces import MapperExtension
 from sqlalchemy.orm.exc import NoResultFound
 from sqlalchemy.exc import OperationalError, IntegrityError
 from sqlalchemy.ext.associationproxy import association_proxy
