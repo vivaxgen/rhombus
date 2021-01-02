@@ -30,7 +30,7 @@ class File(BaseMixIn, Base):
                 default = get_groupid)
     """ group_id for this file, default use user's primarygroup_id """
 
-    bindata = Column(types.Binary, nullable=False, server_default='')
+    bindata = Column(types.LargeBinary, nullable=False, server_default='')
     """ actual data """
 
     permanent = Column(types.Boolean, nullable=False, default=False)
