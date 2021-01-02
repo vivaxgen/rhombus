@@ -14,7 +14,7 @@ class EK(BaseMixIn, Base):
 
     key = Column(types.String(128), nullable=False)
     desc = Column(types.String(128), nullable=False)
-    data = deferred(Column(types.Binary(), nullable=True))
+    data = deferred(Column(types.LargeBinary(), nullable=True))
     syskey = Column(types.Boolean, nullable=False, default=False)
 
     member_of_id = Column(types.Integer, ForeignKey('eks.id'), index=True)
