@@ -173,13 +173,6 @@ class input_text(htmltag):
         return self.as_input()
 
     def as_input(self):
-        if self.info:
-            if self.info.startswith('popup:'):
-                info = '<div class="col-md-1 form-control-static"><a class="js-newWindow" data-popup="width=400,height=200,scrollbars=yes" href="%s"><span class="glyphicon glyphicon-question-sign" aria-hidden="true"></span></a></div>' % self.info[6:]
-            else:
-                info = ''
-        else:
-            info = ''
         return literal( input_text_template.format( name=escape(self.name),
                         label=escape(self.label), value=escape(self.value),
                         placeholder = self.placeholder,
@@ -188,7 +181,7 @@ class input_text(htmltag):
                         class_value = 'col-md-%d' % self.size,
                         class_input = 'form-control',
                         help_span = self.help(),
-                        info = info,
+                        info = self.info_text(),
                     ) )
 
     def help(self):
@@ -207,6 +200,16 @@ class input_text(htmltag):
                         class_value = 'col-md-%d' % self.size,
                         class_input = 'form-control',
                     ) )
+
+    def info_text(self):
+        if self.info:
+            if self.info.startswith('popup:'):
+                info = '<div class="col-md-1 form-control-static"><a class="js-newWindow" data-popup="width=400,height=200,scrollbars=yes" href="%s"><span class="glyphicon glyphicon-question-sign" aria-hidden="true"></span></a></div>' % self.info[6:]
+            else:
+                info = '<small class="form-text text-muted">' + self.info + '</small>'
+        else:
+            info = ''
+        return info
 
 
 class input_show(input_text):
@@ -232,7 +235,7 @@ class input_password(input_text):
                         class_value = 'col-md-%d' % self.size,
                         class_input = 'form-control',
                         help_span = self.help(),
-                        info = info,
+                        info = self.info_text(),
                     ) )
 
 class input_textarea(input_text):
@@ -250,7 +253,8 @@ class input_textarea(input_text):
                         rows = rows,
                         class_input = 'form-control',
                         extra_control = literal(self.extra_control) if self.extra_control else '',
-                        style = 'style="font-family:monospace; width:100%;"'
+                        style = 'style="font-family:monospace; width:100%;"',
+                        info = self.info_text(),
                     ) )
 
 class input_hidden(htmltag):
@@ -722,6 +726,7 @@ input_textarea_template = '''\
   <div class='{class_value}'>
     <textarea id='{name}' name='{name}' class='{class_input}' rows='{rows}' {style}>{value}</textarea>
     {extra_control}
+    {info}
   </div>
 </div>'''
 
