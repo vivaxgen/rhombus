@@ -82,7 +82,7 @@ class FileOverlay(object):
         if mount_point:
             ar = AssetResolver()
             self.mount_point = (mount_point[0],
-                            ar.resolve(mount_point[1]).abspath())
+                            ar.resolve(mount_point[1]).abspath() + '/')
         if (virtpath and abspath):
         	raise RuntimeError('ERR - need only virtpath nor abspath')
         if virtpath:
