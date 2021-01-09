@@ -338,23 +338,23 @@ def auth_cache_factory(auth_cache):
     return get_auth_cache
 
 
-def get_authenticated_userobj(request, user_id):
+def get_authenticated_userobj(request, token):
 
     #raise RuntimeError
 
     dbh = get_dbhandler()
     db_session = dbh.session()
-    if user_id is None:
+    if token is None:
         db_session.user = None
         return None
 
     # get userinstance from current dogpile.cache
     auth_cache = request.auth_cache
-    key = user_id.encode('ASCII')
+    key = token.encode('ASCII')
     userinstance = auth_cache.get(key, session_expiration_time)
     if not userinstance and 'rhombus.authhost' in request.registry.settings:
         # in slave mode - check user existence here first
-        login, userclass, stamp = user_id.split('|')
+        login, userclass, stamp, randstr = token.split('|')
         user = dbh.get_user('%s/%s' % (login, userclass))
         if user is None:
             request.session.flash( (
@@ -367,7 +367,7 @@ def get_authenticated_userobj(request, user_id):
             raise RuntimeError('Error 3439')
 
         # verify to authentication host
-        confirmation = confirm_userid(request.registry.settings['rhombus.authhost'], user_id)
+        confirmation = confirm_token(request.registry.settings['rhombus.authhost'], token)
         if confirmation[0]:
             # set user
             userinstance = user.user_instance()
@@ -490,9 +490,9 @@ def userobj_checker(auth_cache):
     return hasrole_userobj
 
 
-def confirm_userid(url, userid):
+def confirm_token(url, token):
     import requests
-    r = requests.get(url+'/confirm', params = { 'principal': userid })
+    r = requests.get(url+'/confirm', params = { 'principal': token, 'userinfo': 1 })
     return r.json()
 
 

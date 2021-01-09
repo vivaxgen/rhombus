@@ -10,7 +10,7 @@ from pyramid.httpexceptions import HTTPFound, HTTPNotFound
 from rhombus.views import roles
 from rhombus.lib.roles import SYSADM, SYSVIEW
 from rhombus.models.user import UserClass, UserInstance
-from rhombus.lib.utils import get_dbhandler
+from rhombus.lib.utils import get_dbhandler, random_string
 
 from urllib.parse import urlparse
 import time
@@ -116,22 +116,23 @@ def logout(request):
 
 def confirm(request):
 
-    principal = request.params.get('principal', '')
-    print('confirmation request for:', principal)
+    token = request.params.get('principal', '')
+    print('confirmation request for:', token)
     userinfo = request.params.get('userinfo', 0)
-    if not principal:
+    if not token:
         return [False, []]
 
-    key = principal.encode('ASCII')
+    key = token.encode('ASCII')
     userinstance = request.auth_cache.get(key, None)
 
     if not userinstance:
         return [False, []]
 
-    if userinfo and userinstance:
+    if userinfo:
         dbh = get_dbhandler()
         user = dbh.get_user( userinstance.id )
-        userinfo = [ user.lastname, user.firstname, user.email, user.institution ]
+        userinfo = [ user.lastname, user.firstname, user.email, user.institution,
+            [g.name for g in user.groups] ]
     else:
         userinfo = []
 
@@ -157,9 +158,11 @@ def rhombus_js(request):
 
 
 def set_user_headers(userinstance, request):
-    """ set user and return http header """
+    """ create token, set user and return http header """
 
     assert isinstance(userinstance, UserInstance)
-    login = userinstance.login + '|' + userinstance.domain + '|' + str(time.time())
-    request.set_user(login, userinstance)
-    return remember(request, login)
+    token = '|'.join(
+        [userinstance.login, userinstance.domain, str(time.time()), random_string(128)]
+    )
+    request.set_user(token, userinstance)
+    return remember(request, token)
