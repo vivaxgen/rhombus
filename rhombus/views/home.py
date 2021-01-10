@@ -132,7 +132,7 @@ def confirm(request):
         dbh = get_dbhandler()
         user = dbh.get_user( userinstance.id )
         # prepare for group sync
-        usergroups = [g.name for g in user.groups]
+        usergroups = [g.name for g in user.groups if g]
         syncgroups = sorted(
                 [grp_name for grp_name in [g.name for g in dbh.get_groups()]
                             if grp_name.startswith('sync:')]
