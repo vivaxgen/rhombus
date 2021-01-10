@@ -505,6 +505,8 @@ def userobj_checker(auth_cache):
 def confirm_token(url, token):
     import requests
     r = requests.get(url+'/confirm', params = { 'principal': token, 'userinfo': 1 })
+    if not r.ok:
+        raise RuntimeError("ERROR: principal authenticator failed to respond properly!")
     return r.json()
 
 
