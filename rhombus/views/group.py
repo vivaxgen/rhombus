@@ -21,7 +21,7 @@ def index(request):
 
     html, code = format_grouptable(groups, request)
 
-    if request.user.has_roles(SYSADM):
+    if request.user.has_roles(SYSADM, GROUP_CREATE):
 
         add_button = ( 'New group',
                         request.route_url('rhombus.group-edit', id=0)
