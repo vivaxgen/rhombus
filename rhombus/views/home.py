@@ -131,8 +131,22 @@ def confirm(request):
     if userinfo:
         dbh = get_dbhandler()
         user = dbh.get_user( userinstance.id )
+        # prepare for group sync
+        usergroups = [g.name for g in user.groups]
+        syncgroups = sorted(
+                [grp_name for grp_name in [g.name for g in dbh.get_groups()]
+                            if grp_name.startswith('sync:')]
+        )
+        groupinfo = []
+        print(usergroups, syncgroups)
+        for sg in syncgroups:
+            if sg in usergroups:
+                groupinfo.append( '+:' + sg[5:])
+            else:
+                groupinfo.append( '-:' + sg[5:])
+
         userinfo = [ user.lastname, user.firstname, user.email, user.institution,
-            [g.name for g in user.groups] ]
+                        groupinfo ]
     else:
         userinfo = []
 

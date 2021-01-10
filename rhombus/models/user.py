@@ -342,6 +342,26 @@ class User(Base):
             raise RuntimeError('this password use external system')
         return pwcrypt.verify(passwd, self.credential)
 
+    def sync_groups(self, groups):
+        """ synchronize user's group with groups """
+        dbsession = object_session(self)
+        added = []
+        removed = []
+        current_groups = {}
+        for grp in self.groups:
+            current_groups[ grp.name ] = grp
+        for g in groups:
+            grp = Group.search(g[2:], dbsession)
+            if grp is None:
+                continue
+            if g[0] == '-' and grp.name in current_groups:
+                UserGroup.delete(dbsession, self.id, grp.id)
+                removed.append( grp.name )
+            elif g[0] == '+' and grp.name not in current_groups:
+                UserGroup.add(dbsession, self, grp)
+                added.append( grp.name )
+
+        return added, removed
 
     @staticmethod
     def dump(out, query = None):

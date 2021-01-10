@@ -364,11 +364,14 @@ def get_authenticated_userobj(request, token):
             ) )
             return None
         if user.userclass.domain != userclass:
-            raise RuntimeError('Error 3439')
+            raise RuntimeError('ERROR: different userclass for user with remote system!')
 
         # verify to authentication host
         confirmation = confirm_token(request.registry.settings['rhombus.authhost'], token)
         if confirmation[0]:
+            # sync groups for this user if necessary
+            added, removed = user.sync_groups(confirmation[1][4])
+
             # set user
             userinstance = user.user_instance()
             auth_cache.set(key, userinstance)
@@ -377,6 +380,15 @@ def get_authenticated_userobj(request, token):
                 (   'success',
                     'You have been authenticated remotely as %s!' % userinstance.login
             ) )
+        if added:
+            request.session.flash(
+                (   'success',
+                    'You have been added to group(s): %s.' % ' '.join(added)))
+        if removed:
+            request.session.flash(
+                (   'success',
+                    'You have been removed from group(s): %s' % ' '.join(removed)))
+
     db_session.user = userinstance or None
 
     return userinstance
