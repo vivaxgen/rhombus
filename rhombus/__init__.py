@@ -375,19 +375,18 @@ def get_authenticated_userobj(request, token):
             # set user
             userinstance = user.user_instance()
             auth_cache.set(key, userinstance)
-        if userinstance:
             request.session.flash(
                 (   'success',
                     'You have been authenticated remotely as %s!' % userinstance.login
             ) )
-        if added:
-            request.session.flash(
-                (   'success',
-                    'You have been added to group(s): %s.' % ' '.join(added)))
-        if removed:
-            request.session.flash(
-                (   'success',
-                    'You have been removed from group(s): %s' % ' '.join(removed)))
+            if added:
+                request.session.flash(
+                    (   'success',
+                        'You have been added to group(s): %s.' % ' '.join(added)))
+            if removed:
+                request.session.flash(
+                    (   'success',
+                        'You have been removed from group(s): %s' % ' '.join(removed)))
 
     db_session.user = userinstance or None
 
