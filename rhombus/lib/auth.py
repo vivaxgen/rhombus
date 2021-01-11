@@ -34,25 +34,28 @@ def validate_by_basichttp(username, passwd, scheme):
     except urllib2.HTTPError:
         return False
 
-authfunc = {
-    'LDAP': validate_by_LDAP,
-    'BasicHTTP': validate_by_basichttp
-}
-
 
 # util for adding user automatically
-# should return ('lastname', 'firstname')
+# should return ('lastname', 'firstname', 'email')
 
 def inquire_by_LDAP( username, scheme ):
-    import ldap
-    l = ldap.open(scheme['host'])
-    try:
-        r = l.search_s( scheme['DN'] % username, ldap.SCOPE_SUBTREE,
-                            '(objectclass=*)', [ 'sn', 'givenName'] )
-        return ('', '')
-    except:
-        return ('', '')
+    import ldap3
+    s = ldap3.Server(host = scheme['host'], get_info=ldap3.ALL)
+    c = ldap3.Connection(s, auto_bind=True)
+    c.search(scheme['DN'] % username, '(objectClass=*)', attributes=['sn', 'givenName', 'mail'])
+    if len(c.response) > 0:
+        attributes = c.response[0]['attributes']
+        return (attributes['sn'], attributes['givenName'], attributes['mail'])
+    else:
+        return ('', '', '')
 
 
 def inquire_dummy( username, scheme ):
-    return ('', '')
+    return ('', '', '')
+
+
+authfunc = {
+    'LDAP': (validate_by_LDAP, inquire_by_LDAP),
+    'BasicHTTP': (validate_by_basichttp, inquire_dummy)
+}
+

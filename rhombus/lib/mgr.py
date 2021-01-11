@@ -80,6 +80,7 @@ def init_argparser( parser = None):
     p.add_argument('--email', default='')
     p.add_argument('--groups', default='')
     p.add_argument('--credential', default='')
+    p.add_argument('--inquire', default=False, action='store_true')
 
     p.add_argument('--ekeygroup', default=None)
 
@@ -202,6 +203,13 @@ def do_adduser(args, dbh, settings):
     if not args.login:
         cexit('ERR - please provide login name')
 
+    if args.inquire:
+        # get user detail remotely
+        args.lastname, args.firstname, args.email = domain.inquire_user( args.login )
+        if not args.lastname:
+            cexit('ERR - cannot inquire username: %s' % args.login)
+        cerr('Obtaining: %s, %s [%s]' % (args.lastname, args.firstname, args.email))
+
     if not args.lastname:
         cexit('ERR - please provide last name')
 
@@ -222,7 +230,7 @@ def do_adduser(args, dbh, settings):
     user = domain.add_user( login = args.login, email = args.email,
                             lastname = args.lastname, firstname = args.firstname,
                             primarygroup = args.primarygroup,
-                            groups = groups, session = dbh.session() )
+                            groups = groups)
 
     cout('User %s added sucessfully.' % user.login)
 

@@ -67,7 +67,7 @@ class UserClass(Base):
         # password checking performed here
         if (not user and self.autoadd) or (user and user.credential == '{X}'):
             # credential will be checked by the underlying scheme
-            ok = authfunc[self.credscheme['sys']](username, passwd, self.credscheme)
+            ok = authfunc[self.credscheme['sys']][0](username, passwd, self.credscheme)
             if ok:
                 if not user:
                     user = User( login = username, credential = '{X}' )
@@ -78,6 +78,9 @@ class UserClass(Base):
             return user.user_instance()
 
         return None
+
+    def inquire_user(self, username):
+        return authfunc[self.credscheme['sys']][1](username, self.credscheme)
 
     def as_dict(self):
         return dict(id=self.id, domain=self.domain, desc = self.desc,
@@ -126,6 +129,8 @@ class UserClass(Base):
         if groups:
             for grp in groups:
                 g = Group.search(grp, session)
+                if g is None:
+                    raise RuntimeError('ERR: group %s does not exists!' % grp)
                 g.users.append(user_instance)
         return user_instance
 
