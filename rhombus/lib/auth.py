@@ -45,7 +45,7 @@ def inquire_by_LDAP( username, scheme ):
     c.search(scheme['DN'] % username, '(objectClass=*)', attributes=['sn', 'givenName', 'mail'])
     if len(c.response) > 0:
         attributes = c.response[0]['attributes']
-        return (attributes['sn'], attributes['givenName'], attributes['mail'])
+        return (attributes['sn'][0], attributes['givenName'][0], attributes['mail'][0])
     else:
         return ('', '', '')
 
