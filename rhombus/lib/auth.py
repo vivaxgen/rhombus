@@ -7,7 +7,8 @@ from rhombus.lib.utils import cout, cerr
 def validate_by_LDAP(username, passwd, scheme):
     import ldap3
     s = ldap3.Server(host = scheme['host'], get_info=ldap3.ALL)
-    c = ldap3.Connection(s, user=scheme['DN'] % username, password = passwd)
+    c = ldap3.Connection(s, user=scheme['DN'] % username, password = passwd,
+                 client_strategy=ldap3.SAFE_SYNC)
     if not c.bind():
         cerr('Failed LDAP authentication for user: %s' % username)
         return False
@@ -41,7 +42,7 @@ def validate_by_basichttp(username, passwd, scheme):
 def inquire_by_LDAP( username, scheme ):
     import ldap3
     s = ldap3.Server(host = scheme['host'], get_info=ldap3.ALL)
-    c = ldap3.Connection(s, auto_bind=True)
+    c = ldap3.Connection(s, client_strategy=ldap3.SAFE_SYNC, auto_bind=True)
     c.search(scheme['DN'] % username, '(objectClass=*)', attributes=['sn', 'givenName', 'mail'])
     if len(c.response) > 0:
         attributes = c.response[0]['attributes']
