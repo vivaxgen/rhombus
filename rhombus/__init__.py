@@ -353,22 +353,35 @@ def get_authenticated_userobj(request, token):
     key = token.encode('ASCII')
     userinstance = auth_cache.get(key, session_expiration_time)
     if not userinstance and 'rhombus.authhost' in request.registry.settings:
-        # in slave mode - check user existence here first
-        login, userclass, stamp, randstr = token.split('|')
-        user = dbh.get_user('%s/%s' % (login, userclass))
-        if user is None:
-            request.session.flash( (
-                'danger',
-                'Warning: your current login [%s] is not registered in this system!'
-                % login
-            ) )
-            return None
-        if user.userclass.domain != userclass:
-            raise RuntimeError('ERROR: different userclass for user with remote system!')
+        # in client mode
 
         # verify to authentication host
         confirmation = confirm_token(request.registry.settings['rhombus.authhost'], token)
         if confirmation[0]:
+
+            # check the existence of the user
+            login, userclass, stamp, randstr = token.split('|')
+            user = dbh.get_user('%s/%s' % (login, userclass))
+            if user is None:
+                # check is userclass is exists, then add the user automatically to user class
+
+                uc = dbh.get_userclass(userclass)
+                if uc is None:
+                    request.session.flash( (
+                    'danger',
+                    'Warning: your current login [%s] is not registered in this system!'
+                    % login
+                    ) )
+
+                    return None
+
+                lastname, firstname, email = confirmation[1][:3]
+                user = uc.add_user(login, lastname, firstname, email, uc.credscheme['primary_group'])
+                request.session.flash(
+                    (   'success',
+                        'You have been registered to the system under userclass: %s' % uc.domain
+                    ) )
+
             # sync groups for this user if necessary
             added, removed = user.sync_groups(confirmation[1][4])
 
