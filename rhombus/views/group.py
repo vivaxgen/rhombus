@@ -272,9 +272,10 @@ def user_action(request):
 
         dbh.session.flush()
         for failed_login in failed_logins:
-            request.session.flash('error', failed_login)
-        request.session.flash(
-            ('success', 'User(s) %s has been removed successfully' % '; '.join( logins )))
+            request.session.flash(('danger', failed_login))
+        if len(logins) > 0:
+            request.session.flash(
+                ('success', 'User(s) %s has been removed successfully' % '; '.join( logins )))
 
         return HTTPFound( location = request.referrer or request.route_url( 'rhombus.group'))
 
