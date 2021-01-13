@@ -43,9 +43,10 @@ def inquire_by_LDAP( username, scheme ):
     import ldap3
     s = ldap3.Server(host = scheme['host'], get_info=ldap3.ALL)
     c = ldap3.Connection(s, client_strategy=ldap3.SAFE_SYNC, auto_bind=True)
-    c.search(scheme['DN'] % username, '(objectClass=*)', attributes=['sn', 'givenName', 'mail'])
-    if len(c.response) > 0:
-        attributes = c.response[0]['attributes']
+    (status, result, response, request) = c.search(
+            scheme['DN'] % username, '(objectClass=*)', attributes=['sn', 'givenName', 'mail'])
+    if len(response) > 0:
+        attributes = response[0]['attributes']
         return (attributes['sn'][0], attributes['givenName'][0], attributes['mail'][0])
     else:
         return ('', '', '')
