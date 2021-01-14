@@ -43,16 +43,22 @@ def index(request):
             }, request = request )
 
 
-@roles(SYSADM)
+@roles(PUBLIC)
 def view(request):
 
     dbh = get_dbhandler()
     user = dbh.get_user( int(request.matchdict['id']) )
 
+    if request.user.id != user.id and not request.user.has_roles(SYSADM):
+        return error_page(request,
+            'ERR: except system administrator, users can only view their own profile')
+
     html = div( div(h3('User View')) )
 
     eform = edit_form(user, dbh, request, static=True)
     html.add( eform )
+
+    html.add(br(), p('Groups: %s' % ' | '.join([g.name for g in user.groups])))
 
     return render_to_response('rhombus:templates/generics/page.mako',
         {   'html': html,
@@ -389,6 +395,9 @@ def user_menu(request):
                     ' ' + request.user.login,
                 ],
                 div(class_='dropdown-menu dropdown-menu-right', ** { 'aria-labelledby': 'navbarUsermenu'} )[
+                    a('Profile', class_='dropdown-item',
+                            href=request.route_url('rhombus.user-view', id=request.user.id))
+                        if not (request.user.has_roles(GUEST) or authhost) else '',
                     a('Change password', class_='dropdown-item',
                             href=request.route_url('rhombus.user-passwd'))
                         if not (request.user.has_roles(GUEST) or authhost) else '',
