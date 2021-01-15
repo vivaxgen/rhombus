@@ -5,5 +5,5 @@
 <p>You are not authorized to access this resource!</p>
 
 % if text:
-  ${text}
+  <p>${text}</p>
 % endif
