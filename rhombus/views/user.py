@@ -58,7 +58,7 @@ def view(request):
     eform = edit_form(user, dbh, request, static=True)
     html.add( eform )
 
-    html.add(br(), p('Groups: %s' % ' | '.join([g.name for g in user.groups])))
+    html.add(br(), p('Groups: %s' % ' | '.join([g.name for g in user.groups or []])))
 
     return render_to_response('rhombus:templates/generics/page.mako',
         {   'html': html,
