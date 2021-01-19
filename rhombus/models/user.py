@@ -543,7 +543,8 @@ class UserGroup(Base):
 
     user = relationship(User, uselist=False,
         backref=backref('usergroups', cascade='all,delete,delete-orphan'))
-    group = relationship(Group, uselist=False, backref='usergroups')
+    group = relationship(Group, uselist=False,
+        backref=backref('usergroups', cascade='all,delete,delete-orphan'))
 
     def __init__(self, user=None, group=None, role = None):
         self.user = user
