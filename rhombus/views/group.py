@@ -563,16 +563,17 @@ def format_usertable(group, request):
 
     user_table = table(class_='table table-condensed table-striped')[
         thead()[
-            th('', style="width: 5px;"), th('Login'), th('Name'), th('Primary group')
+            th('', style="width: 5px;"), th('Login'), th('Role'), th('Name'), th('Primary group')
         ],
         tbody()[
             tuple([ tr()[
-                        td(literal('<input type="checkbox" name="user-ids" value="%d" />' % u.id)),
-                        td(a(u.login, href=request.route_url('rhombus.user-view', id=u.id))),
-                        td(u.fullname()),
-                        td(a(u.primarygroup.name,
-                            href=request.route_url('rhombus.group-view', id=u.primarygroup_id))),
-                    ] for u in group.users ])
+                        td(literal('<input type="checkbox" name="user-ids" value="%d" />' % ug.user_id)),
+                        td(a(ug.user.login, href=request.route_url('rhombus.user-view', id=ug.user_id))),
+                        td(ug.role),
+                        td(ug.user.fullname()),
+                        td(a(ug.user.primarygroup.name,
+                            href=request.route_url('rhombus.group-view', id=ug.user.primarygroup_id))),
+                    ] for ug in group.usergroups ])
         ]
     ]
     user_bar = selection_bar('user-ids', action=request.route_url('rhombus.group-user_action'),
