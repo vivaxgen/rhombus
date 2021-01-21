@@ -18,7 +18,7 @@ from pyramid.events import BeforeRender
 import dogpile.cache
 import dogpile.cache.util
 
-from rhombus.lib.utils import cout, cerr, get_dbhandler
+from rhombus.lib.utils import cout, cerr, get_dbhandler, random_string
 from rhombus.lib import helpers as h
 
 from rhombus.scripts import run
@@ -32,7 +32,7 @@ def includeme( config ):
     config.include('pyramid_mako')
     config.add_static_view(name='rhombus_static', path="rhombus:static/")
 
-    session_factory = SignedCookieSessionFactory('Rh0S35s1On')
+    session_factory = SignedCookieSessionFactory(random_string(64))
     config.set_session_factory(session_factory)
 
     # configure RbRequest
