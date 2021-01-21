@@ -383,7 +383,7 @@ def get_authenticated_userobj(request, token):
                     ) )
 
             # sync groups for this user if necessary
-            added, removed = user.sync_groups(confirmation[1][4])
+            added, modified, removed = user.sync_groups(confirmation[1][4], confirmation[1][5])
 
             # set user
             userinstance = user.user_instance()
@@ -396,6 +396,10 @@ def get_authenticated_userobj(request, token):
                 request.session.flash(
                     (   'success',
                         'You have been added to group(s): %s.' % ' '.join(added)))
+            if modified:
+                request.session.flash(
+                    (   'success',
+                        'Your role has been modified in group(s): %s.' % ' '.join(modified)))
             if removed:
                 request.session.flash(
                     (   'success',

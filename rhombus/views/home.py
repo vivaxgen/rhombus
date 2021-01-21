@@ -115,6 +115,13 @@ def logout(request):
 
 
 def confirm(request):
+    """ return (status, userinfo) tuple with status as boolen for confirmed (True)
+        or unconfirmed (False), and userinfo is a list with the following content:
+        [ lastname, firstname, email, institution,
+            { group: role, group: role}  # groups where user is member,
+            [ group, group, ...]         # groups where user is not member
+        ]
+    """
 
     token = request.params.get('principal', '')
     print('confirmation request for:', token)
@@ -132,21 +139,25 @@ def confirm(request):
         dbh = get_dbhandler()
         user = dbh.get_user( userinstance.id )
         # prepare for group sync
-        usergroups = [g.name for g in user.groups if g]
+
+        usergroups = {}
+        for ug in user.usergroups:
+            usergroups[ug.group.name] = ug.role
         syncgroups = sorted(
                 [grp_name for grp_name in [g.name for g in dbh.get_groups()]
                             if grp_name.startswith('sync:')]
         )
-        groupinfo = []
+        group_ins = {}
+        group_out = []
         print(usergroups, syncgroups)
         for sg in syncgroups:
             if sg in usergroups:
-                groupinfo.append( '+:' + sg[5:])
+                group_ins[sg[5:]] = usergroups[sg]
             else:
-                groupinfo.append( '-:' + sg[5:])
+                group_out.append( sg[5:])
 
         userinfo = [ user.lastname, user.firstname, user.email, user.institution,
-                        groupinfo ]
+                        group_ins, group_out ]
     else:
         userinfo = []
 

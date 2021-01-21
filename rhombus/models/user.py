@@ -347,26 +347,46 @@ class User(Base):
             raise RuntimeError('this password use external system')
         return pwcrypt.verify(passwd, self.credential)
 
-    def sync_groups(self, groups):
+    def sync_groups(self, in_groups, out_groups):
         """ synchronize user's group with groups """
         dbsession = object_session(self)
         added = []
         removed = []
+        modified = []
         current_groups = {}
         for grp in self.groups:
             current_groups[ grp.name ] = grp
-        for g in groups:
-            grp = Group.search(g[2:], dbsession)
+
+        current_usergroups = {}
+        for ug in self.usergroups:
+            current_usergroups[ug.group.name] = ug
+
+        # check-in or modify for in_groups
+        for g in in_groups:
+            grp = Group.search(g, dbsession)
             if grp is None:
                 continue
-            if g[0] == '-' and grp.name in current_groups:
-                UserGroup.delete(dbsession, self.id, grp.id)
-                removed.append( grp.name )
-            elif g[0] == '+' and grp.name not in current_groups:
-                UserGroup.add(dbsession, self, grp)
-                added.append( grp.name )
+            if g in current_usergroups:
+                if in_groups[g] == current_usergroups[g].role:
+                    continue
+                current_usergroups[g].role = in_groups[g]
+                modified.append(g)
+                continue
 
-        return added, removed
+            UserGroup.add(dbsession, self, grp, in_groups[g])
+            added.append(g)
+
+        # check-out for out_groups
+        for g in out_groups:
+            grp = Group.search(g, dbsession)
+            if grp is None:
+                continue
+            if g in current_usergroups:
+                UserGroup.delete(dbsession, self.id, grp.id)
+                removed.append(g)
+
+        return added, modified, removed
+
 
     @staticmethod
     def dump(out, query = None):
