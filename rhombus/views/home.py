@@ -62,6 +62,7 @@ def login(request):
             # email is used by more than 1 users
             msg = 'Email address is used by multiple users!'
         else:
+            user = users[0]
             login, userclass_name = user.login, user.userclass.domain
     elif userclass_name is None:
         userclass_name = request.registry.settings.get('rhombus.default.userclass','_SYSTEM_')
