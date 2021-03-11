@@ -18,8 +18,8 @@
   <meta name='viewport' content='width=device-width, initial-scale=1.0' />
 
   <!-- styles -->
-  <link href="/assets/rb/bootstrap-4.4.1-dist/css/bootstrap.min.css" rel="stylesheet" />
-  <link href="/assets/rb/fontawesome-free-5.12.1-web/css/all.min.css" rel="stylesheet" />
+  <link href="/assets/rb/bootstrap/css/bootstrap.min.css" rel="stylesheet" />
+  <link href="/assets/rb/fontawesome/css/all.min.css" rel="stylesheet" />
   <link href="${request.static_url('rhombus:static/fonts/source-sans-pro.css')}" rel="stylesheet" />
   <link href="${request.static_url('rhombus:static/select2/css/select2.min.css')}" rel="stylesheet" />
   <link href="${request.static_url('rhombus:static/select2/css/select2-bootstrap.min.css')}" rel="stylesheet" />
