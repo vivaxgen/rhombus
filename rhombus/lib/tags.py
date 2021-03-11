@@ -324,11 +324,13 @@ class input_select(input_text):
 
 class input_select_ek(input_select):
 
-    def __init__(self, name, label, value, parent_ek, group=None, **kwargs):
+    def __init__(self, name, label, value, parent_ek, group=None, option_filter=None, **kwargs):
         if parent_ek is None:
             raise RuntimeError('parent_ek cannot be None')
         super().__init__( name, label, value, multiple=False, **kwargs )
         self.options = [ (ek.id, ek.key) for ek in parent_ek.members ]
+        if option_filter:
+            self.options = [ opt for opt in self.options if option_filter(opt[1]) ]
 
 
 class input_file(input_text):
