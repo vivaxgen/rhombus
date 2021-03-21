@@ -20,9 +20,9 @@
   <!-- styles -->
   <link href="/assets/rb/bootstrap/css/bootstrap.min.css" rel="stylesheet" />
   <link href="/assets/rb/fontawesome/css/all.min.css" rel="stylesheet" />
-  <link href="${request.static_url('rhombus:static/fonts/source-sans-pro.css')}" rel="stylesheet" />
-  <link href="${request.static_url('rhombus:static/select2/css/select2.min.css')}" rel="stylesheet" />
-  <link href="${request.static_url('rhombus:static/select2/css/select2-bootstrap.min.css')}" rel="stylesheet" />
+  <link href="/assets/rb/fonts/source-sans-pro.css" rel="stylesheet" />
+  <link href="/assets/rb/select2/css/select2.min.css" rel="stylesheet" />
+  <link href="/assets/rb/css/select2-bootstrap4.min.css" rel="stylesheet" />
   <link href="${request.static_url('rhombus:static/css/custom.css')}" rel="stylesheet" />
 
   ${self.stylelink()}
@@ -71,11 +71,11 @@
 ##
 ##
 <%def name="scriptlinks()">
-    <script src="/assets/rb/jquery-3.4.1.min.js"></script>
-    <script src="/assets/rb/popper.min.js"></script>
-    <script src="/assets/rb/bootstrap-4.4.1-dist/js/bootstrap.bundle.min.js"></script>
-    <script src="${request.static_url('rhombus:static/select2/js/select2.min.js')}"></script>
-    <script src="${request.static_url('rhombus:static/js/jquery.ocupload-min.js')}"></script>
+    <script src="/assets/rb/js/jquery-3.6.0.min.js"></script>
+    <script src="/assets/rb/js/popper.min.js"></script>
+    <script src="/assets/rb/bootstrap/js/bootstrap.bundle.min.js"></script>
+    <script src="/assets/rb/select2/js/select2.min.js"></script>
+    <!-- <script src="${request.static_url('rhombus:static/js/jquery.ocupload-min.js')}"></script> -->
     ${self.jslink()}
     <script type="text/javascript">
         //<![CDATA[
