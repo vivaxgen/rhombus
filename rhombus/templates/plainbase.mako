@@ -7,7 +7,12 @@
   <meta name='viewport' content='width=device-width, initial-scale=1.0' />
 
   <!-- styles -->
-  <link href="/rhombus_assets/bootstrap/css/bootstrap.min.css" rel="stylesheet" />
+  <link href="/assets/rb/bootstrap/css/bootstrap.min.css" rel="stylesheet" />
+
+  <!-- stylelink() -->
+  ${self.stylelink()}
+  <!-- /stylelink() -->
+
 
   </head>
   <body>
@@ -15,10 +20,31 @@
     ${next.body()}
     </div>
   </body>
+    ${self.scriptlinks()}
 </html>
 
 ##
+##
+<%def name="stylelink()">
+</%def>
+##
+##
+<%def name="scriptlinks()">
+    <script src="/assets/rb/js/jquery-3.6.0.min.js"></script>
+    <script src="/assets/rb/js/popper.min.js"></script>
+    <script src="/assets/rb/bootstrap/js/bootstrap.bundle.min.js"></script>
+    ${self.jslink()}
+    <script type="text/javascript">
+        //<![CDATA[
+        ${self.jscode()}
+        //]]>
+    </script>
+</%def>
+##
+##
+<%def name="jslink()">
+</%def>
+##
+##
 <%def name='jscode()'>
 </%def>
-
-
