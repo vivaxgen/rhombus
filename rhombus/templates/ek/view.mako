@@ -7,6 +7,8 @@
   ${show_ek(ek)}
 </div></div>
 
+<br />
+<div class='line-separator'></div>
 <h4>Members</h4>
 <div class='row'><div class='col-md-6'>
   ${list_eks(ek.members, ek)}
