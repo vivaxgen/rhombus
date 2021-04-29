@@ -27,3 +27,9 @@ div.form-inline label.col-md-1 {
 div.form-group {
 	margin-bottom: 0.25rem;
 }
+
+.line-separator {
+    background-color: #ccc;
+    flex-grow: 5;
+    height: 2px
+}
