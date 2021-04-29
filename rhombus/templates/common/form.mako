@@ -136,7 +136,7 @@ ${selection( name, label,
 ##
 <%def name="textarea_show(label, value, class_='form-group', class_span = 'input-large', rows=3)">
 <div class='${class_}'>
-  <label class='col-md-2 control-label'>${label}</label>
+  <label class='col-md-3 control-label'>${label}</label>
   <div class='col-md-10'>
     <span ${("class='%s uneditable-textarea'" % class_ if class_.startswith('span') else "class='%s uneditable-textarea'" % class_span) | n} ${"rows='%d'" % rows | n} >${value or ""}</span>
   </div>
