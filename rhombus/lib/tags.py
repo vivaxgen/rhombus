@@ -168,13 +168,11 @@ class input_text(htmltag):
         self.static = static
 
     def __str__(self):
-        if self.static:
-            return self.as_static()
         return self.as_input()
 
-    def as_input(self):
+    def as_input(self, value=None, static=False):
         return literal( input_text_template.format( name=escape(self.name),
-                        label=escape(self.label), value=escape(self.value),
+                        label=escape(self.label), value=escape(value or self.value),
                         placeholder = self.placeholder,
                         class_div = 'form-group' + (' has-error' if self.error else ''),
                         class_label = 'col-md-%d control-label' % self.offset,
@@ -182,6 +180,7 @@ class input_text(htmltag):
                         class_input = 'form-control',
                         help_span = self.help(),
                         info = self.info_text(),
+                        ro = 'readonly' if (self.static or static) else '',
                     ) )
 
     def help(self):
@@ -193,6 +192,7 @@ class input_text(htmltag):
         self.error = errmsg
 
     def as_static(self, value=None):
+        return self.as_input(value = value, static = True)
         return literal( input_static_template.format( name=escape(self.name),
                         label=escape(self.label), value=escape(value or self.value),
                         class_div = 'form-group' + (' has-error' if self.error else ''),
@@ -255,6 +255,7 @@ class input_textarea(input_text):
                         extra_control = literal(self.extra_control) if self.extra_control else '',
                         style = 'style="font-family:monospace; width:100%;"',
                         info = self.info_text(),
+                        ro = 'readonly' if self.static else '',
                     ) )
 
 class input_hidden(htmltag):
@@ -285,6 +286,7 @@ class input_select(input_text):
             for (v,l) in self.options:
                 if v == self.value:
                     value = l
+                    break
             return self.as_static(value)
 
         options = []
@@ -694,7 +696,7 @@ input_text_template = '''\
 <div class='{class_div} form-inline row'>
   <label class='{class_label} align-self-start pt-2' for='{name}'>{label}</label>
   <div class='{class_value}'>
-    <input type='text' id='{name}' name='{name}' value='{value}' class='{class_input}' placeholder='{placeholder}' style='width:100%'/>
+    <input type='text' id='{name}' name='{name}' value='{value}' class='{class_input}' placeholder='{placeholder}' style='width:100%' {ro}/>
     {help_span}
   </div>
   {info}
@@ -714,7 +716,7 @@ input_static_template = '''\
 <div class='{class_div} form-inline row'>
   <label class='{class_label}' for='{name}'>{label}</label>
   <div class='{class_value}'>
-    <p class='form-control-plaintext'>{value}</p>
+    <input type='text' class='{class_input}' value='{value}' readonly />
   </div>
 </div>'''
 
@@ -726,7 +728,7 @@ input_textarea_template = '''\
 <div class='{class_div} form-inline row'>
   <label class='{class_label} align-self-baseline pt-2' for='{name}'>{label}</label>
   <div class='{class_value}'>
-    <textarea id='{name}' name='{name}' class='{class_input}' rows='{rows}' {style}>{value}</textarea>
+    <textarea id='{name}' name='{name}' class='{class_input}' rows='{rows}' {style} {ro}>{value}</textarea>
     {extra_control}
     {info}
   </div>
