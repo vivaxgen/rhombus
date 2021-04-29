@@ -5,7 +5,7 @@
 <div class='row'>
 
 <div class='col-md-6'>
-<p>Group Info</p>
+<h4>Group Info</h4>
 ${ form }
 </div>
 
@@ -16,6 +16,7 @@ ${ role_table }
 </div>
 
 <div class='row'>
+<div class='col-md-12'><br /><div class='line-separator'></div></div>
 <div class='col-md-8'>
 <h4>Members</h4>
 ${ user_table }
