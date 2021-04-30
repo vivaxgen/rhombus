@@ -283,9 +283,9 @@ class input_select(input_text):
     def __str__(self):
         if self.static:
             if self.multiple:
-                value = ' '.join([l for (v,l) in self.options if v in self.value])
+                value = ' '.join([l for (v,l) in self.options if v in self.value]) or ' '
             else:
-                value = ''
+                value = ' '
                 for (v,l) in self.options:
                     if v == self.value:
                         value = l
