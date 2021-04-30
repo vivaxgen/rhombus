@@ -87,7 +87,7 @@ def edit(request):
 
         editform, editjs = edit_form(group, dbh, request)
 
-        return render_to_response( "rhombus:templates/generics/page.mako",
+        return render_to_response( "rhombus:templates/generics/formpage.mako",
                 {   'content': str(editform),
                     'code': editjs,
                 }, request = request
@@ -412,7 +412,7 @@ def edit_form(group, dbh, request, static=False):
                     ('rhombus-group_composite', 'Composite',
                             group.check_flags(group.f_composite_group))]),
             input_select('rhombus-group_composite_ids', 'Composite of', multiple=True,
-                            options = composite_options, value = composite_ids),
+                            options = composite_options, value = composite_ids, static=static),
             submit_bar() if not static else a('Edit', class_='btn btn-primary',
                             href=request.route_url('rhombus.group-edit', id=group.id)),
             name="rhombus-group-fieldset"
