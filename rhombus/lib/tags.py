@@ -282,11 +282,14 @@ class input_select(input_text):
 
     def __str__(self):
         if self.static:
-            value = ''
-            for (v,l) in self.options:
-                if v == self.value:
-                    value = l
-                    break
+            if self.multiple:
+                value = ' '.join([l for (v,l) in self.options if v in self.value])
+            else:
+                value = ''
+                for (v,l) in self.options:
+                    if v == self.value:
+                        value = l
+                        break
             return self.as_static(value)
 
         options = []
