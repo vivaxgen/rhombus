@@ -102,5 +102,5 @@
 </%def>
 
 ##
-<%def name="jslink()">
+<%def name="jslinks()">
 </%def>

@@ -9,9 +9,9 @@
   <!-- styles -->
   <link href="/assets/rb/bootstrap/css/bootstrap.min.css" rel="stylesheet" />
 
-  <!-- stylelink() -->
-  ${self.stylelink()}
-  <!-- /stylelink() -->
+  <!-- stylelinks() -->
+  ${self.stylelinks()}
+  <!-- /stylelinks() -->
 
 
   </head>
@@ -25,7 +25,7 @@
 
 ##
 ##
-<%def name="stylelink()">
+<%def name="stylelinks()">
 </%def>
 ##
 ##
@@ -33,7 +33,7 @@
     <script src="/assets/rb/js/jquery-3.6.0.min.js"></script>
     <script src="/assets/rb/js/popper.min.js"></script>
     <script src="/assets/rb/bootstrap/js/bootstrap.bundle.min.js"></script>
-    ${self.jslink()}
+    ${self.jslinks()}
     <script type="text/javascript">
         //<![CDATA[
         ${self.jscode()}
@@ -42,7 +42,7 @@
 </%def>
 ##
 ##
-<%def name="jslink()">
+<%def name="jslinks()">
 </%def>
 ##
 ##

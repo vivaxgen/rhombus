@@ -7,7 +7,7 @@ ${ content | n }
 % endif
 
 ##
-<%def name="stylelink()">
+<%def name="stylelinks()">
   <link href="${request.static_url('rhombus:static/rst/rst.css')}" rel="stylesheet" />
   <link href="${request.static_url('rhombus:static/rst/theme.css')}" rel="stylesheet" />
 </%def>

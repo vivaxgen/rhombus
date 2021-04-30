@@ -12,13 +12,13 @@
 ##
 ##  START OF METHODS
 ##
-<%def name="stylelink()">
+<%def name="stylelinks()">
   <link href="${request.static_url('rhombus:static/datatables/datatables.min.css')}" rel="stylesheet" />
 </%def>
 ##
 ##
-<%def name="jslink()">
-<script src="${request.static_url('rhombus:static/datatables/datatables.min.js')}"></script>
+<%def name="jslinks()">
+	<script src="${request.static_url('rhombus:static/datatables/datatables.min.js')}"></script>
 </%def>
 ##
 ##

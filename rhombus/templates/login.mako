@@ -45,7 +45,7 @@
 
 ##
 ##
-<%def name="stylelink()">
+<%def name="stylelinks()">
   <link href="${request.static_url('rhombus:static/css/login.css')}" rel="stylesheet" />
 </%def>
 ##
