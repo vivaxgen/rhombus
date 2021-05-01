@@ -641,9 +641,9 @@ class selection_bar(object):
 
         button_bar = div(class_='btn-toolbar')[
             div(class_='btn-group')[
-                button(label="Select all", type='button', class_='btn btn-sm', id=self.prefix + '-select-all'),
-                button(label="Unselect all", type='button', class_="btn btn-sm", id=self.prefix + '-select-none'),
-                button(label='Inverse', type='button', class_='btn btn-sm', id=self.prefix + '-select-inverse')
+                button(label="Select all", type='button', class_='btn btn-sm btn-secondary', id=self.prefix + '-select-all'),
+                button(label="Unselect all", type='button', class_="btn btn-sm btn-secondary", id=self.prefix + '-select-none'),
+                button(label='Inverse', type='button', class_='btn btn-sm btn-secondary', id=self.prefix + '-select-inverse')
             ],
             div(class_='btn-group')[
                 button(label="<i class='icon-trash icon-white'></i> Delete",
