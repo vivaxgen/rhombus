@@ -62,7 +62,7 @@ def save(request):
         session.flush()
         db_ek = ek
     else:
-        db_ek = dbh.EK.get(ek_id)
+        db_ek = dbh.EK.get(ek_id, dbh.session())
         if not db_ek:
             return error_page(request)
         db_ek.update( ek )
