@@ -1,3 +1,4 @@
+
 import logging
 
 log = logging.getLogger(__name__)
@@ -42,8 +43,10 @@ class roles(object):
                     return not_authorized(request, msg_1)
                 if PUBLIC in self.allowed and request.user:
                     return wrapped(request, **kw)
-                if not (request.user and request.user.has_roles(*self.allowed)):
+                if not request.user:
                     return not_authorized(request, msg_0)
+                if not request.user.has_roles(*self.allowed):
+                    return not_authorized(request, msg_1)
                 return wrapped(request, **kw)
             return _view_with_roles
 
@@ -63,8 +66,10 @@ class m_roles(roles):
                     return not_authorized(request, msg_1)
                 if PUBLIC in self.allowed and request.user:
                     return wrapped(inst, **kw)
-                if not (request.user and request.user.has_roles(*self.allowed)):
+                if not request.user:
                     return not_authorized(request, msg_0)
+                if not request.user.has_roles(*self.allowed):
+                    return not_authorized(request, msg_1)
                 return wrapped(inst, **kw)
             return _view_with_roles
 
