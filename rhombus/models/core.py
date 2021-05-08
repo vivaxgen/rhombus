@@ -514,3 +514,26 @@ class BaseMixIn(object):
             return
         self.lastuser_id = get_userid()
         self.stamp = now()
+
+
+    @classmethod
+    def bulk_load(cls, a_list, dbh):
+        """ bulk load from a list of dictionary object """
+        objs = [ cls.from_dict(d, dbh) for d in a_list ]
+        dbh.session.flush(objs)
+
+
+    @classmethod
+    def from_dict(cls, a_dict, dbh):
+        """ load and add from a dict """
+        obj = cls()
+        obj.update(a_dict)
+        dbh.session().add(obj)
+        return obj
+
+
+    def as_dict(self):
+        return dict(
+            lastuser = self.lastuser.login,
+            stamp = self.stamp,
+        )
