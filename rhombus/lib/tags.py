@@ -353,7 +353,7 @@ class input_file(input_text):
                         class_div = 'form-group' + (' has-error' if self.error else ''),
                         class_label = 'col-md-%d control-label' % self.offset,
                         class_value = 'col-md-%d' % self.size,
-                        class_input = 'form-control',
+                        class_input = 'form-control-file',
                         help_span = self.help(),
                         info = info,
                         extra_control = literal(self.extra_control) if self.extra_control else '',
@@ -748,10 +748,10 @@ input_select_template = '''\
 '''
 
 input_file_template = '''\
-<div class='{class_div}'>
-  <label class='{class_label}' for='{name}'>{label}</label>
+<div class='{class_div} form-inline row'>
+  <label class='{class_label} align-self-center pt-2' for='{name}'>{label}</label>
   <div class='{class_value}'>
-    <input type='file' id='{name}' name='{name}' value='{value}'/>
+    <input type='file' id='{name}' class='{class_input}' name='{name}' value='{value}'/>
     {help_span}
     {extra_control}
   </div>
