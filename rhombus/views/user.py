@@ -1,5 +1,7 @@
 
 from rhombus.lib.utils import get_dbhandler
+from rhombus.lib.modals import popup, modal_delete
+
 from rhombus.views import *
 from rhombus.views.generics import error_page
 
@@ -293,9 +295,23 @@ def action_post(request):
         if len(users) == 0:
             return Response(modal_error)
 
-        return Response( modal_delete %
-            ''.join( '<li>%s | %s, %s | %s</li>' %
-                (u.login, u.lastname, u.firstname, u.userclass.domain) for u in users))
+        #return Response( modal_delete %
+        #    ''.join( '<li>%s | %s, %s | %s</li>' %
+        #        (u.login, u.lastname, u.firstname, u.userclass.domain) for u in users))
+        return Response(
+            modal_delete(
+                title = 'Deleting User(s)',
+                content = literal(
+                    'You are going to delete the following user(s):'
+                    '<ul>' +
+                    ''.join( '<li>%s | %s, %s | %s</li>' % (u.login, u.lastname,
+                            u.firstname, u.userclass.domain) for u in users) +
+                    '</ul>'
+                ),
+                request = request
+            ),
+            request = request
+        )
 
     elif method == 'delete/confirm':
 
@@ -428,27 +444,6 @@ def get_logout_url(request, authhost=None):
     authhost = authhost or request.registry.settings.get('rhombus.authhost', '')
     return authhost + '/logout?'
 
-
-
-modal_delete = '''
-<div class="modal-dialog" role="document"><div class="modal-content">
-<div class="modal-header">
-    <button type="button" class="close" data-dismiss="modal" aria-hidden="true">×</button>
-    <h3 id="myModalLabel">Deleting Batch(es)</h3>
-</div>
-<div class="modal-body">
-    <p>You are going to delete the following user(s):
-        <ul>
-        %s
-        </ul>
-    </p>
-</div>
-<div class="modal-footer">
-    <button class="btn" data-dismiss="modal" aria-hidden="true">Cancel</button>
-    <button class="btn btn-danger" type="submit" name="_method" value="delete/confirm">Confirm Delete</button>
-</div>
-</div></div>
-'''
 
 modal_error = '''
 <div class="modal-dialog" role="document"><div class="modal-content">

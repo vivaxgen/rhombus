@@ -1,4 +1,6 @@
 
+from rhombus.lib.modals import popup, modal_delete
+
 from rhombus.views import *
 from rhombus.views.generics import error_page
 
@@ -156,6 +158,9 @@ def lookup(request):
 @roles( SYSADM, EK_MODIFY, EK_DELETE )
 def action(request):
 
+    dbh = get_dbhandler()
+    EK = dbh.EK
+
     if not request.POST:
         return error_page()
 
@@ -163,20 +168,33 @@ def action(request):
 
     if method == 'delete':
         ids = request.POST.getall('ek-ids')
-        eks = list( EK.query().filter( EK.id.in_( ids ) ) )
+        eks = list( EK.query(dbh.session()).filter( EK.id.in_( ids ) ) )
 
         if len(eks) == 0:
             return Response(modal_error)
 
         #return Response('Delete Enumerated Keys: ' + str(request.POST))
-        return Response(modal_delete % ''.join( '<li>%s</li>' % x.key for x in eks ))
+        #return Response(modal_delete % ''.join( '<li>%s</li>' % x.key for x in eks ))
+        return Response(
+            modal_delete(
+                title = 'Deleting EKey(s)',
+                content = literal(
+                    'You are going to delete the following key(s):'
+                    '<ul>' +
+                    ''.join( '<li>%s</li>' % x.key for x in eks) +
+                    '</ul>'
+                ),
+                request = request
+            ),
+            request = request
+        )
 
     elif method == 'delete/confirm':
         ids = request.POST.getall('ek-ids')
 
         count = 0
         for ek_id in ids:
-            EK.delete( ek_id )
+            EK.delete( ek_id, dbh.session() )
             count += 1
 
         request.session.flash( ('success', 'Successfully removed %d Enumerated Keys' % count) )
@@ -214,23 +232,6 @@ def format_ektable(eks, request, ek=None):
 
     return bar.render(ek_table)
 
-modal_delete = '''
-<div class="modal-header">
-    <button type="button" class="close" data-dismiss="modal" aria-hidden="true">×</button>
-    <h3 id="myModalLabel">Deleting Enumerated Keys</h3>
-</div>
-<div class="modal-body">
-    <p>You are going to delete the following EK(s):
-        <ul>
-        %s
-        </ul>
-    </p>
-</div>
-<div class="modal-footer">
-    <button class="btn" data-dismiss="modal" aria-hidden="true">Cancel</button>
-    <button class="btn btn-danger" type="submit" name="_method" value="delete/confirm">Confirm Delete</button>
-</div>
-'''
 
 modal_error = '''
 <div class="modal-header">
