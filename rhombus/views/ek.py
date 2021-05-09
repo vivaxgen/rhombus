@@ -9,9 +9,15 @@ def index(request):
 
     dbh = get_dbhandler()
     eks = dbh.EK.query(dbh.session()).filter( dbh.EK.member_of_id == None )
-    return render_to_response( 'rhombus:templates/ek/index.mako',
-                    { 'eks': eks }, request = request )
 
+    html, code = format_ektable(eks, request)
+
+    html = div((h2('Enumerated Key'))).add( html )
+
+    return render_to_response('rhombus:templates/generics/page.mako',
+            {   'html': html,
+                'code': code
+            }, request = request )
 
 
 @roles( SYSADM, SYSVIEW, EK_VIEW )
@@ -23,9 +29,15 @@ def view(request):
     if not ek:
         return error_page(request)
 
-    return render_to_response('rhombus:templates/ek/view.mako',
-            { 'ek': ek }, request = request )
+    eform = edit_form(ek, dbh, request, static=True)
+    html, code = format_ektable(ek.members, request, ek)
 
+    html = div((h2('Enumerated Key'))).add(eform, br(), html)
+
+    return render_to_response('rhombus:templates/generics/page.mako',
+            {   'html': html,
+                'code': code
+            }, request = request )
 
 
 
@@ -87,14 +99,15 @@ def edit_form( ek, dbh, request, static=False ):
         t.fieldset(
             t.input_hidden('ek.id', value=ek.id or 0),
             t.input_hidden('ek.member_of_id', value=ek.member_of_id),
-            t.input_text('ek.key', 'Enum Key', value=ek.key),
-            t.input_text('ek.desc', 'Description', ek.desc),
+            t.input_text('ek.key', 'Enum Key', value=ek.key, static=static),
+            t.input_text('ek.desc', 'Description', ek.desc, static=static),
             t.checkboxes('ek.options', 'Option',
-                    [ ('ek.syskey', 'System key', ek.syskey) ]),
-            t.input_textarea('ek.data', 'Aux Data', ek.data or ''),
+                    [ ('ek.syskey', 'System key', ek.syskey) ], static=static),
+            t.input_textarea('ek.data', 'Aux Data', ek.data or '', static=static),
         ),
         t.fieldset(
-            t.submit_bar() if not static else ''
+            t.submit_bar() if not static else a('Edit', class_='btn btn-primary offset-md-3',
+                            href=request.route_url('rhombus.ek-edit', id=ek.id))
         )
     )
     return form
@@ -172,6 +185,34 @@ def action(request):
 
     return Response(str(request.POST))
 
+
+def format_ektable(eks, request, ek=None):
+
+    ek_table = table(class_='table table-condensed table-striped')[
+        thead()[
+            th('', style='width: 2em'), th('Key'), th('Description')
+        ],
+        tbody() [
+            tuple(
+                [ tr()
+                    [   td(literal('<input type="checkbox" name="ek-ids" value="%d">' % ek.id)),
+                        td(a('%s' % ek.key, href=request.route_url('rhombus.ek-view', id=ek.id))),
+                        td('%s' % ek.desc)
+                    ] for ek in eks
+                ]
+            )
+        ]
+    ]
+
+    add_button = (  'Add key',
+                    request.route_url('rhombus.ek-edit', id=0,
+                        _query = {'member_of_id': ek.id} if ek else {})
+    )
+
+    bar = selection_bar('ek-ids', action=request.route_url('rhombus.ek-action'),
+                    add = add_button)
+
+    return bar.render(ek_table)
 
 modal_delete = '''
 <div class="modal-header">
