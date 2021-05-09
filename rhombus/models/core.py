@@ -294,7 +294,7 @@ def _generic_lowername(cls):
 
 Base.lowername = classmethod(_generic_lowername)
 
-def _generic_delete(cls, dbid, dbsess = None):
+def _generic_delete(cls, dbid, dbsess):
     q = cls.query(dbsess)
     return q.filter(cls.id == int(dbid)).delete()
 
