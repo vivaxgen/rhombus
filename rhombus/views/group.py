@@ -1,5 +1,7 @@
 
 from rhombus.views import *
+from rhombus.views.generics import error_page
+
 from rhombus.lib.tags import button
 from rhombus.lib.modals import popup, modal_delete
 
@@ -178,6 +180,12 @@ def action_post(request):
         group_ids = [ int(x) for x in request.params.getall('group-ids') ]
         group_names = []
         for group in dbh.get_group( group_ids ):
+            # XXX: check whether there are users with this group as primary group
+            n_users =  dbh.User.query(dbh.session()).filter(dbh.User.primarygroup_id == group.id).count()
+            if n_users > 0:
+                return error_page( request,
+                    'Group %s cannot be deleted since it currently is a primary group with %d user member(s).'
+                        % (group.name, n_users) )
             group_names.append( group.name )
             dbh.session().delete(group)
 
