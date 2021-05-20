@@ -479,6 +479,9 @@ class BaseMixIn(object):
         stamp attribute.
     """
 
+    plain_fields = ['stamp']
+    aux_fields = ['lastuser']
+
     @declared_attr
     def id(cls):
         return Column(  types.Integer,
@@ -537,3 +540,20 @@ class BaseMixIn(object):
             lastuser = self.lastuser.login,
             stamp = self.stamp,
         )
+
+    def update_fields_with_dict(self, a_dict, fields):
+        for f in fields:
+            if f in a_dict:
+                setattr(self, f, a_dict.get(f))
+
+    def update_ek_with_dict(self, a_dict, fields, dbh):
+        for f in fields:
+            if f in a_dict:
+                setattr(self, f + '_id', EK.getid(a_dict[f], dbh.session()))
+
+    def create_dict_from_fields(self, fields, exclude=None):
+        d = {}
+        for f in fields:
+            if exclude and f in exclude: continue
+            d[f] = str(getattr(self, f))
+        return d
