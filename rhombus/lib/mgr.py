@@ -55,6 +55,11 @@ def init_argparser( parser = None):
     p.add_argument('--addenumkey', default=False)
     p.add_argument('--delenumkey', default=False)
 
+    # dump/load all
+
+    p.add_argument('--rbdump', default=False, action='store_true')
+    p.add_argument('--rbload', default=False, action='store_true')
+
     # direct manipulation
 
     p.add_argument('--adduser', action='store_true', default=False,
@@ -168,6 +173,9 @@ def do_rbmgr(args, settings, dbh = None):
 
     elif args.exportuserclass:
         do_exportuserclass(args, dbh, settings)
+
+    elif args.rbdump:
+        do_rbdump(args, dbh, settings)
 
     else:
         return False
@@ -352,6 +360,18 @@ def do_exportuserclass(args, dbh, settings):
 
     outfile = open(args.outfile, 'w')
     dbh.UserClass.dump( outfile, userclasses )
+
+
+def do_rbdump(args, dbh, settings):
+    """ this function will dump all Rhombus core data to YAML file """
+
+    import yaml
+    d = {}
+    # dump EK first
+    d['_Rb_:EK'] = dbh.EK.bulk_dump(dbh)
+    d['_Rb_:UserClass'] = dbh.UserClass.bulk_dump(dbh)
+    d['_Rb_:Group'] = dbh.Group.bulk_dump(dbh)
+    yaml.safe_dump( d, open(args.outfile, 'w'), default_flow_style = False )
 
 
 def do_syncuserclass(args, dbh, settings):
