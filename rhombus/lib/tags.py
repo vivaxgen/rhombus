@@ -136,18 +136,23 @@ class htmltag(object):
         self.enabled = flag
 
 
+FORM_URLENCODED = 'application/x-www-form-urlencoded'
+FORM_MULTIPART = 'multipart/form-data' 
+
 class form(htmltag):
 
-    def __init__(self, name, action='#', method=GET, **kwargs):
+    def __init__(self, name, action='#', method=GET, enctype=FORM_URLENCODED, **kwargs):
         super().__init__( name = name, **kwargs )
         self.action = action
         self.method = method
+        self.enctype = enctype
 
 
     def __str__(self):
         return literal( form_template.format( name=escape(self.name),
                                 action = self.action,
                                 method = self.method,
+                                enctype = self.enctype,
                                 contents = '\n'.join( escape(c) for c in self.contents ),
                         ) )
 
@@ -797,7 +802,7 @@ submit_bar_template = '''\
 '''
 
 form_template = '''\
-<form name="{name}" id="{name}" action="{action}" method="{method}" class="form-horizontal input-group-sm">
+<form name="{name}" id="{name}" action="{action}" method="{method}" class="form-horizontal input-group-sm" enctype="{enctype}">
   {contents}
 </form>'''
 
