@@ -261,8 +261,6 @@ class EK(BaseMixIn, Base):
     def bulk_dump(cls, dbh, query = None):
         if not query:
             query = cls.query(dbh.session()).filter( cls.member_of_id == None )
-
-        import IPython; IPython.embed()
         return [ obj.as_dict() for obj in query ]
 
     @staticmethod
