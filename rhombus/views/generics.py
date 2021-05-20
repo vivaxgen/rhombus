@@ -45,14 +45,14 @@ def not_authorized(request, text=''):
 
 # pages with forwarding / refreshing
 
-def forwarding_page(text='', url='', delay=5):
+def forwarding_page(request, text='', url='', delay=5):
     return render_to_response('rhombus:templates/generics/forwarding_page.mako',
-        { 'text': text, 'url': url, 'delay': delay } )
+        { 'msg': text, 'url': url, 'delay': delay }, request = request )
 
 
-def refreshing_page(text='', delay=5):
+def refreshing_page(request, text='', delay=5):
     return render_to_response('rhombus:templates/generics/refreshing_page.mako',
-        { 'text': text, 'delay': delay } )
+        { 'text': text, 'delay': delay }, request = request )
 
 
 
