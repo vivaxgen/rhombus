@@ -520,7 +520,7 @@ class BaseMixIn(object):
     def bulk_load(cls, a_list, dbh):
         """ bulk load from a list of dictionary object """
         objs = [ cls.from_dict(d, dbh) for d in a_list ]
-        dbh.session.flush(objs)
+        dbh.session().flush(objs)
 
 
     @classmethod
