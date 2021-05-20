@@ -527,6 +527,12 @@ class BaseMixIn(object):
 
 
     @classmethod
+    def bulk_dump(cls, dbh):
+        q = cls.query(dbh.session())
+        return [ obj.as_dict() for obj in q ]
+
+
+    @classmethod
     def from_dict(cls, a_dict, dbh):
         """ load and add from a dict """
         obj = cls()
