@@ -257,6 +257,14 @@ class EK(BaseMixIn, Base):
         yaml.safe_dump_all( (x.as_dict() for x in query), _out, default_flow_style = False )
 
 
+    @classmethod
+    def bulk_dump(cls, dbh, query = None):
+        if not query:
+            query = cls.query(dbh.session()).filter( cls.member_of_id == None )
+
+        import IPython; IPython.embed()
+        return [ obj.as_dict() for obj in query ]
+
     @staticmethod
     def load( _in ):
         import yaml
