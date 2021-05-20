@@ -165,6 +165,15 @@ class UserClass(Base):
         yaml.safe_dump_all( ( x.as_dict() for x in userclasses ), out, default_flow_style=False )
 
 
+    # the method below are necessary since this class is not inherited from BaseMixIn and
+    # making this class inherited from BaseMixIn will introduce schema incompatibility for now
+
+    @classmethod
+    def bulk_dump(cls, dbh):
+        q = cls.query(dbh.session())
+        return [ obj.as_dict() for obj in q ]
+
+
 @registered
 class UserData(Base):
 
@@ -527,7 +536,7 @@ class Group(Base):
                     session = get_dbhandler().session()
                     with session.no_autoflush:
                         for ag_id in obj['composite_ids']:
-                            AssociatedGroup.add(self.id, ag_id, 'C', session)
+                            AssociatedGroup.add(self, ag_id, 'C', session)
 
                     #raise RuntimeError('FATAL ERR: node does not have id while performing tagging')
                 else:
@@ -539,14 +548,27 @@ class Group(Base):
         self.scheme = obj.scheme
 
     def as_dict(self):
-        return dict( name=self.name, desc=self.desc, scheme=self.scheme,
+        d = dict( name=self.name, desc=self.desc, scheme=self.scheme,
                 users = [ (ug.user.login, ug.role) for ug in self.usergroups ] )
+        if (self.flags & self.f_composite_group):
+            d['assoc_groups'] = [ (x.associated_group.name, x.role)
+                for x in AssociatedGroup.query(object_session(self)).filter(AssociatedGroup.group_id == self.id) ]
+        return d
 
     @staticmethod
     def dump(out, query=None):
         if query is None:
             query = Group.query()
         yaml.safe_dump_all( (x.as_dict() for x in query), out, default_flow_style=False)
+
+
+    # the method below are necessary since this class is not inherited from BaseMixIn and
+    # making this class inherited from BaseMixIn will introduce schema incompatibility for now
+
+    @classmethod
+    def bulk_dump(cls, dbh):
+        q = cls.query(dbh.session())
+        return [ obj.as_dict() for obj in q ]
 
 
 @registered
@@ -646,15 +668,15 @@ class AssociatedGroup(Base):
 
     @classmethod
     def add(cls, group_id, grp_id, role='C', session=None):
-        assert type(group_id) == int
 
         if not session:
             session = get_dbhandler().session()
-        if type(grp_id) == int:
+        if type(group_id) == int:
             ag = cls(group_id = group_id, assoc_group_id = grp_id, role = role)
+        elif isinstance(group_id, Group):
+            ag = cls(group = group_id, assoc_group_id = grp_id, role=role)
         else:
-            raise RuntimeError('FATAL PROG/ERR: Need integers for all group arguments!')
-            #tag = cls(group = group_id, assoc_group = grp_id, role = role)
+            raise RuntimeError('FATAL PROG/ERR: Need integer or group for 1st argument')
         session.add(ag)
 
 
