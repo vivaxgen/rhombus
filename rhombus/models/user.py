@@ -671,6 +671,10 @@ class AssociatedGroup(Base):
 
         if not session:
             session = get_dbhandler().session()
+
+        ag = Group.get(grp_id, session)
+        if (ag.flags & ag.f_composite_group):
+            raise RuntimeError('Error: composite group cannot consist of another composite group!')
         if type(group_id) == int:
             ag = cls(group_id = group_id, assoc_group_id = grp_id, role = role)
         elif isinstance(group_id, Group):
