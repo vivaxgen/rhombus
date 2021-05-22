@@ -608,6 +608,7 @@ class custom_submit_bar(htmltag):
         self.buttons = args
         self.offset=3
         self.hide = False
+        self.reset_button = True
 
     def set_offset(self, offset):
         self.offset = offset
@@ -615,6 +616,10 @@ class custom_submit_bar(htmltag):
 
     def set_hide(self, flag):
         self.hide = flag
+        return self
+
+    def show_reset_button(self, flag):
+        self.reset_button = flag
         return self
 
     def __str__(self):
@@ -625,7 +630,8 @@ class custom_submit_bar(htmltag):
                 button(class_="btn btn-primary", type="submit", name="_method",
                         id="_method.%s" % b[1], label=b[0], value=b[1])
             )
-        buttons.add( button(class_="btn", type="reset", label="Reset") )
+        if self.reset_button:
+            buttons.add( button(class_="btn", type="reset", label="Reset") )
         html.add(buttons)
         return literal(html)
 
