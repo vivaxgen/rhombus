@@ -302,16 +302,19 @@ class RhoRequest(Request):
             return SESS_TICKET + random_string(8)
         return SESS_TICKET + ticket
 
-    def get_ticket(self, data):
+    def get_ticket(self, data, ticket=None):
         while True:
-            sess_ticket = self.get_sess_ticket()
-            if sess_ticket not in self.session:
-                self.session[sess_ticket] = data
+            sess_ticket = self.get_sess_ticket(ticket)
+            if self.cache.get(sess_ticket) == dogpile.cache.api.NO_VALUE:
+                self.cache.set(sess_ticket, data)
                 break
         return sess_ticket
 
-    def get_data(self, ticket):
-        return self.session.get( self.get_sess_ticket(ticket), None )
+    def get_data(self, ticket, expiration_time=None):
+        data = self.cache.get( self.get_sess_ticket(ticket), expiration_time or session_expiration_time )
+        if data == dogpile.cache.api.NO_VALUE:
+            raise KeyError(f"ticket {ticket} is not associated with any data.")
+        return data
 
     def del_ticket(self, ticket):
         try:
