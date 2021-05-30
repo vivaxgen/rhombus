@@ -160,10 +160,10 @@ class form(htmltag):
 class input_text(htmltag):
 
     def __init__(self, name, label, value='', info=None, size=8, offset=3,
-                    extra_control=None, static=False, placeholder='', **kwargs):
+                    extra_control=None, static=False, placeholder='', update_dict=None, **kwargs):
         super().__init__( name = name, **kwargs )
         self.label = label
-        self.value = value
+        self.value = (update_dict.get(name, None) if update_dict else value) or value
         self.placeholder = placeholder
         self.error = None
         self.info = info
@@ -179,10 +179,10 @@ class input_text(htmltag):
         return literal( input_text_template.format( name=escape(self.name),
                         label=escape(self.label), value=escape(value or self.value),
                         placeholder = self.placeholder,
-                        class_div = 'form-group' + (' has-error' if self.error else ''),
+                        class_div = 'form-group',
                         class_label = 'col-md-%d control-label' % self.offset,
                         class_value = 'col-md-%d' % self.size,
-                        class_input = 'form-control',
+                        class_input = 'form-control' + (' is-invalid' if self.error else ''),
                         help_span = self.help(),
                         info = self.info_text(),
                         ro = 'readonly' if (self.static or static) else '',
@@ -191,20 +191,13 @@ class input_text(htmltag):
     def help(self):
         if not self.error:
             return ''
-        return '<span id="helpBlock" class="help-block">' + self.error + '</span>'
+        return '<span id="invalid-feedback" class="invalid-feedback">' + self.error + '</span>'
 
     def add_error(self, errmsg):
         self.error = errmsg
 
     def as_static(self, value=None):
         return self.as_input(value = value, static = True)
-        return literal( input_static_template.format( name=escape(self.name),
-                        label=escape(self.label), value=escape(value or self.value),
-                        class_div = 'form-group' + (' has-error' if self.error else ''),
-                        class_label = 'col-md-%d control-label' % self.offset,
-                        class_value = 'col-md-%d' % self.size,
-                        class_input = 'form-control',
-                    ) )
 
     def info_text(self):
         if self.info:
@@ -235,10 +228,10 @@ class input_password(input_text):
             info = ''
         return literal( input_password_template.format( name=escape(self.name),
                         label=escape(self.label), value=escape(self.value),
-                        class_div = 'form-group' + (' has-error' if self.error else ''),
+                        class_div = 'form-group',
                         class_label = 'col-md-%d control-label' % self.offset,
                         class_value = 'col-md-%d' % self.size,
-                        class_input = 'form-control',
+                        class_input = 'form-control' + (' is-invalid' if self.error else ''),
                         help_span = self.help(),
                         info = self.info_text(),
                     ) )
@@ -256,9 +249,10 @@ class input_textarea(input_text):
                         class_label = 'col-md-%d control-label' % self.offset,
                         class_value = 'col-md-%d' % size,
                         rows = rows,
-                        class_input = 'form-control',
+                        class_input = 'form-control'  + (' is-invalid' if self.error else ''),
                         extra_control = literal(self.extra_control) if self.extra_control else '',
                         style = 'style="font-family:monospace; width:100%;"',
+                        help_span = self.help(),
                         info = self.info_text(),
                         ro = 'readonly' if self.static else '',
                     ) )
@@ -744,6 +738,7 @@ input_textarea_template = '''\
   <div class='{class_value}'>
     <textarea id='{name}' name='{name}' class='{class_input}' rows='{rows}' {style} {ro}>{value}</textarea>
     {extra_control}
+    {help_span}
     {info}
   </div>
 </div>'''
