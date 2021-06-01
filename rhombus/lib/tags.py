@@ -275,9 +275,13 @@ class input_select(input_text):
     def __init__(self, name, label, value='', options=[], multiple=False, extra_control=None, **kwargs):
         """ options: [ (val, label), ... ] """
         super().__init__( name, label, value, **kwargs )
-        self.options = options
+        self.options = [ (str(o[0]), o[1]) for o in options ]
         self.multiple = multiple
         self.extra_control = extra_control
+        if self.multiple:
+            self.value = [ str(x) for x in self.value ]
+        else:
+            self.value = str(self.value)
 
     def __str__(self):
         if self.static:
