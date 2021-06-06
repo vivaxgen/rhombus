@@ -336,7 +336,7 @@ class input_select_ek(input_select):
         if parent_ek is None:
             raise RuntimeError('parent_ek cannot be None')
         super().__init__( name, label, value, multiple=False, **kwargs )
-        self.options = [ (ek.id, ek.key) for ek in parent_ek.members ]
+        self.options = [ (str(ek.id), ek.key) for ek in parent_ek.members ]
         if option_filter:
             self.options = [ opt for opt in self.options if option_filter(opt[1]) ]
 
