@@ -27,11 +27,13 @@ from sqlalchemy.ext.associationproxy import association_proxy
 from sqlalchemy.ext.declarative import declared_attr
 from sqlalchemy.sql.functions import current_timestamp, now
 from sqlalchemy.dialects.postgresql import base as pg
+from sqlalchemy.inspection import inspect
 
 import uuid, json, yaml, copy
 import transaction
 import pickle
 import threading
+import functools
 
 from .meta import get_base, get_dbsession, get_datalogger, RhoSession
 
@@ -479,8 +481,12 @@ class BaseMixIn(object):
         stamp attribute.
     """
 
-    plain_fields = ['stamp']
-    aux_fields = ['lastuser']
+    __plain_fields__ = None
+    __ek_fields__ = None
+    __rel_fields__ = None
+    __aux_fields__ = None
+
+    __excluded_fields__ = { 'id', }
 
     @declared_attr
     def id(cls):
@@ -547,19 +553,42 @@ class BaseMixIn(object):
             stamp = self.stamp,
         )
 
-    def update_fields_with_dict(self, a_dict, fields):
+    def update_fields_with_dict(self, a_dict, fields=None):
+        fields = fields or self.get_plain_fields()
         for f in fields:
             if f in a_dict:
+                if not hasattr(self, f):
+                    raise AttributeError(f)
                 setattr(self, f, a_dict.get(f))
 
-    def update_ek_with_dict(self, a_dict, fields, dbh):
+    def update_ek_with_dict(self, a_dict, fields=None, dbh=None):
+        fields = fields or self.__ek_fields__
+        session = dbh.session() if dbh else object_session(self)
         for f in fields:
             if f in a_dict:
-                setattr(self, f + '_id', EK.getid(a_dict[f], dbh.session()))
+                f_ = f + '_id'
+                if not hasattr(self, f_):
+                    raise AttributeError(f_)
+                setattr(self, f_, dbh.EK.getid(a_dict[f], session))
 
-    def create_dict_from_fields(self, fields, exclude=None):
+    def create_dict_from_fields(self, fields=None, exclude=None):
+        fields = fields or ( self.__plain_fields__ + self.__aux_fields__ )
         d = {}
         for f in fields:
             if exclude and f in exclude: continue
             d[f] = str(getattr(self, f))
         return d
+
+
+    @classmethod
+    def get_plain_fields(cls):
+        if cls.__plain_fields__ is None:
+            cls.__plain_fields__ = list( c.name for c in inspect(cls).c if c.name not in cls.__excluded_fields__ )
+        return cls.__plain_fields__
+
+    @classmethod
+    def get_rel_fields(cls):
+        if cls.__rel_fields__ is None:
+            rels = inspect(cls).relationships
+            cls.__rel_fields__ = list( r.key for k in rels if r.key not in cls.__excluded_fields__ )
+        return cls.__rel_fields__
