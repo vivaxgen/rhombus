@@ -3,9 +3,56 @@ import sys
 
 from rhombus.lib.utils import cerr, cout
 from rhombus.models import (core, meta, ek, user, actionlog, filemgr)
-from sqlalchemy import engine_from_config, event
+from sqlalchemy import engine_from_config, event, or_, and_
 
 cinfo = print
+
+## query constructor
+
+class QueryConstructor(object):
+
+    # field specs contains field_tag: column_class
+    field_specs = {
+        'userclass_id': user.UserClass.id,
+        'user_id': user.User.id,
+        'group_id': user.Group.id,
+    }
+
+
+    def __init__(self):
+        pass
+
+
+    def construct_query_from_list(self, a_list):
+        exprs = []
+        classes = []
+        for spec in a_list:
+            spec_exprs, spec_classes = self.construct_query_from_dict( spec )
+            exprs.append( spec_exprs )
+            classes.extend( spec_classes )
+
+        classes = set( classes )
+        return or_(* exprs), classes
+
+
+    def construct_query_from_dict(self, a_dict):
+
+        exprs = []
+        classes = []
+
+        for k, val in a_dict.items():
+            f = self.field_specs[k]
+            if f.class_ not in classes:
+                classes.append( f.class_ )
+            if isinstance(val, list):
+                exprs.append( f.in_(val) )
+            elif '%' in val:
+                exprs.append( f.like(val))
+            else:
+                exprs.append( f == val )
+
+        return and_( *exprs ), classes
+
 
 
 class DBHandler(object):
@@ -19,6 +66,7 @@ class DBHandler(object):
     UserClass = user.UserClass
     UserGroup = user.UserGroup
 
+    query_constructor_class = QueryConstructor
 
     def __init__(self, settings, tag='sqlalchemy.', initial = False):
         """ use settings from configfile, prepare self.engine & self.session """
@@ -44,6 +92,7 @@ class DBHandler(object):
         self.settings = settings
         self.session = meta.get_dbsession()
         self.session.configure(bind = self.engine )
+        self._query_constructor = None
 
 
 
@@ -158,3 +207,40 @@ class DBHandler(object):
         return self.EK.search(ekey, dbsession = self.session())
 
 
+    # Universal query system
+
+    def get_query_constructor(self):
+        if self._query_constructor is None:
+            self._query_constructor = self.query_constructor_class()
+        return self._query_constructor
+
+
+    def construct_query(self, object, selector):
+        """ return compound query constructed from list & dictionary
+
+            return objects with samples_id in [0, 1, 2] OR collection_id in [ 5 ]
+            [
+                {'sample_id': [0, 1, 2]},
+                {'collection_id': [5]}
+            ]
+            filter( or_( Sample.id.in_([0,1,2]), Collection.id.in_([5]) ) )
+
+            return objects with category_id in [1,2] AND collection_id in [ 5 ]
+            [
+                {'category_id': [1, 2], 'collection_id': [5]}
+            ]
+            filter ( or_( and_(Category.id.in_([1,2]), Collection.id.in_([5])) ) )
+        """
+
+        q = self.session().query( object )
+
+        selector = selector or []
+        constructor = self.get_query_constructor()
+        filter_expr, filter_classes = constructor.construct_query_from_list( selector )
+        filter_classes = filter_classes - { object }
+
+        for class_ in filter_classes:
+            q = q.join(class_)
+
+        q = q.filter( filter_expr )
+        return q
