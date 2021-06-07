@@ -4,6 +4,7 @@ import sys
 from rhombus.lib.utils import cerr, cout
 from rhombus.models import (core, meta, ek, user, actionlog, filemgr)
 from sqlalchemy import engine_from_config, event, or_, and_
+from sqlalchemy.orm import exc
 
 cinfo = print
 
