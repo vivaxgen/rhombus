@@ -198,6 +198,7 @@ class User(Base):
                     index=True)
     lastname = Column(types.String(32), index=True, nullable=False)
     firstname = Column(types.String(32), nullable=False, server_default='')
+    fullname = column_property(lastname + ', ' + firstname)
 
     # email is unique because it can be used to authenticate user as well
     email = Column(types.String(32), unique=True, nullable=False)

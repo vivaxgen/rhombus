@@ -18,7 +18,7 @@ __version__ = '20150216'
 # essential import from sqlalchemy
 
 from sqlalchemy import and_, or_, schema, types, MetaData, Sequence, Column, ForeignKey, UniqueConstraint, Table
-from sqlalchemy.orm import relationship, backref, dynamic_loader, deferred
+from sqlalchemy.orm import relationship, backref, dynamic_loader, deferred, column_property
 from sqlalchemy.orm.collections import column_mapped_collection, attribute_mapped_collection
 from sqlalchemy.orm.session import object_session
 from sqlalchemy.orm.exc import NoResultFound
