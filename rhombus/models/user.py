@@ -198,7 +198,10 @@ class User(Base):
                     index=True)
     lastname = Column(types.String(32), index=True, nullable=False)
     firstname = Column(types.String(32), nullable=False, server_default='')
-    email = Column(types.String(32), index=True, nullable=False)
+
+    # email is unique because it can be used to authenticate user as well
+    email = Column(types.String(32), unique=True, nullable=False)
+    email2 = Column(types.String(32), index=True, nullable=False, server_default='')
     institution = Column(types.String(64), nullable=False, server_default='')
     address = Column(types.String(128), nullable=False, server_default='')
     contact = Column(types.String(64), nullable=False, server_default='')
