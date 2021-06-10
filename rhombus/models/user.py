@@ -16,7 +16,7 @@ class UserClass(Base):
     id = Column(types.Integer, Sequence('userclass_seq_id', optional=True),
         primary_key=True)
     domain = Column(types.String(16), nullable=False, unique=True)
-    desc = Column(types.String(64), nullable=False)
+    desc = Column(types.String(64), nullable=False, server_default='')
     referer = Column(types.String(128), nullable=False, server_default='')
     autoadd = Column(types.Boolean, nullable=False, default=False)
     credscheme = Column(YAMLCol(256), nullable=False)  # YAML type data
@@ -202,7 +202,7 @@ class User(Base):
 
     # email is unique because it can be used to authenticate user as well
     email = Column(types.String(32), unique=True, nullable=False)
-    email2 = Column(types.String(32), index=True, nullable=False, server_default='')
+    email2 = Column(types.String(64), index=True, nullable=False, server_default='')
     institution = Column(types.String(64), nullable=False, server_default='')
     address = Column(types.String(128), nullable=False, server_default='')
     contact = Column(types.String(64), nullable=False, server_default='')
@@ -255,8 +255,8 @@ class User(Base):
                 self.set_primarygroup(u.primarygroup_id)
 
 
-    def fullname(self):
-        return '%s, %s' % (self.lastname, self.firstname)
+    #def fullname(self):
+    #    return '%s, %s' % (self.lastname, self.firstname)
 
 
     def set_primarygroup(self, grp):
