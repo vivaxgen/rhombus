@@ -553,13 +553,25 @@ class BaseMixIn(object):
             stamp = self.stamp,
         )
 
-    def update_fields_with_dict(self, a_dict, fields=None):
+    def update_fields_with_dict(self, a_dict, fields=None, excludes=None):
         fields = fields or self.get_plain_fields()
         for f in fields:
+            if excludes and f in excludes:
+                continue
             if f in a_dict:
                 if not hasattr(self, f):
                     raise AttributeError(f)
                 setattr(self, f, a_dict.get(f))
+
+    def update_fields_with_object(self, an_obj, fields=None, exclude=None):
+        fields = fields or self.get_plain_fields()
+        for f in fields:
+            if excludes and f in excludes:
+                continue
+            if hasattr(an_obj, f):
+                if not hasattr(self, f):
+                    raise AttributeError(f)
+                setattr(self, f, getattr(an_obj, f))
 
     def update_ek_with_dict(self, a_dict, fields=None, dbh=None):
         fields = fields or self.__ek_fields__
