@@ -578,7 +578,7 @@ def format_usertable(group, request):
                         td(literal('<input type="checkbox" name="user-ids" value="%d" />' % ug.user_id)),
                         td(a(ug.user.login, href=request.route_url('rhombus.user-view', id=ug.user_id))),
                         td(ug.role),
-                        td(ug.user.fullname()),
+                        td(ug.user.fullname),
                         td(a(ug.user.primarygroup.name,
                             href=request.route_url('rhombus.group-view', id=ug.user.primarygroup_id))),
                     ] for ug in group.usergroups ])

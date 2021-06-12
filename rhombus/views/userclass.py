@@ -55,7 +55,7 @@ def view(request):
         tbody()[
             tuple([ tr()[
                         td(a(u.login, href=request.route_url('rhombus.user-view', id=u.id))),
-                        td(u.fullname()),
+                        td(u.fullname),
                         td(a(u.primarygroup.name,
                             href=request.route_url('rhombus.group-view', id=u.primarygroup_id))),
                     ] for u in userclass.users ])
