@@ -15,6 +15,7 @@ DATABASE CREATION AND DELETION
 
 To create a new database, run the following command as PostgreSQL admin user:
 
+$ createuser OWNERNAME
 $ createdb -O OWNERNAME DBNAME
 $ psql DBNAME -c "DROP EXTENSION plpgsql"
 
@@ -40,5 +41,29 @@ $ psql -U USERNAME -h HOST -f INFILE DBNAME
 SCHEMA MIGRATION
 
 Sometimes, during development, we need to modify the SQL schema. Use alembic
-to manage the schema.
+to manage the schema. If using alembic, create the table first using alembic
+migration, then initialize database using rbmgr --initdb --no-create-table to
+avoid table creation.
 
+To create the first schema, create an empty database and then run:
+
+$ alembic revision --autogenerate -m "Initial tables"
+
+Inspect the resulted alembic script and edit accordingly (usually adding import
+dependency), then create the alembic schema and initial tables in the database:
+
+$ alembic upgrade head
+
+Then initialize the database using rbmgr
+
+$ APP-run rbmgr --initdb --no-create-table --cred A_SYSTEM_PASSWORD
+
+For consecutive schema revision, perform similar steps for alembic as above.
+
+
+SQLALCHEMY UNIX SOCKET CONNECTION
+
+By default, postgresql use unix socket at /var/run/postgresql/.s.PGSQL.5432 so use
+the following directive for the default socket location:
+
+sqlalchemy.url = postgresql+psycopg2://login:passwd@/dbname
