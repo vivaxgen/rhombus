@@ -5,7 +5,7 @@ from rhombus.views import *
 from rhombus.views.generics import error_page
 
 
-@roles( PUBLIC )
+@roles( SYSADM, SYSVIEW, EK_VIEW )
 def index(request):
     """ list all non-member/root EnumKey (EK) """
 
