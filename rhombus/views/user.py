@@ -419,7 +419,8 @@ def user_menu(request):
                         if not (request.user.has_roles(GUEST) or authhost) else '',
                     a('Management', class_='dropdown-item',
                             href=request.route_url('rhombus.dashboard'))
-                        if request.user.has_roles(SYSADM) else '',
+                        if request.user.has_roles(SYSADM, SYSVIEW, DATAADM, DATAVIEW,
+                                        EK_VIEW, USERCLASS_VIEW, USER_VIEW, GROUP_VIEW) else '',
                     a('Logout', class_='dropdown-item', href=get_logout_url(request, authhost))
                 ]
 
