@@ -229,6 +229,14 @@ class User(Base):
 
     def update(self, u):
         if isinstance(u, dict):
+
+            if 'primarygroup_id' in u:
+                self.set_primarygroup(u['primarygroup_id'])
+
+            self.update_fields_with_dict(u, exclude=['primary_group_id'])
+
+            return
+
             if 'lastname' in u:
                 self.lastname = u['lastname']
             if 'firstname' in u:
@@ -245,6 +253,14 @@ class User(Base):
                 self.set_primarygroup(u['primarygroup_id'])
 
         else:
+
+            if u.primarygroup_id:
+                self.set_primarygroup(u.primarygroup_id)
+
+            self.update_fields_with_object(u, exclude=['primary_group_id'])
+
+            return
+
             self.lastname = u.lastname
             self.firstname = u.firstname
             self.email = u.email
@@ -339,7 +355,7 @@ class User(Base):
                 self.userclass.domain, group_ids, role_ids, dbsession = object_session(self) )
 
     def render(self):
-        return "%s | %s" % (str(self), self.fullname())
+        return "%s | %s" % (str(self), self.fullname)
 
     def as_dict(self):
         return dict( id = self.id, login = self.login, credential = self.credential,
