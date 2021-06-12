@@ -474,19 +474,13 @@ def clear_caches_XXX(success):
 #current_t.addAfterCommitHook(clear_caches)
 
 
-class BaseMixIn(object):
-    """ BaseMixIn
+class StampMixIn(object):
+    """ StampMixIn
 
         This is base class for all object that needs id, lastuser_id and
         stamp attribute.
     """
 
-    __plain_fields__ = None
-    __ek_fields__ = None
-    __rel_fields__ = None
-    __aux_fields__ = None
-
-    __excluded_fields__ = { 'id', }
 
     @declared_attr
     def id(cls):
@@ -525,6 +519,15 @@ class BaseMixIn(object):
         self.stamp = now()
 
 
+class AutoUpdateMixIn(object):
+
+    __plain_fields__ = None
+    __ek_fields__ = None
+    __rel_fields__ = None
+    __aux_fields__ = None
+
+    __excluded_fields__ = { 'id', }
+
     @classmethod
     def bulk_load(cls, a_list, dbh):
         """ bulk load from a list of dictionary object """
@@ -553,10 +556,10 @@ class BaseMixIn(object):
             stamp = self.stamp,
         )
 
-    def update_fields_with_dict(self, a_dict, fields=None, excludes=None):
+    def update_fields_with_dict(self, a_dict, fields=None, exclude=None):
         fields = fields or self.get_plain_fields()
         for f in fields:
-            if excludes and f in excludes:
+            if exclude and f in exclude:
                 continue
             if f in a_dict:
                 if not hasattr(self, f):
@@ -566,7 +569,7 @@ class BaseMixIn(object):
     def update_fields_with_object(self, an_obj, fields=None, exclude=None):
         fields = fields or self.get_plain_fields()
         for f in fields:
-            if excludes and f in excludes:
+            if exclude and f in exclude:
                 continue
             if hasattr(an_obj, f):
                 if not hasattr(self, f):
@@ -604,3 +607,8 @@ class BaseMixIn(object):
             rels = inspect(cls).relationships
             cls.__rel_fields__ = list( r.key for k in rels if r.key not in cls.__excluded_fields__ )
         return cls.__rel_fields__
+
+
+class BaseMixIn(StampMixIn, AutoUpdateMixIn):
+    """ BaseMixIn combined StampMixIn with AutoUpdate MixIn)
+    """
