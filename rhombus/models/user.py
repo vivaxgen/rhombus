@@ -10,7 +10,7 @@ from pprint import pprint
 
 
 @registered
-class UserClass(Base):
+class UserClass(Base, AutoUpdateMixIn):
 
     __tablename__ = 'userclasses'
     id = Column(types.Integer, Sequence('userclass_seq_id', optional=True),
@@ -30,18 +30,10 @@ class UserClass(Base):
     def update(self, d):
 
         if isinstance(d, dict):
-            self.domain = d['domain']
-            self.desc = d['desc']
-            self.credscheme = d['credscheme']
-            if 'referer' in d:
-                self.referer = d['referer']
-            if 'autoadd' in d:
-                self.autoadd = d['autoadd']
-            if 'credscheme' in d:
-                self.credscheme = d['credscheme']
+            self.update_fields_with_dict(d)
 
         else:
-            raise RuntimeError('updating can only be performed using dict ')
+            self.update_fields_with_object(d)
 
 
     @staticmethod
@@ -186,7 +178,7 @@ class UserData(Base):
 
 
 @registered
-class User(Base):
+class User(Base, AutoUpdateMixIn):
 
     __tablename__ = 'users'
     id = Column(types.Integer, Sequence('user_seq_id', optional=True),
@@ -214,8 +206,10 @@ class User(Base):
     yaml = deferred(Column(YAMLCol))
     __table_args__ = ( UniqueConstraint('login', 'userclass_id'), {} )
 
-    userclass = relationship(UserClass, uselist=False, backref=backref('users', lazy='dynamic'))
-    primarygroup = relationship('Group', uselist=False, backref=backref('primaryusers'))
+    userclass = relationship(UserClass, uselist=False, foreign_keys=userclass_id,
+                                backref=backref('users', lazy='dynamic'))
+    primarygroup = relationship('Group', uselist=False, foreign_keys=primarygroup_id,
+                                backref=backref('primaryusers'))
     userdata = relationship(UserData,
                     collection_class = column_mapped_collection(UserData.key_id),
                     cascade='all,delete,delete-orphan')
@@ -235,23 +229,6 @@ class User(Base):
 
             self.update_fields_with_dict(u, exclude=['primary_group_id'])
 
-            return
-
-            if 'lastname' in u:
-                self.lastname = u['lastname']
-            if 'firstname' in u:
-                self.firstname = u['firstname']
-            if 'email' in u:
-                self.email = u['email']
-            if 'institution' in u:
-                self.institution = u['institution']
-            if 'address' in u:
-                self.address = u['address']
-            if 'contact' in u:
-                self.contact = u['contact']
-            if 'primarygroup_id' in u:
-                self.set_primarygroup(u['primarygroup_id'])
-
         else:
 
             if u.primarygroup_id:
@@ -260,20 +237,6 @@ class User(Base):
             self.update_fields_with_object(u, exclude=['primary_group_id'])
 
             return
-
-            self.lastname = u.lastname
-            self.firstname = u.firstname
-            self.email = u.email
-            self.institution = u.institution
-            self.address = u.address
-            self.contact = u.contact
-            if u.primarygroup_id:
-                self.set_primarygroup(u.primarygroup_id)
-
-
-    #def fullname(self):
-    #    return '%s, %s' % (self.lastname, self.firstname)
-
 
     def set_primarygroup(self, grp):
         if type(grp) == int:
@@ -438,7 +401,7 @@ group_role_table = Table('groups_roles', metadata,
 
 
 @registered
-class Group(Base):
+class Group(Base, AutoUpdateMixIn):
 
     __tablename__ = 'groups'
     id = Column(types.Integer, Sequence('group_seq_id', optional=True), primary_key=True)
@@ -540,9 +503,8 @@ class Group(Base):
 
     def update(self, obj):
         if type(obj) == dict:
-            self.name = obj['name']
-            self.desc = obj['desc']
-            self.scheme = obj['scheme']
+
+            self.update_fields_with_dict(obj)
 
             # flags
             if 'flags-on' in obj:
@@ -561,11 +523,9 @@ class Group(Base):
                     #raise RuntimeError('FATAL ERR: node does not have id while performing tagging')
                 else:
                     AssociatedGroup.sync( self.id, obj['composite_ids'], session = object_session(self) )
-            return
 
-        self.name = obj.name
-        self.desc = obj.desc
-        self.scheme = obj.scheme
+        else:
+            self.update_fields_with_object(obj)
 
     def as_dict(self):
         d = dict( name=self.name, desc=self.desc, scheme=self.scheme,
