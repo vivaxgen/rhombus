@@ -157,10 +157,13 @@ class EK(BaseMixIn, Base):
     @staticmethod
     def search(key, group=None, dbsession=None):
         assert dbsession, "Please provide dbsession!"
-        assert group == None or type(group) == str, "group argument must be string or None"
+        assert group == None or type(group) == str or isinstance(group, EK), "group argument must be string, None or instance of EK"
         q = EK.query(dbsession).autoflush(False).filter( EK.key.ilike(key) )
         if group:
-            q = q.filter( EK.member_of_id == EK._id(group, dbsession=dbsession) )
+            if type(group) == str:
+                q = q.filter( EK.member_of_id == EK._id(group, dbsession=dbsession) )
+            else:
+                q = q.filter( EK.member_of_id == group.id)
         r = q.all()
         if r: return r[0]
         return None
