@@ -187,7 +187,7 @@ class BaseViewer(object):
         eform, jscode = self.edit_form(obj, readonly=True)
         if rq.user.has_roles( * self.managing_roles ) or self.can_modify(obj):
             eform.get('footer').add(
-                a('Edit', class_ = 'btn btn-primary offset-md-1',
+                a('Edit', class_ = 'btn btn-primary offset-md-2',
                     href=rq.route_url(self.edit_route, id=obj.id)) )
 
         if not render:
