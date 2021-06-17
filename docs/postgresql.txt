@@ -45,7 +45,11 @@ to manage the schema. If using alembic, create the table first using alembic
 migration, then initialize database using rbmgr --initdb --no-create-table to
 avoid table creation.
 
-To create the first schema, create an empty database and then run:
+To prepare for alembic system, create an empty database and then run the following:
+
+$ alembic upgrade head
+
+Create the initial schema based on the application model::
 
 $ alembic revision --autogenerate -m "Initial tables"
 
