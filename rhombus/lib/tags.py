@@ -137,7 +137,7 @@ class htmltag(object):
 
 
 FORM_URLENCODED = 'application/x-www-form-urlencoded'
-FORM_MULTIPART = 'multipart/form-data' 
+FORM_MULTIPART = 'multipart/form-data'
 
 class form(htmltag):
 
