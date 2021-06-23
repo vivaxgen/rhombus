@@ -199,6 +199,26 @@ class BaseViewer(object):
     def lookup(self):
         return self.lookup_helper()
 
+    @m_roles( PUBLIC )
+    def action(self):
+
+        _m = self.request.method
+
+        if _m == 'GET':
+            return self.action_get()
+
+        elif _m == 'POST':
+            return self.action_post()
+
+        elif _m == 'PUT':
+            return self.action_put()
+
+        elif _m == 'DELETE':
+            return self.action_delete()
+
+        return error_page(self.request, 'HTTP method not implemented!')
+
+
 
     @m_roles( PUBLIC )
     def add(self):
@@ -211,13 +231,14 @@ class BaseViewer(object):
 
             obj = self.object_class()
             try:
-                d = self.parse_form(rq.params)
+                #d = self.parse_form(rq.params)
                 self.update_object( obj, self.parse_form(rq.params) )
 
             except ParseFormError as e:
                 err_msg = str(e)
                 field = e.field
-                eform, jscode = self.edit_form(obj, update_dict = rq.params)
+                eform, jscode = self.edit_form(obj, update_dict = rq.params,
+                                    create = True if obj.id is None else False)
                 eform.get(field).add_error(err_msg)
                 if not render:
                     return (eform, jscode)
@@ -287,8 +308,25 @@ class BaseViewer(object):
         fields = fields or self.form_fields
         d['_stamp_'] = float(form['rhombus-stamp'])
 
+        #raise
         for key, f in fields.items():
+
+            nullable = False
+            required = False
+            if key.endswith('?'):
+                # value is optional
+                key = key[:-1]
+                nullable = True
+            elif key.endswith('*'):
+                # value must exist
+                key = key[:-1]
+                required = True
+
             if f[0] in form:
+                if nullable and form[f[0]] == '':
+                    continue
+                if required and form[f[0]] == '':
+                    raise ParseFormError('You must fill this field!', f[0])
                 if len(f) == 2:
                     try:
                         d[key] = f[1](form[f[0]])
@@ -304,6 +342,8 @@ class BaseViewer(object):
                         raise ParseFormError('Error in parsing input', f[0])
                 else:
                     d[key] = form[f[0]]
+            elif required:
+                raise ParseFormError('You must fill this field!', f[0])
 
         return d
 
@@ -329,7 +369,8 @@ class BaseViewer(object):
         rq = self.request
         res = func([obj_id],
                 groups = None if rq.user.has_roles( * self.viewing_roles )
-                                else rq.user.groups)
+                                else rq.user.groups,
+                user = rq.user)
         if len(res) == 0:
             raise RuntimeError('Cannot find object! Please check object id!')
 
