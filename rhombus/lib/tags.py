@@ -308,8 +308,10 @@ class input_select(input_text):
                     multiple = 'multiple="multiple"' if self.multiple else '',
                     class_label = 'col-md-%d control-label' % self.offset,
                     class_value = 'col-md-%d' % self.size,
-                    class_input = 'form-control',
+                    class_input = 'form-control' + (' is-invalid' if self.error else ''),
                     attrs = self.attributes(attrs_only=True),
+                    help_span = self.help(),
+                    info = self.info_text(),
                     extra_control = literal(self.extra_control) if self.extra_control else '',
                 ))
         return self.div_wrap(html)
@@ -740,6 +742,8 @@ input_select_template = '''\
     {options}
     </select>
     {extra_control}
+    {help_span}
+    {info}
   </div>
 '''
 
