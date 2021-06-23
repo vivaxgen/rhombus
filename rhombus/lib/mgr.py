@@ -374,6 +374,16 @@ def do_rbdump(args, dbh, settings):
     yaml.safe_dump( d, open(args.outfile, 'w'), default_flow_style = False )
 
 
+def do_rbload(args, dbh, settings):
+    """ this function will load all Rhombus core data from YAML file """
+
+    import yaml
+    d = yaml.load( open(args.infile, 'r') )
+
+    # set EK
+    dbh.EK.bulk_load(dbh, d['_Rb_:EK'])
+
+
 def do_syncuserclass(args, dbh, settings):
 
     if not args.userclass:
