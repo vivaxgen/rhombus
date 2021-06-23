@@ -521,7 +521,9 @@ class StampMixIn(object):
 
 class AutoUpdateMixIn(object):
 
+    # this is for caching field/column lookup
     __plain_fields__ = None
+    __nullable_fields__ = None
     __ek_fields__ = None
     __rel_fields__ = None
     __aux_fields__ = None
@@ -558,12 +560,18 @@ class AutoUpdateMixIn(object):
 
     def update_fields_with_dict(self, a_dict, fields=None, exclude=None):
         fields = fields or self.get_plain_fields()
+        nullable_fields = self.get_nullable_fields()
+        #raise
         for f in fields:
             if exclude and f in exclude:
                 continue
             if f in a_dict:
                 if not hasattr(self, f):
                     raise AttributeError(f)
+                if f in nullable_fields:
+                    value = a_dict.get(f) 
+                    if value is None or value is '':
+                        continue
                 setattr(self, f, a_dict.get(f))
 
     def update_fields_with_object(self, an_obj, fields=None, exclude=None):
@@ -598,8 +606,22 @@ class AutoUpdateMixIn(object):
     @classmethod
     def get_plain_fields(cls):
         if cls.__plain_fields__ is None:
-            cls.__plain_fields__ = list( c.name for c in inspect(cls).c if c.name not in cls.__excluded_fields__ )
+            cls.__plain_fields__ = []
+            cls.__nullable_fields__ = []
+            for c in inspect(cls).c:
+                if c.name in cls.__excluded_fields__:
+                    continue
+                cls.__plain_fields__.append( c.name)
+                if c.nullable:
+                    cls.__nullable_fields__.append( c.name )
+            #cls.__plain_fields__ = list( c.name for c in inspect(cls).c if c.name not in cls.__excluded_fields__ )
         return cls.__plain_fields__
+
+    @classmethod
+    def get_nullable_fields(cls):
+        if cls.__nullable_fields__ is None:
+            cls.get_plain_fields()
+        return cls.__nullable_fields__
 
     @classmethod
     def get_rel_fields(cls):
