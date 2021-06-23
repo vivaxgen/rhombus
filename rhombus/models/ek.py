@@ -266,6 +266,12 @@ class EK(BaseMixIn, Base):
             query = cls.query(dbh.session()).filter( cls.member_of_id == None )
         return [ obj.as_dict() for obj in query ]
 
+    @classmethod
+    def bulk_load(cls, dbh, d):
+        session = dbh.session()
+        for item in d.values():
+            cls.from_dict(item, dbsession=session)
+
     @staticmethod
     def load( _in ):
         import yaml
