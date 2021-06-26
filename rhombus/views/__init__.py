@@ -145,7 +145,7 @@ class BaseViewer(object):
         """
         return False
 
-    def edit_form(self):
+    def edit_form(self, obj=None, create=False, readonly=False, update_dict=None):
         raise NotImplementedError()
 
     def lookup_helper(self):
