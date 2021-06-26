@@ -328,10 +328,13 @@ class BaseViewer(object):
                 if nullable and form[f[0]] == '':
                     continue
                 if required and form[f[0]] == '':
-                    raise ParseFormError('You must fill this field!', f[0])
+                    raise ParseFormError('This field is mandatory!', f[0])
                 if len(f) == 2:
                     try:
-                        d[key] = f[1](form[f[0]])
+                        val = f[1](form[f[0]])
+                        if nullable and (val is None or val == ''):
+                            continue
+                        d[key] = val
                     except Exception as e:
                         raise ParseFormError(str(e), f[0]) from e
                 elif len(f) == 3:
