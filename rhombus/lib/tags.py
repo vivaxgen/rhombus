@@ -21,7 +21,7 @@ class htmltag(object):
             key = key.lower()
             if key in ['name', 'class_', 'id']:
                 continue
-            self.attrs[key] = val
+            self.attrs[key.removesuffix('_')] = val
         self.enabled = True
 
 
@@ -347,8 +347,33 @@ class input_file(input_text):
                         class_input = 'form-control-file',
                         help_span = self.help(),
                         info = self.info_text(),
+                        view_link=self.view_link,
                         extra_control = literal(self.extra_control) if self.extra_control else '',
                     ) )
+
+    def __str__(self):
+        if self.static:
+            # show as static; label and view link (open new tab)
+            return literal(input_plaintext_template.format(
+                        name=escape(self.name),
+                        label=escape(self.label), value=escape(self.value),
+                        placeholder=self.placeholder,
+                        class_div = 'form-group',
+                        class_label = 'col-md-%d control-label' % self.offset,
+                        class_value = 'col-md-%d' % self.size,
+                        class_input = 'form-control' + (' is-invalid' if self.error else ''),
+                        text=self.value,
+                        help_span = self.help(),
+                        info = self.info_text(),
+                )
+            )
+        else:
+            return self.as_input()
+
+    def set_view_link(self, html):
+        self.view_link = html
+        return self
+
 
 
 class checkboxes(htmltag):
@@ -702,6 +727,16 @@ input_text_template = '''\
   {info}
 </div>'''
 
+input_plaintext_template = '''\
+<div class='{class_div} form-inline row'>
+  <label class='{class_label} ' for='{name}'>{label}</label>
+  <div class='{class_value}'>
+    {text}
+    {help_span}
+  </div>
+  {info}
+</div>'''
+
 input_password_template = '''\
 <div class='{class_div} form-inline row'>
   <label class='{class_label}' for='{name}'>{label}</label>
@@ -749,13 +784,14 @@ input_select_template = '''\
 
 input_file_template = '''\
 <div class='{class_div} form-inline row'>
-  <label class='{class_label} align-self-baseline pt-2' for='{name}'>{label}</label>
+  <label class='{class_label} align-self-start pt-1' for='{name}'>{label}</label>
   <div class='{class_value}'>
     <input type='file' id='{name}' class='{class_input}' name='{name}' value='{value}'/>
     {help_span}
     {extra_control}
     {info}
   </div>
+  {view_link}
 </div>'''
 
 checkboxes_template = '''\
