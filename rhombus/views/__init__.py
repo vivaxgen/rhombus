@@ -240,6 +240,8 @@ class BaseViewer(object):
                 eform, jscode = self.edit_form(obj, update_dict = rq.params,
                                     create = True if obj.id is None else False)
                 eform.get(field).add_error(err_msg)
+                # for debugging purposes, add debug text to form
+                eform.add(literal(f'<!--\n[[EXC: ParseFormError at: {field} with: {err_msg}]]\n-->'))
                 if not render:
                     return (eform, jscode)
                 return self.render_edit_form(eform, jscode)
