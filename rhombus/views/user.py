@@ -149,7 +149,9 @@ def edit_form(user, dbh, request, static=False):
                 static=static),
             input_text('rhombus-user_firstname', 'Firstname', value=user.firstname,
                 static=static),
-            input_text('rhombus-user_email', 'E-mail', value=user.email,
+            input_text('rhombus-user_email', 'Primary email', value=user.email,
+                static=static),
+            input_text('rhombus-user_email2', 'Secondary email', value=user.email2,
                 static=static),
             input_select('rhombus-user_primarygroup_id', 'Primary group', value=user.primarygroup_id,
                 static=static, options = [ (g.id, g.name) for g in dbh.get_group() ]),
@@ -172,6 +174,7 @@ def parse_form( f ):
     d['lastname'] = f['rhombus-user_lastname']
     d['firstname'] = f['rhombus-user_firstname']
     d['email'] = f['rhombus-user_email']
+    d['email2'] = f['rhombus-user_email2']
     d['primarygroup_id'] = int(f['rhombus-user_primarygroup_id'])
     d['institution'] = f['rhombus-user_institution']
     return d
