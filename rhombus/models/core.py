@@ -570,7 +570,7 @@ class AutoUpdateMixIn(object):
                     raise AttributeError(f)
                 if f in nullable_fields:
                     value = a_dict.get(f) 
-                    if value is None or value is '':
+                    if value is None or value == '':
                         continue
                 setattr(self, f, a_dict.get(f))
 
