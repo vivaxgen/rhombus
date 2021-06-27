@@ -262,7 +262,6 @@ class input_hidden(htmltag):
                         (escape(self.id or self.name), escape(self.name), escape(self.value)) )
 
 
-
 class input_select(input_text):
 
     def __init__(self, name, label, value='', options=[], multiple=False, extra_control=None, **kwargs):
@@ -347,7 +346,7 @@ class input_file(input_text):
                         class_input = 'form-control-file',
                         help_span = self.help(),
                         info = self.info_text(),
-                        view_link=self.view_link,
+                        view_link=self.view_link(),
                         extra_control = literal(self.extra_control) if self.extra_control else '',
                     ) )
 
@@ -371,9 +370,13 @@ class input_file(input_text):
             return self.as_input()
 
     def set_view_link(self, html):
-        self.view_link = html
+        self._view_link = html
         return self
 
+    def view_link(self):
+        if hasattr(self, '_view_link'):
+            return self._view_link
+        return ''
 
 
 class checkboxes(htmltag):
