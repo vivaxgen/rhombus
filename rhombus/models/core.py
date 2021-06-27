@@ -17,7 +17,7 @@ __version__ = '20150216'
 
 # essential import from sqlalchemy
 
-from sqlalchemy import and_, or_, schema, types, MetaData, Sequence, Column, ForeignKey, UniqueConstraint, Table
+from sqlalchemy import and_, or_, schema, types, MetaData, Sequence, Column, ForeignKey, UniqueConstraint, Table, Identity
 from sqlalchemy.orm import relationship, backref, dynamic_loader, deferred, column_property
 from sqlalchemy.orm.collections import column_mapped_collection, attribute_mapped_collection
 from sqlalchemy.orm.session import object_session
@@ -609,6 +609,8 @@ class AutoUpdateMixIn(object):
             cls.__plain_fields__ = []
             cls.__nullable_fields__ = []
             for c in inspect(cls).c:
+                if not isinstance(c, Column):
+                    continue
                 if c.name in cls.__excluded_fields__:
                     continue
                 cls.__plain_fields__.append( c.name)
