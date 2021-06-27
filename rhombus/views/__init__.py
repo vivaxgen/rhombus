@@ -379,7 +379,8 @@ class BaseViewer(object):
         if len(res) == 0:
             raise RuntimeError('Cannot find object! Please check object id!')
 
-        return res[0]
+        self.obj = res[0]
+        return self.obj
 
     def set_object(self, obj):
         raise NotImplementedError
