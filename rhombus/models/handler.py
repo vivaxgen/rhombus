@@ -48,7 +48,7 @@ class QueryConstructor(object):
             if isinstance(val, list):
                 exprs.append( f.in_(val) )
             elif '%' in val:
-                exprs.append( f.like(val))
+                exprs.append( f.ilike(val))
             else:
                 exprs.append( f == val )
 
