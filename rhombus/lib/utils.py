@@ -1,33 +1,49 @@
-import sys, base64, os, math, contextlib, shutil
+import sys
+import base64
+import os
+import math
+import shutil
+
 
 def cout(s, nl=True, flush=False):
     sys.stdout.write(s)
-    if nl: sys.stdout.write('\n')
-    if flush: sys.stdout.flush()
+    if nl:
+        sys.stdout.write('\n')
+    if flush:
+        sys.stdout.flush()
+
 
 def cerr(s, nl=True, flush=False):
     sys.stderr.write(s)
-    if nl: sys.stderr.write('\n')
-    if flush: sys.stderr.flush()
+    if nl:
+        sys.stderr.write('\n')
+    if flush:
+        sys.stderr.flush()
+
 
 def cexit(s, code=1):
     cerr(s)
     sys.exit(code)
 
+
 cinfo = cout
+
 
 # general utils
 
-random_string = lambda n: base64.b64encode(os.urandom(int(math.ceil(0.75*n))), b'-_')[:n].decode('UTF-8')
+def random_string(n):
+    return base64.b64encode(os.urandom(int(math.ceil(0.75 * n))), b'-_')[:n].decode('UTF-8')
 
-def silent_remove( path ):
+
+def silent_remove(path):
     try:
-        os.remove( path )
+        os.remove(path)
     except FileNotFoundError:
         pass
 
-def silent_rmdir( path ):
-    shutil.rmtree(path, ignore_errors = True)
+
+def silent_rmdir(path):
+    shutil.rmtree(path, ignore_errors=True)
 
 
 # dbhandler
@@ -36,7 +52,8 @@ def silent_rmdir( path ):
 _DBHANDLER_ = None
 _DBHANDLER_CLASS_ = None
 
-def get_dbhandler( settings = None, tag = 'sqlalchemy.', initial=False):
+
+def get_dbhandler(settings=None, tag='sqlalchemy.', initial=False):
     """ get global dbhandler """
 
     global _DBHANDLER_, _DBHANDLER_CLASS_
@@ -49,7 +66,7 @@ def get_dbhandler( settings = None, tag = 'sqlalchemy.', initial=False):
         if _DBHANDLER_CLASS_ is None:
             cerr('FATAL ERROR - call set_dbhandler_class() before calling get_dbhandler()')
             sys.exit(1)
-        _DBHANDLER_ = _DBHANDLER_CLASS_( settings, tag, initial )
+        _DBHANDLER_ = _DBHANDLER_CLASS_(settings, tag, initial)
 
     elif settings is not None:
         cerr('FATAL ERROR - get_dbhandler() must not have settings for consecutive calls')
@@ -63,14 +80,16 @@ def get_dbhandler_notsafe():
     return _DBHANDLER_
 
 
-def set_dbhandler_class( class_ ):
+def set_dbhandler_class(class_):
     global _DBHANDLER_CLASS_
-    cerr('Setting dbhandler class to %s' % str(class_))
+    cerr(f'Setting dbhandler class to {str(class_)}')
     _DBHANDLER_CLASS_ = class_
+
 
 def get_dbhandler_class():
     global _DBHANDLER_CLASS_
     return _DBHANDLER_CLASS_
+
 
 def generic_userid_func():
     global _DBHANDLER_
@@ -81,4 +100,3 @@ def generic_userid_func():
             raise RuntimeError('FATAL PROG ERR: user is not set!')
 
     return _DBHANDLER_.session().user.id
-
