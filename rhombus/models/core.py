@@ -15,23 +15,23 @@ from sqlalchemy.orm import relationship, backref, dynamic_loader, deferred, colu
 from sqlalchemy.orm.collections import column_mapped_collection, attribute_mapped_collection
 from sqlalchemy.orm.session import object_session
 from sqlalchemy.orm.exc import NoResultFound
+from sqlalchemy.ext.declarative import declared_attr
 from sqlalchemy.exc import OperationalError, IntegrityError
 from sqlalchemy.ext.associationproxy import association_proxy
-from sqlalchemy.ext.declarative import declared_attr
 from sqlalchemy.sql.functions import current_timestamp, now
-from sqlalchemy.dialects.postgresql import base as pg
-from sqlalchemy.inspection import inspect
 
-import uuid
+from rhombus.lib.utils import get_userid, get_groupid, set_func_userid
+
 import json
-import yaml
-import copy
 import transaction
 import pickle
 import threading
 import functools
 
 from .meta import get_base, get_dbsession, get_datalogger, RhoSession
+from .auxtypes import UUID, YAMLCol, JSONCol
+from .stampmixin import StampMixIn
+from .autoupdatemixin import AutoUpdateMixIn
 
 log = logging.getLogger(__name__)
 __version__ = '20150216'
@@ -42,128 +42,6 @@ __version__ = '20150216'
 Base = get_base()
 dbsession = get_dbsession()
 metadata = Base.metadata
-func_userid = None
-func_groupid = None
-
-
-# global function
-
-def set_func_userid(func):
-    global func_userid
-    func_userid = func
-
-
-def get_userid():
-    if func_userid:
-        return func_userid()
-    raise RuntimeError('ERR: get_userid() has not been set')
-
-
-def set_func_groupid(func):
-    global func_groupid
-    func_groupid = func
-
-
-def get_groupid():
-    if func_groupid:
-        return func_groupid()
-    return None
-
-
-# create universal UUID
-
-class UUID(types.TypeDecorator):
-    name = 'rhombus.eijkman.go.id'
-    impl = types.BLOB
-
-    def __init__(self):
-        types.TypeDecorator.__init__(self, length=16)
-
-    def load_dialect_impl(self, dialect):
-        if dialect.name == 'sqlite':
-            return dialect.type_descriptor(types.BLOB(self.impl.length))
-        else:
-            return dialect.type_descriptor(pg.UUID())
-
-    @staticmethod
-    def _coerce(value):
-        if value and not isinstance(value, uuid.UUID):
-            try:
-                value = uuid.UUID(value)
-
-            except (TypeError, ValueError):
-                value = uuid.UUID(bytes=value)
-
-        return value
-
-    def process_bind_param(self, value, dialect):
-        if value is None:
-            return value
-
-        if not isinstance(value, uuid.UUID):
-            value = self._coerce(value)
-
-        if dialect.name == 'postgresql':
-            return str(value)
-
-        return value.bytes
-
-    def process_result_value(self, value, dialect):
-        if value is None:
-            return value
-
-        if dialect.name == 'postgresql':
-            if isinstance(value, uuid.UUID):
-                return value
-        else:
-            return uuid.UUID(bytes=value)
-
-    @classmethod
-    def new(cls):
-        return uuid.uuid3(uuid.NAMESPACE_URL, cls.name)
-
-
-# create JSON column
-# XXX: may be more appropriate to create a dict-based object that will serialize to JSON?
-
-null = object()
-
-
-class JSONCol(types.TypeDecorator):
-    impl = types.Unicode
-
-    def process_bind_param(self, value, dialect):
-        if value is null:
-            value = None
-        return json.dumps(value)
-
-    def process_result_value(self, value, dialect):
-        if value is None:
-            return None
-        return json.loads(value)
-
-    def copy_value(self, value):
-        return copy.deepcopy(value)
-
-
-# create YAML column
-
-
-class YAMLCol(types.TypeDecorator):
-    impl = types.Unicode
-
-    def process_bind_param(self, value, dialect):
-        if value is null:
-            value = None
-        return yaml.dump(value, default_flow_style=True)
-
-    def process_result_value(self, value, dialect):
-        if value is None:
-            return None
-        return yaml.load(value, yaml.SafeLoader)
-
-    def copy_value(self, value):
-        return copy.deepcopy(value)
 
 
 #
@@ -416,158 +294,6 @@ class DataLogger(object):
         typeid, objid = instance.__class__.__typeid__, instance.id
         dbsession.execute(DataLog.__table__.insert().values(
                           class_id=typeid, object_id=objid, action_id=3, user_id=get_userid()))
-
-
-class StampMixIn(object):
-    """ StampMixIn
-
-        This is base class for all object that needs id, lastuser_id and
-        stamp attribute.
-    """
-
-    @declared_attr
-    def id(cls):
-        return Column(types.Integer,
-                      Sequence('%s_seqid' % cls.__name__.lower(), optional=True),
-                      primary_key=True)
-
-    @declared_attr
-    def lastuser_id(cls):
-        return Column(types.Integer,
-                      ForeignKey('users.id'),
-                      default=get_userid,
-                      onupdate=get_userid,
-                      nullable=True)
-
-    @declared_attr
-    def lastuser(cls):
-        return relationship('User', uselist=False, foreign_keys=[cls.lastuser_id])
-
-    @declared_attr
-    def stamp(cls):
-        return Column(types.TIMESTAMP, nullable=False, default=current_timestamp(),
-                      onupdate=now())
-        ## this is reserved for big, incompatible update
-        ## return Column(types.DateTime(timezone=True), nullable=False,
-        ##        server_default=func.now(), server_onupdate=func.utc_timestamp())
-
-    def __before_update__(self):
-        # this is to force some database backend to change the values
-        # during update
-        session = object_session(self)
-        if not session.before_update_event or getattr(self, 'ignore_before_update', False):
-            return
-        self.lastuser_id = get_userid()
-        self.stamp = now()
-
-
-class AutoUpdateMixIn(object):
-
-    # this is for caching field/column lookup
-    __plain_fields__ = None
-    __nullable_fields__ = None
-    __ek_fields__ = None
-    __rel_fields__ = None
-    __aux_fields__ = None
-
-    __excluded_fields__ = {'id', }
-
-    @classmethod
-    def bulk_load(cls, a_list, dbh):
-        """ bulk load from a list of dictionary object """
-        objs = [cls.from_dict(d, dbh) for d in a_list]
-        dbh.session().flush(objs)
-
-    @classmethod
-    def bulk_dump(cls, dbh):
-        q = cls.query(dbh.session())
-        return [obj.as_dict() for obj in q]
-
-    @classmethod
-    def from_dict(cls, a_dict, dbh):
-        """ load and add from a dict """
-        obj = cls()
-        obj.update(a_dict)
-        dbh.session().add(obj)
-        return obj
-
-    def as_dict(self):
-        return dict(
-            lastuser=self.lastuser.login,
-            stamp=self.stamp,
-        )
-
-    def update_fields_with_dict(self, a_dict, fields=None, exclude=None):
-        fields = fields or self.get_plain_fields()
-        nullable_fields = self.get_nullable_fields()
-        for f in fields:
-            if exclude and f in exclude:
-                continue
-            if f in a_dict:
-                if not hasattr(self, f):
-                    raise AttributeError(f)
-                if f in nullable_fields:
-                    value = a_dict.get(f) 
-                    if value is None or value == '':
-                        continue
-                setattr(self, f, a_dict.get(f))
-
-    def update_fields_with_object(self, an_obj, fields=None, exclude=None):
-        fields = fields or self.get_plain_fields()
-        for f in fields:
-            if exclude and f in exclude:
-                continue
-            if hasattr(an_obj, f):
-                if not hasattr(self, f):
-                    raise AttributeError(f)
-                setattr(self, f, getattr(an_obj, f))
-
-    def update_ek_with_dict(self, a_dict, fields=None, dbh=None):
-        fields = fields or self.__ek_fields__
-        session = dbh.session() if dbh else object_session(self)
-        for f in fields:
-            if f in a_dict:
-                f_ = f + '_id'
-                if not hasattr(self, f_):
-                    raise AttributeError(f_)
-                setattr(self, f_, dbh.EK.getid(a_dict[f], session))
-
-    def create_dict_from_fields(self, fields=None, exclude=None):
-        fields = fields or (self.__plain_fields__ + self.__aux_fields__)
-        d = {}
-        for f in fields:
-            if exclude and f in exclude:
-                continue
-            d[f] = str(getattr(self, f))
-        return d
-
-    @classmethod
-    def get_plain_fields(cls):
-        if cls.__plain_fields__ is None:
-            cls.__plain_fields__ = []
-            cls.__nullable_fields__ = []
-            for c in inspect(cls).c:
-                if not isinstance(c, Column):
-                    continue
-                if c.name in cls.__excluded_fields__:
-                    continue
-                cls.__plain_fields__.append(c.name)
-                if c.nullable:
-                    cls.__nullable_fields__.append(c.name)
-        return cls.__plain_fields__
-
-    @classmethod
-    def get_nullable_fields(cls):
-        if cls.__nullable_fields__ is None:
-            cls.get_plain_fields()
-        return cls.__nullable_fields__
-
-    @classmethod
-    def get_rel_fields(cls):
-        if cls.__rel_fields__ is None:
-            rels = inspect(cls).relationships
-            cls.__rel_fields__ = list(r.key for r in rels if r.key not in cls.__excluded_fields__)
-        return cls.__rel_fields__
 
 
 class BaseMixIn(StampMixIn, AutoUpdateMixIn):

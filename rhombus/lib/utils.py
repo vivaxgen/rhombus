@@ -100,3 +100,31 @@ def generic_userid_func():
             raise RuntimeError('FATAL PROG ERR: user is not set!')
 
     return _DBHANDLER_.session().user.id
+
+
+# functions to deal with user and group
+
+func_userid = None
+func_groupid = None
+
+
+def set_func_userid(func):
+    global func_userid
+    func_userid = func
+
+
+def get_userid():
+    if func_userid:
+        return func_userid()
+    raise RuntimeError('ERR: get_userid() has not been set')
+
+
+def set_func_groupid(func):
+    global func_groupid
+    func_groupid = func
+
+
+def get_groupid():
+    if func_groupid:
+        return func_groupid()
+    return None
