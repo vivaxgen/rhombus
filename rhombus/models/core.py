@@ -1,7 +1,7 @@
 __copyright__ = '''
 core.py - Rhombus SQLAlchemy core objects
 
-(c) 2011 - 2015 Hidayat Trimarsanto <anto@eijkman.go.id> <trimarsanto@gmail.com>
+(c) 2011 - 2021 Hidayat Trimarsanto <anto@eijkman.go.id> <trimarsanto@gmail.com>
 
 All right reserved.
 This software is licensed under LGPL v3 or later version.
@@ -9,13 +9,6 @@ Please read the README.txt of this software.
 '''
 
 import logging
-
-log = logging.getLogger(__name__)
-
-__version__ = '20150216'
-
-
-# essential import from sqlalchemy
 
 from sqlalchemy import and_, or_, schema, types, MetaData, Sequence, Column, ForeignKey, UniqueConstraint, Table, Identity
 from sqlalchemy.orm import relationship, backref, dynamic_loader, deferred, column_property
@@ -29,7 +22,10 @@ from sqlalchemy.sql.functions import current_timestamp, now
 from sqlalchemy.dialects.postgresql import base as pg
 from sqlalchemy.inspection import inspect
 
-import uuid, json, yaml, copy
+import uuid
+import json
+import yaml
+import copy
 import transaction
 import pickle
 import threading
@@ -37,7 +33,9 @@ import functools
 
 from .meta import get_base, get_dbsession, get_datalogger, RhoSession
 
-#from pylons import session as tylons_session
+log = logging.getLogger(__name__)
+__version__ = '20150216'
+
 
 # global variables
 
@@ -50,9 +48,10 @@ func_groupid = None
 
 # global function
 
-def set_func_userid( func ):
+def set_func_userid(func):
     global func_userid
     func_userid = func
+
 
 def get_userid():
     if func_userid:
@@ -60,9 +59,10 @@ def get_userid():
     raise RuntimeError('ERR: get_userid() has not been set')
 
 
-def set_func_groupid( func ):
+def set_func_groupid(func):
     global func_groupid
     func_groupid = func
+
 
 def get_groupid():
     if func_groupid:
@@ -85,12 +85,6 @@ class UUID(types.TypeDecorator):
         else:
             return dialect.type_descriptor(pg.UUID())
 
-    def process_bind_param(self, value, dialect):
-        if value is None:
-            return value
-        else:
-            return value.bytes
-
     @staticmethod
     def _coerce(value):
         if value and not isinstance(value, uuid.UUID):
@@ -112,7 +106,7 @@ class UUID(types.TypeDecorator):
         if dialect.name == 'postgresql':
             return str(value)
 
-        return value.bytes #if self.binary else value.hex
+        return value.bytes
 
     def process_result_value(self, value, dialect):
         if value is None:
@@ -134,6 +128,7 @@ class UUID(types.TypeDecorator):
 
 null = object()
 
+
 class JSONCol(types.TypeDecorator):
     impl = types.Unicode
 
@@ -150,10 +145,9 @@ class JSONCol(types.TypeDecorator):
     def copy_value(self, value):
         return copy.deepcopy(value)
 
-# create YAML column
-#
 
-null = null
+# create YAML column
+
 
 class YAMLCol(types.TypeDecorator):
     impl = types.Unicode
@@ -191,7 +185,8 @@ class ClassRegistry(object):
 
     def register(self, cls):
         if hasattr(cls, '__typeid__'):
-            if cls.__typeid__ == -1: return
+            if cls.__typeid__ == -1:
+                return
         self._classes[cls.lowername()] = cls
         cls.__typeid__ = None
 
@@ -204,7 +199,7 @@ class ClassRegistry(object):
         try:
             log.info('Reading class registry...')
             class_table = SysReg.getdata('__class_table__')
-            if class_table == None:
+            if class_table is None:
                 raise NoResultFound
             last_id = -1
             for cls_name, cls_id in class_table.items():
@@ -225,7 +220,6 @@ class ClassRegistry(object):
                 dbsession.flush()
                 transaction.manager.commit()
 
-
         except NoResultFound:
             log.info('Initialize class registry...')
             class_table = self.update_table()
@@ -235,14 +229,13 @@ class ClassRegistry(object):
         except OperationalError:
             log.info('WARN: SysReg has not been initialized.')
 
-
     def get_id(self, cls):
         return self._by_class[cls]
 
     def get_class(self, id):
         return self._by_id[id]
 
-    def update_table(self, class_table = {}, nextid = 1):
+    def update_table(self, class_table={}, nextid=1):
 
         assert get_datalogger(), "ERROR: ClassRegistry.update_table() should not be called!"
 
@@ -255,17 +248,18 @@ class ClassRegistry(object):
         return class_table
 
 
-
 _clsreg = ClassRegistry()
+
 
 def registered(cls):
     log.info("Registering class: %s" % cls.__name__)
-    _clsreg.register( cls )
+    _clsreg.register(cls)
     return cls
 
 
 def get_clsreg():
     return _clsreg
+
 
 def ClsReg():
     return _clsreg
@@ -276,32 +270,38 @@ def ClsReg():
 #
 
 
-def _generic_query(cls, dbsess = None):
+def _generic_query(cls, dbsess=None):
     if dbsess is None:
         dbsess = dbsession
         print('DEPRECATED: please provide instance of RhoSession')
     assert isinstance(dbsess, RhoSession), 'FATAL PROG ERR: need to pass instance of RhoSession'
     return dbsess.query(cls)
 
+
 Base.query = classmethod(_generic_query)
 
-def _generic_get(cls, dbid, dbsess = None):
+
+def _generic_get(cls, dbid, dbsess=None):
     q = cls.query(dbsess)
     return q.get(int(dbid))
 
+
 Base.get = classmethod(_generic_get)
+
 
 def _generic_lowername(cls):
     return cls.__name__.lower()
 
+
 Base.lowername = classmethod(_generic_lowername)
+
 
 def _generic_delete(cls, dbid, dbsess):
     q = cls.query(dbsess)
     return q.filter(cls.id == int(dbid)).delete()
 
-Base.delete = classmethod(_generic_delete)
 
+Base.delete = classmethod(_generic_delete)
 
 
 #
@@ -313,7 +313,7 @@ class SysReg(Base):
 
     __tablename__ = 'sysregs'
     id = Column(types.Integer, Sequence('sysreg_seqid', optional=True),
-            primary_key=True)
+                primary_key=True)
     key = Column(types.String(64), nullable=False, unique=True)
     bindata = Column(types.LargeBinary, nullable=False)
     mimetype = Column(types.String(32), nullable=False)
@@ -321,45 +321,46 @@ class SysReg(Base):
     @staticmethod
     def getbykey(keyname, exception=True):
         if exception:
-            return dbsession.query(SysReg).filter_by( key = keyname ).one()
+            return dbsession.query(SysReg).filter_by(key=keyname).one()
 
         try:
-            return dbsession.query(SysReg).filter_by( key = keyname ).one()
+            return dbsession.query(SysReg).filter_by(key=keyname).one()
         except NoResultFound:
             return None
 
     @staticmethod
     def setdata(keyname, mimetype, value):
         if mimetype == 'text/json':
-            bindata = json.dumps( value ).encode('UTF-8')
+            bindata = json.dumps(value).encode('UTF-8')
         elif mimetype == 'application/python-pickle':
-            bindata = pickle.dumps( value )
+            bindata = pickle.dumps(value)
         elif mimetype == 'application/octet-stream':
             bindata = value
         else:
-            raise RuntimeError( 'unknown mimetype' )
-        dbsession.add( SysReg( key=keyname, bindata=bindata, mimetype=mimetype ) )
+            raise RuntimeError('unknown mimetype')
+        dbsession.add(SysReg(key=keyname, bindata=bindata, mimetype=mimetype))
 
 
     @staticmethod
     def getdata(keyname):
         ob = SysReg.getbykey(keyname)
         if ob.mimetype == 'text/json':
-            return json.loads( ob.bindata.decode('UTF-8') )
+            return json.loads(ob.bindata.decode('UTF-8'))
         elif ob.mimetype == 'application/python-pickle':
-            return pickle.loads( ob.bindata )
+            return pickle.loads(ob.bindata)
         elif ob.mimetype == 'application/octet-stream':
             return ob.bindata
-        raise RuntimeError( 'unknown mimetype' )
+        raise RuntimeError('unknown mimetype')
 
 # SysLog - system log
+
 
 @registered
 class SysLog(Base):
 
     __tablename__ = 'syslogs'
     id = Column(types.Integer, Sequence('syslog_seqid', optional=True),
-            primary_key=True)
+                primary_key=True)
     stamp = Column(types.TIMESTAMP, nullable=False, default=current_timestamp())
     level = Column(types.SmallInteger)
     msg = Column(types.String)
@@ -375,13 +376,13 @@ class DataLog(Base):
 
     __tablename__ = 'datalogs'
     id = Column(types.Integer, Sequence('datalog_seqid', optional=True),
-            primary_key=True)
+                primary_key=True)
     stamp = Column(types.TIMESTAMP, nullable=False, default=current_timestamp())
     class_id = Column(types.SmallInteger, nullable=False)
     object_id = Column(types.Integer, nullable=False)
     action_id = Column(types.SmallInteger, nullable=False)
     user_id = Column(types.Integer, ForeignKey('users.id'), nullable=True,
-                    default=get_userid, onupdate=get_userid)
+                     default=get_userid, onupdate=get_userid)
 
     user = relationship('User', uselist=False)
 
@@ -389,8 +390,7 @@ class DataLog(Base):
         return DataLogger._actions[self.action_id]
 
     def classname(self):
-        return ClsReg().get_class( self.class_id ).__name__
-
+        return ClsReg().get_class(self.class_id).__name__
 
 
 class DataLogger(object):
@@ -400,78 +400,22 @@ class DataLogger(object):
         dbsession.execute()
     """
 
-    _actions = { 1: 'INSERT', 2: 'UPDATE', 3: 'DELETE' }
+    _actions = {1: 'INSERT', 2: 'UPDATE', 3: 'DELETE'}
 
     def action_insert(self, instance):
         typeid, objid = instance.__class__.__typeid__, instance.id
-        #entry = DataLog( class_id=typeid, object_id=objid, action_id=1 )
-        #dbsession.add(entry)
-        dbsession.execute( DataLog.__table__.insert().values(
-                class_id = typeid, object_id = objid, action_id = 1, user_id = get_userid() ))
+        dbsession.execute(DataLog.__table__.insert().values(
+                          class_id=typeid, object_id=objid, action_id=1, user_id=get_userid()))
 
     def action_update(self, instance):
         typeid, objid = instance.__class__.__typeid__, instance.id
-        #dbsession.add( DataLog( class_id=typeid, object_id=objid, action_id=2 ) )
-        dbsession.execute( DataLog.__table__.insert().values(
-                class_id = typeid, object_id = objid, action_id = 2, user_id = get_userid() ))
-
+        dbsession.execute(DataLog.__table__.insert().values(
+                          class_id=typeid, object_id=objid, action_id=2, user_id=get_userid()))
 
     def action_delete(self, instance):
         typeid, objid = instance.__class__.__typeid__, instance.id
-        #dbsession.add( DataLog( class_id=typeid, object_id=objid, action_id=3 ) )
-        dbsession.execute( DataLog.__table__.insert().values(
-                class_id = typeid, object_id = objid, action_id = 3, user_id = get_userid() ))
-
-
-
-class idcache_XXX(object):
-
-    instances = {}
-
-    def __init__(self):
-        self._keys = {}
-        self._ids = {}
-        self.add_self(self)
-
-    def get_key(self, id):
-        return self._keys.get(id, None)
-
-    def get_id(self, key):
-        return self._ids.get(key, None)
-
-    def set_key(self, key, id):
-        self._ids[key] = id
-        self._keys[id] = key
-
-    def clear(self):
-        self._keys = {}
-        self._ids = {}
-
-    def __del__(self):
-        self.remove_self(self)
-
-    @classmethod
-    def add_self(cls, instance):
-        cls.instances[instance] = instance
-
-    @classmethod
-    def remove_self(cls, instance):
-        del cls.instances[instance]
-
-    @classmethod
-    def clear_all(cls):
-        for instance in cls.instances.values():
-            instance.clear()
-
-
-def clear_caches_XXX(success):
-    log.debug('Attempting to clear id caches')
-    if not success:
-        log.info('Clearing id caches')
-        idcache.clear_all()
-
-#current_t = transaction.get()
-#current_t.addAfterCommitHook(clear_caches)
+        dbsession.execute(DataLog.__table__.insert().values(
+                          class_id=typeid, object_id=objid, action_id=3, user_id=get_userid()))
 
 
 class StampMixIn(object):
@@ -481,20 +425,19 @@ class StampMixIn(object):
         stamp attribute.
     """
 
-
     @declared_attr
     def id(cls):
-        return Column(  types.Integer,
-                        Sequence('%s_seqid' % cls.__name__.lower(), optional=True),
-                        primary_key=True )
+        return Column(types.Integer,
+                      Sequence('%s_seqid' % cls.__name__.lower(), optional=True),
+                      primary_key=True)
 
     @declared_attr
     def lastuser_id(cls):
-        return Column(  types.Integer,
-                        ForeignKey('users.id'),
-                        default = get_userid,
-                        onupdate = get_userid,
-                        nullable = True )
+        return Column(types.Integer,
+                      ForeignKey('users.id'),
+                      default=get_userid,
+                      onupdate=get_userid,
+                      nullable=True)
 
     @declared_attr
     def lastuser(cls):
@@ -503,11 +446,10 @@ class StampMixIn(object):
     @declared_attr
     def stamp(cls):
         return Column(types.TIMESTAMP, nullable=False, default=current_timestamp(),
-            onupdate = now())
+                      onupdate=now())
         ## this is reserved for big, incompatible update
         ## return Column(types.DateTime(timezone=True), nullable=False,
         ##        server_default=func.now(), server_onupdate=func.utc_timestamp())
-
 
     def __before_update__(self):
         # this is to force some database backend to change the values
@@ -528,20 +470,18 @@ class AutoUpdateMixIn(object):
     __rel_fields__ = None
     __aux_fields__ = None
 
-    __excluded_fields__ = { 'id', }
+    __excluded_fields__ = {'id', }
 
     @classmethod
     def bulk_load(cls, a_list, dbh):
         """ bulk load from a list of dictionary object """
-        objs = [ cls.from_dict(d, dbh) for d in a_list ]
+        objs = [cls.from_dict(d, dbh) for d in a_list]
         dbh.session().flush(objs)
-
 
     @classmethod
     def bulk_dump(cls, dbh):
         q = cls.query(dbh.session())
-        return [ obj.as_dict() for obj in q ]
-
+        return [obj.as_dict() for obj in q]
 
     @classmethod
     def from_dict(cls, a_dict, dbh):
@@ -551,17 +491,15 @@ class AutoUpdateMixIn(object):
         dbh.session().add(obj)
         return obj
 
-
     def as_dict(self):
         return dict(
-            lastuser = self.lastuser.login,
-            stamp = self.stamp,
+            lastuser=self.lastuser.login,
+            stamp=self.stamp,
         )
 
     def update_fields_with_dict(self, a_dict, fields=None, exclude=None):
         fields = fields or self.get_plain_fields()
         nullable_fields = self.get_nullable_fields()
-        #raise
         for f in fields:
             if exclude and f in exclude:
                 continue
@@ -595,13 +533,13 @@ class AutoUpdateMixIn(object):
                 setattr(self, f_, dbh.EK.getid(a_dict[f], session))
 
     def create_dict_from_fields(self, fields=None, exclude=None):
-        fields = fields or ( self.__plain_fields__ + self.__aux_fields__ )
+        fields = fields or (self.__plain_fields__ + self.__aux_fields__)
         d = {}
         for f in fields:
-            if exclude and f in exclude: continue
+            if exclude and f in exclude:
+                continue
             d[f] = str(getattr(self, f))
         return d
-
 
     @classmethod
     def get_plain_fields(cls):
@@ -613,10 +551,9 @@ class AutoUpdateMixIn(object):
                     continue
                 if c.name in cls.__excluded_fields__:
                     continue
-                cls.__plain_fields__.append( c.name)
+                cls.__plain_fields__.append(c.name)
                 if c.nullable:
-                    cls.__nullable_fields__.append( c.name )
-            #cls.__plain_fields__ = list( c.name for c in inspect(cls).c if c.name not in cls.__excluded_fields__ )
+                    cls.__nullable_fields__.append(c.name)
         return cls.__plain_fields__
 
     @classmethod
@@ -629,7 +566,7 @@ class AutoUpdateMixIn(object):
     def get_rel_fields(cls):
         if cls.__rel_fields__ is None:
             rels = inspect(cls).relationships
-            cls.__rel_fields__ = list( r.key for k in rels if r.key not in cls.__excluded_fields__ )
+            cls.__rel_fields__ = list(r.key for r in rels if r.key not in cls.__excluded_fields__)
         return cls.__rel_fields__
 
 
