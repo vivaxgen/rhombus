@@ -48,6 +48,10 @@ class EK(BaseMixIn, Base):
             self.member_of_id = obj.member_of_id
 
     def as_dict(self):
+        d = super().as_dict()
+        d['group'] = self.group.name if self.group else None
+        d['members'] = [m.as_dict() for m in self.members]
+        return d
         return dict( id = self.id, key = self.key, desc = self.desc,
                     syskey = self.syskey, data = self.data,
                     lastuser = self.lastuser.as_dict() if self.lastuser else None,
@@ -267,9 +271,10 @@ class EK(BaseMixIn, Base):
         return [ obj.as_dict() for obj in query ]
 
     @classmethod
-    def bulk_load(cls, dbh, d):
+    def bulk_load(cls, a_list, dbh):
         session = dbh.session()
-        for item in d.values():
+        for item in a_list:
+            cerr(f'[Loading {item["key"]}]')
             cls.from_dict(item, dbsession=session)
 
     @staticmethod
