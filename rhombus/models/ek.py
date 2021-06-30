@@ -274,11 +274,10 @@ class EK(BaseMixIn, Base):
     def bulk_load(cls, a_list, dbh):
         session = dbh.session()
         for item in a_list:
-            cerr(f'[Loading {item["key"]}]')
             cls.from_dict(item, dbsession=session)
 
     @staticmethod
     def load( _in ):
         import yaml
 
-
+# end of file
