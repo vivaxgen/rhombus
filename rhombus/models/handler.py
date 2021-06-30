@@ -245,3 +245,17 @@ class DBHandler(object):
 
         q = q.filter( filter_expr )
         return q
+
+    def fetch_query(self, query, fetch, raise_if_empty):
+        """ prepare query results, either the query itself, the fetched objects
+            or raised exception if necessary
+        """
+        if not fetch:
+            return query
+
+        res = query.all()
+        if raise_if_empty and len(res) == 0:
+            raise exc.NoResultFound()
+        return res
+
+# end of file
