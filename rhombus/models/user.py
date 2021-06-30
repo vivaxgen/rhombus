@@ -75,6 +75,10 @@ class UserClass(Base, AutoUpdateMixIn):
         return authfunc[self.credscheme['sys']][1](username, self.credscheme)
 
     def as_dict(self):
+        d = super().as_dict()
+        d['users'] = [u.as_dict() for u in self.users]
+        return d
+
         return dict(id=self.id, domain=self.domain, desc = self.desc,
                     referer = self.referer, autoadd = self.autoadd,
                     credscheme = self.credscheme,
@@ -136,17 +140,20 @@ class UserClass(Base, AutoUpdateMixIn):
 
 
     @classmethod
-    def from_dict(cls, d):
+    def from_dict(cls, d, dbh=None):
         uc = UserClass()
         uc.update(d)
 
-        from rhombus.lib.utils import get_dbhandler
+        if dbh is None:
+            from rhombus.lib.utils import get_dbhandler
+            dbsession = get_dbhandler().session()
 
-        get_dbhandler().session().add(uc)
+        dbh.session().add(uc)
+        dbh.session().flush([uc])
 
         if 'users' in d:
             for user_dict in d['users']:
-                user = User.from_dict(user_dict, userclass = uc)
+                user = User.from_dict(user_dict, dbh, userclass = uc)
 
         return uc
 
@@ -239,6 +246,8 @@ class User(Base, AutoUpdateMixIn):
             return
 
     def set_primarygroup(self, grp):
+
+        assert self.id
         if type(grp) == int:
             primarygroup_id = grp
         else:
@@ -320,7 +329,13 @@ class User(Base, AutoUpdateMixIn):
     def render(self):
         return "%s | %s" % (str(self), self.fullname)
 
-    def as_dict(self):
+    def as_dict(self, exclude=[]):
+        # we will handle primarygroup using name, so primarygroup_id is excluded
+        d = super().as_dict(exclude=exclude + ['primarygroup_id'])
+        d['primarygroup'] = self.primarygroup.name
+        d['groups'] = [[ug.group.name, ug.role] for ug in self.usergroups]
+        return d
+
         return dict( id = self.id, login = self.login, credential = self.credential,
                 lastlogin = self.lastlogin, userclass = self.userclass.domain,
                 lastname = self.lastname, firstname = self.firstname,
@@ -378,6 +393,39 @@ class User(Base, AutoUpdateMixIn):
                 removed.append(g)
 
         return added, modified, removed
+
+
+    @classmethod
+    def from_dict(cls, d, dbh, userclass=None):
+
+        session = dbh.session()
+
+        # we add user to primarygroup after after flushing to obtain user.id
+        if 'primarygroup_id' in d:
+            del d['primarygroup_id']
+
+        obj = super().from_dict(d, dbh)
+        obj.userclass = userclass
+        with session.no_autoflush:
+            if 'primarygroup' in d:
+                obj.primarygroup_id = Group.search(d['primarygroup'], session).id
+
+        # we need to flush to db to get user.id
+        session.flush([obj])
+
+        cerr(f'[New user login: {obj.login} id: {obj.id}] with primarygroup id: {obj.primarygroup_id}')
+
+        # add to all groups, including primary group
+        groups = d['groups']
+        if groups:
+            with session.no_autoflush:
+                for grp in groups:
+                    cerr(f'[Adding user {obj.id}/{obj.login} to group {grp}]')
+                    g = Group.search(grp[0], session)
+                    if g is None:
+                        raise RuntimeError('ERR: group %s does not exists!' % grp)
+                    g.users.append(obj)
+        return obj
 
 
     @staticmethod
@@ -528,12 +576,21 @@ class Group(Base, AutoUpdateMixIn):
             self.update_fields_with_object(obj)
 
     def as_dict(self):
-        d = dict( name=self.name, desc=self.desc, scheme=self.scheme,
-                users = [ (ug.user.login, ug.role) for ug in self.usergroups ] )
+        d = self.create_dict_from_fields()
+        d['users'] = [(ug.user.login, ug.role) for ug in self.usergroups]
+        d['roles'] = [ek.key for ek in self.roles]
         if (self.flags & self.f_composite_group):
-            d['assoc_groups'] = [ (x.associated_group.name, x.role)
-                for x in AssociatedGroup.query(object_session(self)).filter(AssociatedGroup.group_id == self.id) ]
+            d['assoc_groups'] = [(x.associated_group.name, x.role)
+                                 for x in AssociatedGroup.query(object_session(self))
+                                 .filter(AssociatedGroup.group_id == self.id) ]
         return d
+
+    @classmethod
+    def from_dict(cls, d, dbh):
+        obj = super().from_dict(d, dbh)
+        for role in d['roles']:
+            obj.roles.append(EK.search(role, dbsession=dbh.session()))
+        return obj
 
     @staticmethod
     def dump(out, query=None):
