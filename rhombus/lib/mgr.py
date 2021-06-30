@@ -177,6 +177,9 @@ def do_rbmgr(args, settings, dbh = None):
     elif args.rbdump:
         do_rbdump(args, dbh, settings)
 
+    elif args.rbload:
+        do_rbload(args, dbh, settings)
+
     else:
         return False
 
@@ -243,8 +246,7 @@ def do_adduser(args, dbh, settings):
     cout('User %s added sucessfully.' % user.login)
 
 
-## ENUM KEY
-
+# # ENUM KEY
 
 
 def do_setcred(args, dbh, settings):
@@ -371,17 +373,25 @@ def do_rbdump(args, dbh, settings):
     d['_Rb_:EK'] = dbh.EK.bulk_dump(dbh)
     d['_Rb_:UserClass'] = dbh.UserClass.bulk_dump(dbh)
     d['_Rb_:Group'] = dbh.Group.bulk_dump(dbh)
-    yaml.safe_dump( d, open(args.outfile, 'w'), default_flow_style = False )
+    yaml.safe_dump(d, open(args.outfile, 'w'), default_flow_style=False)
 
 
 def do_rbload(args, dbh, settings):
     """ this function will load all Rhombus core data from YAML file """
 
     import yaml
-    d = yaml.load( open(args.infile, 'r') )
+    d = yaml.load(open(args.infile, 'r'))
 
     # set EK
-    dbh.EK.bulk_load(dbh, d['_Rb_:EK'])
+    dbh.EK.bulk_load(d['_Rb_:EK'], dbh)
+    dbh.session().flush()
+
+    # set groups
+    dbh.Group.bulk_load(d['_Rb_:Group'], dbh)
+    dbh.session().flush()
+
+    # set userclass and user
+    dbh.UserClass.bulk_load(d['_Rb_:UserClass'], dbh)
 
 
 def do_syncuserclass(args, dbh, settings):
@@ -391,3 +401,5 @@ def do_syncuserclass(args, dbh, settings):
 
     if not args.synctoken:
         cexit('ERR: Please provide --synctoken')
+
+# end of file
