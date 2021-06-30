@@ -22,37 +22,32 @@ class UserClass(Base, AutoUpdateMixIn):
     credscheme = Column(YAMLCol(256), nullable=False)  # YAML type data
     flags = Column(types.Integer, nullable=False, server_default='0')
 
-
     def __repr__(self):
         return "%s" % self.domain
 
-
     def update(self, d):
-
         if isinstance(d, dict):
             self.update_fields_with_dict(d)
-
         else:
             self.update_fields_with_object(d)
-
 
     @staticmethod
     def search(domain, session):
         q = session.query(UserClass).filter(UserClass.domain == domain).all()
-        if q: return q[0]
+        if q:
+            return q[0]
         return None
-
 
     @staticmethod
     def allclasses():
-        return [ (x.id, x.domain) for x in UserClass.query().order_by( UserClass.domain ).all() ]
+        return [(x.id, x.domain) for x in UserClass.query().order_by(UserClass.domain).all()]
 
     def auth_user(self, username, passwd):
         """ return UserInstance or None """
         if not (username and passwd):
             return None
 
-        user = User.search( username, self )
+        user = User.search(username, self)
         if not user and not self.autoadd:
             return None
 
@@ -62,8 +57,8 @@ class UserClass(Base, AutoUpdateMixIn):
             ok = authfunc[self.credscheme['sys']][0](username, passwd, self.credscheme)
             if ok:
                 if not user:
-                    user = User( login = username, credential = '{X}' )
-                    self.users.add( user )
+                    user = User(login=username, credential='{X}')
+                    self.users.add(user)
                     dbsession.commit()
                 return user.user_instance()
         elif user and user.verify_credential(passwd):
@@ -79,11 +74,10 @@ class UserClass(Base, AutoUpdateMixIn):
         d['users'] = [u.as_dict() for u in self.users]
         return d
 
-        return dict(id=self.id, domain=self.domain, desc = self.desc,
-                    referer = self.referer, autoadd = self.autoadd,
-                    credscheme = self.credscheme,
-                    users = [ u.as_dict() for u in self.users ] )
-
+        return dict(id=self.id, domain=self.domain, desc=self.desc,
+                    referer=self.referer, autoadd=self.autoadd,
+                    credscheme=self.credscheme,
+                    users=[u.as_dict() for u in self.users])
 
     @staticmethod
     def bulk_insert(userclass, dbsession):
@@ -98,7 +92,7 @@ class UserClass(Base, AutoUpdateMixIn):
         print(len(userclass))
         pprint(userclass)
         domain, desc, referer, credscheme, userlist = tuple(userclass)
-        uc = UserClass( domain=domain, desc=desc, referer=referer, credscheme=credscheme )
+        uc = UserClass(domain=domain, desc=desc, referer=referer, credscheme=credscheme)
         dbsession.add(uc)
         for user in userlist:
             login, lastname, firstname, email, p_grp = user[:5]
@@ -106,10 +100,9 @@ class UserClass(Base, AutoUpdateMixIn):
                 grps = user[6]
             else:
                 grps = []
-            u = uc.add_user( login, lastname, firstname, email, p_grp, grps )
+            u = uc.add_user(login, lastname, firstname, email, p_grp, grps)
             if len(user) >= 6:
-                u.set_credential( user[5] )
-
+                u.set_credential(user[5])
 
     def add_user(self, login, lastname, firstname, email, primarygroup, groups=[]):
         """ add a new user """
@@ -130,14 +123,11 @@ class UserClass(Base, AutoUpdateMixIn):
                 g.users.append(user_instance)
         return user_instance
 
-
     def search_user(self, login):
         return User.search(login, self)
 
-
     def get_user(self, login):
         return User.search(login, self)
-
 
     @classmethod
     def from_dict(cls, d, dbh=None):
@@ -157,11 +147,10 @@ class UserClass(Base, AutoUpdateMixIn):
 
         return uc
 
-
     @staticmethod
     def dump(out, userclasses):
         """ dump data to YAML-formatted file """
-        yaml.safe_dump_all( ( x.as_dict() for x in userclasses ), out, default_flow_style=False )
+        yaml.safe_dump_all((x.as_dict() for x in userclasses), out, default_flow_style=False)
 
 
     # the method below are necessary since this class is not inherited from BaseMixIn and
@@ -170,7 +159,7 @@ class UserClass(Base, AutoUpdateMixIn):
     @classmethod
     def bulk_dump(cls, dbh):
         q = cls.query(dbh.session())
-        return [ obj.as_dict() for obj in q ]
+        return [obj.as_dict() for obj in q]
 
 
 @registered
@@ -211,14 +200,14 @@ class User(Base, AutoUpdateMixIn):
     primarygroup_id = Column(types.Integer, ForeignKey('groups.id'), nullable=False, index=True)
 
     yaml = deferred(Column(YAMLCol))
-    __table_args__ = ( UniqueConstraint('login', 'userclass_id'), {} )
+    __table_args__ = (UniqueConstraint('login', 'userclass_id'), {})
 
     userclass = relationship(UserClass, uselist=False, foreign_keys=userclass_id,
                                 backref=backref('users', lazy='dynamic'))
     primarygroup = relationship('Group', uselist=False, foreign_keys=primarygroup_id,
                                 backref=backref('primaryusers'))
     userdata = relationship(UserData,
-                    collection_class = column_mapped_collection(UserData.key_id),
+                    collection_class=column_mapped_collection(UserData.key_id),
                     cascade='all,delete,delete-orphan')
     groups = association_proxy('usergroups', 'group')
 
@@ -265,7 +254,6 @@ class User(Base, AutoUpdateMixIn):
         self.primarygroup_id = primarygroup_id
         UserGroup.add(session, self.id, primarygroup_id)
 
-
     @staticmethod
     def search(login, userclass=None, session=None):
         if userclass:
@@ -279,7 +267,8 @@ class User(Base, AutoUpdateMixIn):
             userclass = UserClass.search(domain, dbsession)
         q = dbsession.query(User).filter(and_(User.login == login, User.userclass == userclass))
         r = q.all()
-        if r: return r[0]
+        if r:
+            return r[0]
         return None
 
     def set_pref(self, key, data):
@@ -296,22 +285,23 @@ class User(Base, AutoUpdateMixIn):
 
     def groupids(self):
         dbsession = object_session(self)
-        return [ x.group_id for x in UserGroup.query(dbsession).filter( UserGroup.user_id == self.id ).all() ]
+        return [x.group_id for x in UserGroup.query(dbsession).filter(UserGroup.user_id == self.id).all()]
 
     def group_role_ids(self):
         dbsession = object_session(self)
-        grp_ids = [ x.group_id for x in UserGroup.query(dbsession).filter( UserGroup.user_id == self.id ).all() ]
-        res = dbsession.execute( group_role_table.select( group_role_table.c.group_id.in_( grp_ids ) ).with_only_columns([group_role_table.c.role_id]).distinct())
-        role_ids = [ item for sublist in res.fetchall() for item in sublist ]
-        return ( grp_ids, role_ids )
+        grp_ids = [x.group_id for x in UserGroup.query(dbsession).filter(UserGroup.user_id == self.id).all()]
+        res = dbsession.execute(group_role_table.select(group_role_table.c.group_id.in_(grp_ids))
+                                .with_only_columns([group_role_table.c.role_id]).distinct())
+        role_ids = [item for sublist in res.fetchall() for item in sublist]
+        return (grp_ids, role_ids)
 
     def group_users(self):
         dbsession = object_session(self)
         if self.has_roles(SYSADM):
             return User.query(dbsession).all()
         group_ids = self.groupids()
-        user_ids = [ x.user_id for x in UserGroup.query(dbsession).filter( UserGroup.group_id.in_( group_ids ))]
-        return [ User.get(u, dbsession) for u in set(user_ids) ]
+        user_ids = [x.user_id for x in UserGroup.query(dbsession).filter(UserGroup.group_id.in_(group_ids))]
+        return [User.get(u, dbsession) for u in set(user_ids)]
 
     def has_roles(self, *roles):
         grp_ids, role_ids = self.group_role_ids()
@@ -323,8 +313,8 @@ class User(Base, AutoUpdateMixIn):
 
     def user_instance(self):
         group_ids, role_ids = self.group_role_ids()
-        return UserInstance( self.login, self.id, self.primarygroup_id,
-                self.userclass.domain, group_ids, role_ids, dbsession = object_session(self) )
+        return UserInstance(self.login, self.id, self.primarygroup_id,
+                self.userclass.domain, group_ids, role_ids, dbsession=object_session(self))
 
     def render(self):
         return "%s | %s" % (str(self), self.fullname)
@@ -362,7 +352,7 @@ class User(Base, AutoUpdateMixIn):
         modified = []
         current_groups = {}
         for grp in self.groups:
-            current_groups[ grp.name ] = grp
+            current_groups[grp.name] = grp
 
         current_usergroups = {}
         for ug in self.usergroups:
@@ -393,7 +383,6 @@ class User(Base, AutoUpdateMixIn):
                 removed.append(g)
 
         return added, modified, removed
-
 
     @classmethod
     def from_dict(cls, d, dbh, userclass=None):
@@ -427,13 +416,12 @@ class User(Base, AutoUpdateMixIn):
                     g.users.append(obj)
         return obj
 
-
     @staticmethod
-    def dump(out, query = None):
+    def dump(out, query=None):
         import yaml
         if not query:
             query = User.query()
-        yaml.dump_all( (x.as_dict() for x in query), out, default_flow_style=False )
+        yaml.dump_all((x.as_dict() for x in query), out, default_flow_style=False)
 
 
 def _create_ug_by_user(user):
@@ -444,7 +432,7 @@ group_role_table = Table('groups_roles', metadata,
         primary_key=True),
     Column('group_id', types.Integer, ForeignKey('groups.id'), nullable=False),
     Column('role_id', types.Integer, ForeignKey('eks.id'), nullable=False),
-    UniqueConstraint( 'group_id', 'role_id' )
+    UniqueConstraint('group_id', 'role_id')
 )
 
 
@@ -460,7 +448,7 @@ class Group(Base, AutoUpdateMixIn):
 
     #users = relationship(User, secondary=user_group_table, backref=backref('groups'))
     users = association_proxy('usergroups', 'user', creator=_create_ug_by_user)
-    roles = relationship(EK, secondary=group_role_table, order_by = EK.key)
+    roles = relationship(EK, secondary=group_role_table, order_by=EK.key)
 
     # flags
     f_composite_group = 1 << 0
@@ -472,12 +460,11 @@ class Group(Base, AutoUpdateMixIn):
         if type(user) == int:
             if (self.flags & self.f_composite_group):
                 # join UserGroup and AssociatedGroup
-                user_ids = [ x[0] for x in list(AssociatedGroup.get_usergroup_info_query(self, 'C'))
-                ]
+                user_ids = [x[0] for x in list(AssociatedGroup.get_usergroup_info_query(self, 'C'))]
             else:
-                user_ids = [ x[0] for x in
-                                object_session(self).query(UserGroup.user_id).\
-                                filter( UserGroup.group_id == self.id)
+                user_ids = [x[0] for x in
+                                object_session(self).query(UserGroup.user_id)
+                                .filter(UserGroup.group_id == self.id)
                 ]
                 #user_ids = [ x.user_id for x in UserGroup.query().filter( UserGroup.group_id == self.id ).all() ]
             return user in user_ids
@@ -493,14 +480,14 @@ class Group(Base, AutoUpdateMixIn):
             user_id = user
 
         if (self.flags & self.f_composite_group):
-            uginfo = AssociatedGroup.get_usergroup_info_query(self, 'C').filter( UserGroup.user_id == user_id).one()
-            if ug and uginfo[1] == 'A':
+            uginfo = AssociatedGroup.get_usergroup_info_query(self, 'C').filter(UserGroup.user_id == user_id).one()
+            if uginfo and uginfo[1] == 'A':
                 return True
             return False
 
         try:
-            ug = UserGroup.query(object_session(self)).filter( UserGroup.group_id == self.id,
-                    UserGroup.user_id == user_id ).one()
+            ug = UserGroup.query(object_session(self)).filter(UserGroup.group_id == self.id,
+                    UserGroup.user_id == user_id).one()
             if ug and ug.role == 'A':
                 return True
         except NoResultFound:
@@ -512,7 +499,7 @@ class Group(Base, AutoUpdateMixIn):
         return self.flags & flag
 
     def set_flags(self, flag, val):
-        self.flags = (self.flags | flag) if val == True else (self.flags & ~flag)
+        self.flags = (self.flags | flag) if val is True else (self.flags & ~flag)
 
     def render(self):
         if self.desc:
@@ -524,13 +511,14 @@ class Group(Base, AutoUpdateMixIn):
         if type(grpname) == int:
             return Group.get(grpname, dbsession)
         q = Group.query(dbsession).filter(Group.name == grpname).all()
-        if q: return q[0]
+        if q:
+            return q[0]
         return None
 
     @staticmethod
     def _id(grpname, dbsession):
         assert dbsession
-        grp = Group.search(grpname, dbsession = dbsession)
+        grp = Group.search(grpname, dbsession=dbsession)
         if grp:
             return grp.id
         return 0
@@ -544,10 +532,10 @@ class Group(Base, AutoUpdateMixIn):
                 grpname, desc, roles = grpitem[0], grpitem[1], grpitem[2]
             else:
                 grpname, desc, roles = grpitem[0], grpitem[0], grpitem[1]
-            grp = Group(name = grpname, desc=desc)
+            grp = Group(name=grpname, desc=desc)
             dbsession.add(grp)
             for role in roles:
-                grp.roles.append( EK.search(role, dbsession = dbsession) )
+                grp.roles.append(EK.search(role, dbsession=dbsession))
 
     def update(self, obj):
         if type(obj) == dict:
@@ -567,10 +555,8 @@ class Group(Base, AutoUpdateMixIn):
                     with session.no_autoflush:
                         for ag_id in obj['composite_ids']:
                             AssociatedGroup.add(self, ag_id, 'C', session)
-
-                    #raise RuntimeError('FATAL ERR: node does not have id while performing tagging')
                 else:
-                    AssociatedGroup.sync( self.id, obj['composite_ids'], session = object_session(self) )
+                    AssociatedGroup.sync(self.id, obj['composite_ids'], session=object_session(self))
 
         else:
             self.update_fields_with_object(obj)
@@ -582,7 +568,7 @@ class Group(Base, AutoUpdateMixIn):
         if (self.flags & self.f_composite_group):
             d['assoc_groups'] = [(x.associated_group.name, x.role)
                                  for x in AssociatedGroup.query(object_session(self))
-                                 .filter(AssociatedGroup.group_id == self.id) ]
+                                 .filter(AssociatedGroup.group_id == self.id)]
         return d
 
     @classmethod
@@ -605,7 +591,7 @@ class Group(Base, AutoUpdateMixIn):
     @classmethod
     def bulk_dump(cls, dbh):
         q = cls.query(dbh.session())
-        return [ obj.as_dict() for obj in q ]
+        return [obj.as_dict() for obj in q]
 
 
 @registered
@@ -618,14 +604,14 @@ class UserGroup(Base):
     group_id = Column(types.Integer, ForeignKey('groups.id'), nullable=False)
     role = Column(types.String(1), nullable=False, server_default='M')
 
-    __table_args__ = ( UniqueConstraint('user_id', 'group_id'), {} )
+    __table_args__ = (UniqueConstraint('user_id', 'group_id'), {})
 
     user = relationship(User, uselist=False,
         backref=backref('usergroups', cascade='all,delete,delete-orphan'))
     group = relationship(Group, uselist=False,
         backref=backref('usergroups', cascade='all,delete,delete-orphan'))
 
-    def __init__(self, user=None, group=None, role = None):
+    def __init__(self, user=None, group=None, role=None):
         self.user = user
         self.group = group
         self.role = role
@@ -637,14 +623,13 @@ class UserGroup(Base):
         if type(group) == int:
             group = Group.get(group, session)
         ug = UserGroup(user, group, role)
-        session.add( ug )
-
+        session.add(ug)
 
     @staticmethod
     def delete(session, user_id, group_id):
         ug = UserGroup.query(session).filter(UserGroup.user_id == user_id,
                     UserGroup.group_id == group_id).one()
-        session.delete( ug )
+        session.delete(ug)
 
 
 @registered
@@ -657,25 +642,24 @@ class AssociatedGroup(Base):
     assoc_group_id = Column(types.Integer, ForeignKey('groups.id'), nullable=False)
     role = Column(types.String(1), nullable=False, server_default='R')
 
-    group = relationship(Group, uselist=False, foreign_keys=[ group_id ],
+    group = relationship(Group, uselist=False, foreign_keys=[group_id],
                 backref=backref('associated_groups', cascade='all,delete,delete-orphan'))
-    associated_group = relationship(Group, uselist=False, foreign_keys=[ assoc_group_id ])
+    associated_group = relationship(Group, uselist=False, foreign_keys=[assoc_group_id])
 
     __table_args__ = (UniqueConstraint('group_id', 'assoc_group_id'), {})
-
 
     @classmethod
     def get_usergroup_info_query(cls, group, role=None):
         """ return tuples of (user_id, group_id, role) for those associated with the group
         """
-        q = object_session(group).query( UserGroup.user_id, UserGroup.role, UserGroup.group_id, cls.role ).\
-                filter( UserGroup.group_id == cls.assoc_group_id, cls.group_id == group.id)
+        q = object_session(group).query(UserGroup.user_id, UserGroup.role, UserGroup.group_id, cls.role).\
+                filter(UserGroup.group_id == cls.assoc_group_id, cls.group_id == group.id)
         if role:
-            q = q.filter( cls.role == role )
+            q = q.filter(cls.role == role)
         return q
 
     @classmethod
-    def sync(cls, group_id, group_ids, role='C', session = None):
+    def sync(cls, group_id, group_ids, role='C', session=None):
         # synchronize node_id and tag_ids
 
         # check sanity
@@ -691,17 +675,17 @@ class AssociatedGroup(Base):
         in_sync = []
         for ag in ags:
             if ag.assoc_group_id in group_ids:
-                in_sync.append( ag.assoc_group_id )
+                in_sync.append(ag.assoc_group_id)
             else:
                 # remove this tag
                 session.delete(ag)
 
         print(in_sync)
         for grp_id in group_ids:
-            if grp_id in in_sync: continue
+            if grp_id in in_sync:
+                continue
             print('add %d' % grp_id)
             cls.add(group_id, grp_id, role, session)
-
 
     @classmethod
     def add(cls, group_id, grp_id, role='C', session=None):
@@ -713,13 +697,12 @@ class AssociatedGroup(Base):
         if (ag.flags & ag.f_composite_group):
             raise RuntimeError('Error: composite group cannot consist of another composite group!')
         if type(group_id) == int:
-            ag = cls(group_id = group_id, assoc_group_id = grp_id, role = role)
+            ag = cls(group_id=group_id, assoc_group_id=grp_id, role=role)
         elif isinstance(group_id, Group):
-            ag = cls(group = group_id, assoc_group_id = grp_id, role=role)
+            ag = cls(group=group_id, assoc_group_id=grp_id, role=role)
         else:
             raise RuntimeError('FATAL PROG/ERR: Need integer or group for 1st argument')
         session.add(ag)
-
 
     @classmethod
     def remove(cls, group_id, grp_id, session):
@@ -747,15 +730,15 @@ class UserInstance(object):
         self.id = id
         self.domain = domain
         self.primarygroup_id = primarygroup_id
-        self.groups = [ (g.name, g.id) for g in [ Group.get(gid, dbsession) for gid in groups ] ]
-        self.roles = [ (EK._key(rid, dbsession=dbsession), rid) for rid in roles ]
+        self.groups = [(g.name, g.id) for g in [Group.get(gid, dbsession) for gid in groups]]
+        self.roles = [(EK._key(rid, dbsession=dbsession), rid) for rid in roles]
 
 
     def in_group(self, *groups):
         """ check if user at least is in one of the groups """
 
         # if has SYSADM or DATAADM roles, then user is virtually part of any group
-        if self.has_roles( SYSADM, DATAADM ):
+        if self.has_roles(SYSADM, DATAADM):
             return True
 
         for grp in groups:
@@ -780,7 +763,7 @@ class UserInstance(object):
     def has_roles(self, *roles):
         """ check if user at least has one of the roles """
         for rolename in roles:
-            role_id = EK._id( rolename )
+            role_id = EK._id(rolename)
             if (rolename, role_id) in self.roles:
                 return True
         return False
@@ -788,10 +771,10 @@ class UserInstance(object):
     def get_groups(self, system=False):
         res = []
         for (grpname, gid) in self.groups:
-            grp = Group.get( gid )
+            grp = Group.get(gid)
             if not system and grp.name.startswith('_'):
                 continue
-            res.append( grp )
+            res.append(grp)
         return res
 
     def check_consistency(self, update=False):
@@ -803,14 +786,20 @@ class UserInstance(object):
                 raise RuntimeError('Group id: %d is not consistent!' % gid)
 
 
-## globals
+#
+# globals
+#
 
 _DEF_USERCLASS_ = None
+
 
 def set_default_userclass(userclass):
     global _DEF_USERCLASS_
     _DEF_USERCLASS_ = UserClass
 
+
 def get_default_userclass():
     global _DEF_USERCLASS_
     return _DEF_USERCLASS_
+
+# EOF
