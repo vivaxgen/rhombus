@@ -190,8 +190,7 @@ Base.delete = classmethod(_generic_delete)
 class SysReg(Base):
 
     __tablename__ = 'sysregs'
-    id = Column(types.Integer, Sequence('sysreg_seqid', optional=True),
-                primary_key=True)
+    id = Column(types.Integer, Identity(), primary_key=True)
     key = Column(types.String(64), nullable=False, unique=True)
     bindata = Column(types.LargeBinary, nullable=False)
     mimetype = Column(types.String(32), nullable=False)
@@ -237,8 +236,7 @@ class SysReg(Base):
 class SysLog(Base):
 
     __tablename__ = 'syslogs'
-    id = Column(types.Integer, Sequence('syslog_seqid', optional=True),
-                primary_key=True)
+    id = Column(types.Integer, Identity(), primary_key=True)
     stamp = Column(types.TIMESTAMP, nullable=False, default=current_timestamp())
     level = Column(types.SmallInteger)
     msg = Column(types.String)
@@ -253,8 +251,7 @@ class DataLog(Base):
     __typeid__ = -1
 
     __tablename__ = 'datalogs'
-    id = Column(types.Integer, Sequence('datalog_seqid', optional=True),
-                primary_key=True)
+    id = Column(types.Integer, Identity(), primary_key=True)
     stamp = Column(types.TIMESTAMP, nullable=False, default=current_timestamp())
     class_id = Column(types.SmallInteger, nullable=False)
     object_id = Column(types.Integer, nullable=False)

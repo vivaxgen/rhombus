@@ -8,13 +8,15 @@ This software is licensed under LGPL v3 or later version.
 Please read the README.txt of this software.
 '''
 
-from sqlalchemy import types, Column, Sequence, ForeignKey
+from sqlalchemy import types, Column, ForeignKey, Identity
 from sqlalchemy.ext.declarative import declared_attr
 from sqlalchemy.orm import relationship
 from sqlalchemy.orm.session import object_session
-from sqlalchemy.sql.functions import current_timestamp, now
+from sqlalchemy.sql.functions import now
 
 from rhombus.lib.utils import get_userid
+
+__version__ = '20210629'
 
 
 class StampMixIn(object):
@@ -26,14 +28,16 @@ class StampMixIn(object):
 
     @declared_attr
     def id(cls):
-        return Column(types.Integer,
-                      Sequence('%s_seqid' % cls.__name__.lower(), optional=True),
-                      primary_key=True)
+        return Column(types.Integer, Identity(), primary_key=True)
+
+    @declared_attr
+    def create_time(cls):
+        return Column(types.DateTime(timezone=True), nullable=False, server_default=now())
 
     @declared_attr
     def lastuser_id(cls):
         return Column(types.Integer,
-                      ForeignKey('users.id'),
+                      ForeignKey('users.id', use_alter=True),
                       default=get_userid,
                       onupdate=get_userid,
                       nullable=True)
@@ -44,11 +48,10 @@ class StampMixIn(object):
 
     @declared_attr
     def stamp(cls):
-        return Column(types.TIMESTAMP, nullable=False, default=current_timestamp(),
-                      onupdate=now())
-        ## this is reserved for big, incompatible update
-        ## return Column(types.DateTime(timezone=True), nullable=False,
-        ##        server_default=func.now(), server_onupdate=func.utc_timestamp())
+        # we use DateTime instead of TIMESTAMP to get consistent behaviour across different
+        # RDBM systems
+        return Column(types.DateTime(timezone=True), nullable=False,
+                      server_default=now(), onupdate=now())
 
     def __before_update__(self):
         # this is to force some database backend to change the values
@@ -58,3 +61,5 @@ class StampMixIn(object):
             return
         self.lastuser_id = get_userid()
         self.stamp = now()
+
+# end of file

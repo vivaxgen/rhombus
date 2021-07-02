@@ -10,8 +10,7 @@ class ActionLog(Base):
     """ Action Log """
 
     __tablename__ = 'actionlogs'
-    id = Column(types.Integer, Sequence('actionlog_seqid', optional=True),
-            primary_key=True)
+    id = Column(types.Integer, Identity(), primary_key=True)
     user_id = Column(types.Integer, ForeignKey('users.id'), nullable=False,
             default=get_userid)
     action_id = Column(types.Integer, ForeignKey('eks.id'))
@@ -74,8 +73,7 @@ class UserActionLog(Base):
     """ User-targetted Action Log """
 
     __tablename__ = 'useractionlogs'
-    id = Column(types.Integer, Sequence('useractionlog_seqid', optional=True),
-            primary_key=True)
+    id = Column(types.Integer, Identity(), primary_key=True)
     user_id = Column(types.Integer, ForeignKey('users.id'), nullable=False)
     actionlog_id = Column(types.Integer, ForeignKey('actionlogs.id'), nullable=False)
     stamp = Column(types.TIMESTAMP, nullable=False, default=current_timestamp())

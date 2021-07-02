@@ -10,16 +10,16 @@ from pprint import pprint
 
 
 @registered
-class UserClass(Base, AutoUpdateMixIn):
+class UserClass(Base, BaseMixIn):
 
     __tablename__ = 'userclasses'
-    id = Column(types.Integer, Sequence('userclass_seq_id', optional=True),
-        primary_key=True)
+    #id = Column(types.Integer, Sequence('userclass_seq_id', optional=True),
+    #    primary_key=True)
     domain = Column(types.String(16), nullable=False, unique=True)
     desc = Column(types.String(64), nullable=False, server_default='')
     referer = Column(types.String(128), nullable=False, server_default='')
     autoadd = Column(types.Boolean, nullable=False, default=False)
-    credscheme = Column(YAMLCol(256), nullable=False)  # YAML type data
+    credscheme = Column(types.JSON, nullable=False, server_default='null')
     flags = Column(types.Integer, nullable=False, server_default='0')
 
     def __repr__(self):
@@ -163,10 +163,10 @@ class UserClass(Base, AutoUpdateMixIn):
 
 
 @registered
-class UserData(Base):
+class UserData(Base): #, BaseMixIn):
 
     __tablename__ = 'userdatas'
-    id = Column(types.Integer, Sequence('userdata_seq_id', optional=True), primary_key=True)
+    id = Column(types.Integer, Identity(), primary_key=True)
     user_id = Column(types.Integer, ForeignKey('users.id'), nullable=False, index=True)
     key_id = Column(types.Integer, ForeignKey('eks.id'), nullable=False, index=True)
     bindata = Column(types.LargeBinary, nullable=False)
@@ -174,11 +174,11 @@ class UserData(Base):
 
 
 @registered
-class User(Base, AutoUpdateMixIn):
+class User(Base, BaseMixIn):
 
     __tablename__ = 'users'
-    id = Column(types.Integer, Sequence('user_seq_id', optional=True),
-        primary_key=True)
+    #id = Column(types.Integer, Sequence('user_seq_id', optional=True),
+    #    primary_key=True)
     login = Column(types.String(32), unique=True, nullable=False)
     credential = Column(types.String(128), nullable=False)
     lastlogin = Column(types.TIMESTAMP)
@@ -199,7 +199,8 @@ class User(Base, AutoUpdateMixIn):
 
     primarygroup_id = Column(types.Integer, ForeignKey('groups.id'), nullable=False, index=True)
 
-    yaml = deferred(Column(YAMLCol))
+    json = deferred(Column(types.JSON, nullable=False, server_default='null'))
+
     __table_args__ = (UniqueConstraint('login', 'userclass_id'), {})
 
     userclass = relationship(UserClass, uselist=False, foreign_keys=userclass_id,
@@ -429,8 +430,7 @@ def _create_ug_by_user(user):
     return UserGroup(user=user)
 
 group_role_table = Table('groups_roles', metadata,
-    Column('id', types.Integer, Sequence('group_role_seqid', optional=True),
-        primary_key=True),
+    Column('id', types.Integer, Identity(), primary_key=True),
     Column('group_id', types.Integer, ForeignKey('groups.id'), nullable=False),
     Column('role_id', types.Integer, ForeignKey('eks.id'), nullable=False),
     UniqueConstraint('group_id', 'role_id')
@@ -438,13 +438,13 @@ group_role_table = Table('groups_roles', metadata,
 
 
 @registered
-class Group(Base, AutoUpdateMixIn):
+class Group(Base, BaseMixIn):
 
     __tablename__ = 'groups'
-    id = Column(types.Integer, Sequence('group_seq_id', optional=True), primary_key=True)
+    #id = Column(types.Integer, Sequence('group_seq_id', optional=True), primary_key=True)
     name = Column(types.String(32), nullable=False, unique=True)
     desc = Column(types.String(128), nullable=False, server_default='')
-    scheme = Column(YAMLCol(256), nullable=False, server_default='')
+    scheme = Column(types.JSON, nullable=False, server_default='null')
     flags= Column(types.Integer, nullable=False, server_default='0', default=0)
 
     #users = relationship(User, secondary=user_group_table, backref=backref('groups'))
@@ -599,8 +599,7 @@ class Group(Base, AutoUpdateMixIn):
 class UserGroup(Base):
 
     __tablename__ = 'users_groups'
-    id = Column(types.Integer, Sequence('user_group_seq_id', optional=True),
-            primary_key=True)
+    id = Column(types.Integer, Identity(), primary_key=True)
     user_id = Column(types.Integer, ForeignKey('users.id'), nullable=False)
     group_id = Column(types.Integer, ForeignKey('groups.id'), nullable=False)
     role = Column(types.String(1), nullable=False, server_default='M')
@@ -637,8 +636,7 @@ class UserGroup(Base):
 class AssociatedGroup(Base):
 
     __tablename__ = 'associated_groups'
-    id = Column(types.Integer, Sequence('associated_group_seq_id', optional=True),
-            primary_key=True)
+    id = Column(types.Integer, Identity(), primary_key=True)
     group_id = Column(types.Integer, ForeignKey('groups.id'), nullable=False)
     assoc_group_id = Column(types.Integer, ForeignKey('groups.id'), nullable=False)
     role = Column(types.String(1), nullable=False, server_default='R')
