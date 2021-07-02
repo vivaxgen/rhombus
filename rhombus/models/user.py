@@ -413,7 +413,8 @@ class User(Base, AutoUpdateMixIn):
                     g = Group.search(grp[0], session)
                     if g is None:
                         raise RuntimeError('ERR: group %s does not exists!' % grp)
-                    g.users.append(obj)
+                    ug = dbh.UserGroup(obj, g, grp[1])
+                    session.flush([ug])
         return obj
 
     @staticmethod
