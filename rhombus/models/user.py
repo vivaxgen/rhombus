@@ -1,6 +1,20 @@
-from .core import *
-from .ek import *
+__copyright__ = '''
+user.py - Rhombus SQLAlchemy user related module
 
+(c) 2021 Hidayat Trimarsanto <anto@eijkman.go.id> <trimarsanto@gmail.com>
+
+All right reserved.
+This software is licensed under LGPL v3 or later version.
+Please read the README.txt of this software.
+'''
+
+from .core import (registered, Column, types, Base, BaseMixIn, object_session, column_property,
+                   ForeignKey, deferred, Identity, relationship, UniqueConstraint, backref,
+                   column_mapped_collection, association_proxy, Table, metadata, and_,
+                   NoResultFound)
+from .ek import EK
+
+from rhombus.lib.utils import get_dbhandler, cerr
 from rhombus.lib.auth import authfunc
 from rhombus.lib.roles import SYSADM, DATAADM
 from passlib.hash import sha256_crypt as pwcrypt
@@ -13,8 +27,7 @@ from pprint import pprint
 class UserClass(Base, BaseMixIn):
 
     __tablename__ = 'userclasses'
-    #id = Column(types.Integer, Sequence('userclass_seq_id', optional=True),
-    #    primary_key=True)
+
     domain = Column(types.String(16), nullable=False, unique=True)
     desc = Column(types.String(64), nullable=False, server_default='')
     referer = Column(types.String(128), nullable=False, server_default='')
@@ -59,7 +72,7 @@ class UserClass(Base, BaseMixIn):
                 if not user:
                     user = User(login=username, credential='{X}')
                     self.users.add(user)
-                    dbsession.commit()
+                    object_session(user).flush([user])
                 return user.user_instance()
         elif user and user.verify_credential(passwd):
             return user.user_instance()
@@ -110,8 +123,8 @@ class UserClass(Base, BaseMixIn):
         session = object_session(self)
         pri_grp = Group.search(primarygroup, session)
         user_instance = User(login=login, userclass=self,
-                            lastname=lastname, firstname=firstname, email=email,
-                            primarygroup = pri_grp, credential='{X}')
+                             lastname=lastname, firstname=firstname, email=email,
+                             primarygroup=pri_grp, credential='{X}')
         # set as member for primary group too
         pri_grp.users.append(user_instance)
 
@@ -136,14 +149,14 @@ class UserClass(Base, BaseMixIn):
 
         if dbh is None:
             from rhombus.lib.utils import get_dbhandler
-            dbsession = get_dbhandler().session()
+            dbh = get_dbhandler()
 
         dbh.session().add(uc)
         dbh.session().flush([uc])
 
         if 'users' in d:
             for user_dict in d['users']:
-                user = User.from_dict(user_dict, dbh, userclass = uc)
+                user = User.from_dict(user_dict, dbh, userclass=uc)
 
         return uc
 
@@ -152,18 +165,17 @@ class UserClass(Base, BaseMixIn):
         """ dump data to YAML-formatted file """
         yaml.safe_dump_all((x.as_dict() for x in userclasses), out, default_flow_style=False)
 
-
     # the method below are necessary since this class is not inherited from BaseMixIn and
     # making this class inherited from BaseMixIn will introduce schema incompatibility for now
 
     @classmethod
-    def bulk_dump(cls, dbh):
+    def bulk_dump_xxx(cls, dbh):
         q = cls.query(dbh.session())
         return [obj.as_dict() for obj in q]
 
 
 @registered
-class UserData(Base): #, BaseMixIn):
+class UserData(Base):
 
     __tablename__ = 'userdatas'
     id = Column(types.Integer, Identity(), primary_key=True)
@@ -177,13 +189,12 @@ class UserData(Base): #, BaseMixIn):
 class User(Base, BaseMixIn):
 
     __tablename__ = 'users'
-    #id = Column(types.Integer, Sequence('user_seq_id', optional=True),
-    #    primary_key=True)
+
     login = Column(types.String(32), unique=True, nullable=False)
     credential = Column(types.String(128), nullable=False)
     lastlogin = Column(types.TIMESTAMP)
     userclass_id = Column(types.Integer, ForeignKey('userclasses.id'), nullable=False,
-                    index=True)
+                          index=True)
     lastname = Column(types.String(32), index=True, nullable=False)
     firstname = Column(types.String(32), nullable=False, server_default='')
     fullname = column_property(lastname + ', ' + firstname)
@@ -204,12 +215,12 @@ class User(Base, BaseMixIn):
     __table_args__ = (UniqueConstraint('login', 'userclass_id'), {})
 
     userclass = relationship(UserClass, uselist=False, foreign_keys=userclass_id,
-                                backref=backref('users', lazy='dynamic'))
+                             backref=backref('users', lazy='dynamic'))
     primarygroup = relationship('Group', uselist=False, foreign_keys=primarygroup_id,
                                 backref=backref('primaryusers'))
     userdata = relationship(UserData,
-                    collection_class=column_mapped_collection(UserData.key_id),
-                    cascade='all,delete,delete-orphan')
+                            collection_class=column_mapped_collection(UserData.key_id),
+                            cascade='all,delete,delete-orphan')
     groups = association_proxy('usergroups', 'group')
 
     def __repr__(self):
@@ -315,7 +326,8 @@ class User(Base, BaseMixIn):
     def user_instance(self):
         group_ids, role_ids = self.group_role_ids()
         return UserInstance(self.login, self.id, self.primarygroup_id,
-                self.userclass.domain, group_ids, role_ids, dbsession=object_session(self))
+                            self.userclass.domain, group_ids, role_ids,
+                            dbsession=object_session(self))
 
     def render(self):
         return "%s | %s" % (str(self), self.fullname)
@@ -326,13 +338,6 @@ class User(Base, BaseMixIn):
         d['primarygroup'] = self.primarygroup.name
         d['groups'] = [[ug.group.name, ug.role] for ug in self.usergroups]
         return d
-
-        return dict( id = self.id, login = self.login, credential = self.credential,
-                lastlogin = self.lastlogin, userclass = self.userclass.domain,
-                lastname = self.lastname, firstname = self.firstname,
-                institution = self.institution, address = self.address, contact = self.contact,
-                status = self.status, primarygroup = self.primarygroup.name,
-                groups = [ [ug.group.name, ug.role] for ug in self.usergroups ] )
 
     def set_credential(self, passwd):
         if passwd == '{X}':
@@ -429,25 +434,25 @@ class User(Base, BaseMixIn):
 def _create_ug_by_user(user):
     return UserGroup(user=user)
 
+
 group_role_table = Table('groups_roles', metadata,
-    Column('id', types.Integer, Identity(), primary_key=True),
-    Column('group_id', types.Integer, ForeignKey('groups.id'), nullable=False),
-    Column('role_id', types.Integer, ForeignKey('eks.id'), nullable=False),
-    UniqueConstraint('group_id', 'role_id')
-)
+                         Column('id', types.Integer, Identity(), primary_key=True),
+                         Column('group_id', types.Integer, ForeignKey('groups.id'), nullable=False),
+                         Column('role_id', types.Integer, ForeignKey('eks.id'), nullable=False),
+                         UniqueConstraint('group_id', 'role_id')
+                         )
 
 
 @registered
 class Group(Base, BaseMixIn):
 
     __tablename__ = 'groups'
-    #id = Column(types.Integer, Sequence('group_seq_id', optional=True), primary_key=True)
+
     name = Column(types.String(32), nullable=False, unique=True)
     desc = Column(types.String(128), nullable=False, server_default='')
     scheme = Column(types.JSON, nullable=False, server_default='null')
-    flags= Column(types.Integer, nullable=False, server_default='0', default=0)
+    flags = Column(types.Integer, nullable=False, server_default='0', default=0)
 
-    #users = relationship(User, secondary=user_group_table, backref=backref('groups'))
     users = association_proxy('usergroups', 'user', creator=_create_ug_by_user)
     roles = relationship(EK, secondary=group_role_table, order_by=EK.key)
 
@@ -464,13 +469,14 @@ class Group(Base, BaseMixIn):
                 user_ids = [x[0] for x in list(AssociatedGroup.get_usergroup_info_query(self, 'C'))]
             else:
                 user_ids = [x[0] for x in
-                                object_session(self).query(UserGroup.user_id)
-                                .filter(UserGroup.group_id == self.id)
-                ]
-                #user_ids = [ x.user_id for x in UserGroup.query().filter( UserGroup.group_id == self.id ).all() ]
+                            object_session(self).query(UserGroup.user_id)
+                            .filter(UserGroup.group_id == self.id)
+                            ]
             return user in user_ids
+
         elif type(user) == UserInstance:
             return user.in_group(self)
+
         else:
             return user in self.users
 
@@ -488,7 +494,7 @@ class Group(Base, BaseMixIn):
 
         try:
             ug = UserGroup.query(object_session(self)).filter(UserGroup.group_id == self.id,
-                    UserGroup.user_id == user_id).one()
+                                                              UserGroup.user_id == user_id).one()
             if ug and ug.role == 'A':
                 return True
         except NoResultFound:
@@ -583,8 +589,7 @@ class Group(Base, BaseMixIn):
     def dump(out, query=None):
         if query is None:
             query = Group.query()
-        yaml.safe_dump_all( (x.as_dict() for x in query), out, default_flow_style=False)
-
+        yaml.safe_dump_all((x.as_dict() for x in query), out, default_flow_style=False)
 
     # the method below are necessary since this class is not inherited from BaseMixIn and
     # making this class inherited from BaseMixIn will introduce schema incompatibility for now
@@ -607,9 +612,9 @@ class UserGroup(Base):
     __table_args__ = (UniqueConstraint('user_id', 'group_id'), {})
 
     user = relationship(User, uselist=False,
-        backref=backref('usergroups', cascade='all,delete,delete-orphan'))
+                        backref=backref('usergroups', cascade='all,delete,delete-orphan'))
     group = relationship(Group, uselist=False,
-        backref=backref('usergroups', cascade='all,delete,delete-orphan'))
+                         backref=backref('usergroups', cascade='all,delete,delete-orphan'))
 
     def __init__(self, user=None, group=None, role=None):
         self.user = user
@@ -628,7 +633,7 @@ class UserGroup(Base):
     @staticmethod
     def delete(session, user_id, group_id):
         ug = UserGroup.query(session).filter(UserGroup.user_id == user_id,
-                    UserGroup.group_id == group_id).one()
+                                             UserGroup.group_id == group_id).one()
         session.delete(ug)
 
 
@@ -642,7 +647,7 @@ class AssociatedGroup(Base):
     role = Column(types.String(1), nullable=False, server_default='R')
 
     group = relationship(Group, uselist=False, foreign_keys=[group_id],
-                backref=backref('associated_groups', cascade='all,delete,delete-orphan'))
+                         backref=backref('associated_groups', cascade='all,delete,delete-orphan'))
     associated_group = relationship(Group, uselist=False, foreign_keys=[assoc_group_id])
 
     __table_args__ = (UniqueConstraint('group_id', 'assoc_group_id'), {})
@@ -651,8 +656,8 @@ class AssociatedGroup(Base):
     def get_usergroup_info_query(cls, group, role=None):
         """ return tuples of (user_id, group_id, role) for those associated with the group
         """
-        q = object_session(group).query(UserGroup.user_id, UserGroup.role, UserGroup.group_id, cls.role).\
-                filter(UserGroup.group_id == cls.assoc_group_id, cls.group_id == group.id)
+        q = object_session(group).query(UserGroup.user_id, UserGroup.role, UserGroup.group_id, cls.role)\
+            .filter(UserGroup.group_id == cls.assoc_group_id, cls.group_id == group.id)
         if role:
             q = q.filter(cls.role == role)
         return q
@@ -708,6 +713,7 @@ class AssociatedGroup(Base):
         ag = cls.query().filter(cls.group_id == group_id, cls.assoc_group_id == grp_id).one()
         session.delete(ag)
 
+
 #
 # helpers
 #
@@ -718,7 +724,7 @@ class UserInstance(object):
     """
 
     def __init__(self, login, id, primarygroup_id, domain=None, groups=None,
-                roles=None, dbsession=None):
+                 roles=None, dbsession=None):
         """ login: string, id: int, primarygroup_id: int,
             primarygroup_id: group_id,
             groups: [ list of group_ids as Group ]
@@ -732,7 +738,6 @@ class UserInstance(object):
         self.groups = [(g.name, g.id) for g in [Group.get(gid, dbsession) for gid in groups]]
         self.roles = [(EK._key(rid, dbsession=dbsession), rid) for rid in roles]
 
-
     def in_group(self, *groups):
         """ check if user at least is in one of the groups """
 
@@ -742,7 +747,7 @@ class UserInstance(object):
 
         for grp in groups:
             if isinstance(grp, str):
-                grp_id = Group._id( grp )
+                grp_id = Group._id(grp)
                 grpname = grp
             elif isinstance(grp, int):
                 grp_id = grp
