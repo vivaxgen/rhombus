@@ -54,6 +54,14 @@ class QueryConstructor(object):
 
         return and_(*exprs), classes
 
+    field_specs = {
+        'userclass_id': user.UserClass.id,
+        'userclass_domain': user.UserClass.domain,
+
+        'user_id': user.User.id,
+        'user_login': user.User.login,
+    }
+
 
 class DBHandler(object):
 
