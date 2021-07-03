@@ -1,24 +1,25 @@
 
 import logging
-
-log = logging.getLogger(__name__)
-
 from pyramid.response import Response
 from pyramid.renderers import render_to_response
 from pyramid.httpexceptions import HTTPFound
 
-from rhombus.lib.roles import *
+from rhombus.lib.roles import PUBLIC, SYSADM, SYSVIEW, DATAADM, DATAVIEW
 from rhombus.lib.utils import get_dbhandler, random_string, cerr, cout
-from rhombus.lib.tags import *
 from rhombus.views.generics import not_authorized, error_page
+import rhombus.lib.tags as t
 
 import sqlalchemy.exc
 import time
+
+log = logging.getLogger(__name__)
+
 
 class not_roles(object):
 
     def __init__(self, *role_list):
         self.not_roles = role_list
+
 
 msg_0 = 'Please log in first.'
 
@@ -92,13 +93,13 @@ class BaseViewer(object):
     template_edit = 'rhombus:templates/generics/formpage.mako'
 
     # roles that can manage all instances of the object, regardless of the ownership
-    managing_roles = [ SYSADM, DATAADM ]
+    managing_roles = [SYSADM, DATAADM]
 
     # roles that can modify instances owned by primary group of a user
     modifying_roles = [] + managing_roles
 
     # roles that can view instances owned by primary group
-    viewing_roles = [ SYSVIEW, DATAVIEW, ] + modifying_roles
+    viewing_roles = [SYSVIEW, DATAVIEW, ] + modifying_roles
 
     # class to generate new object
     object_class = None
@@ -118,7 +119,6 @@ class BaseViewer(object):
     #   'text': ('rhombus-user-text', )
     #   ]
     form_fields = {}
-
 
     # Methods to be defined for each viewer
 
@@ -160,7 +160,6 @@ class BaseViewer(object):
     def rpc_helper(self):
         raise NotImplementedError()
 
-
     # Internal methods
 
     def __init__(self, request):
@@ -168,38 +167,35 @@ class BaseViewer(object):
         self.dbh = get_dbhandler()
         self.obj = None
 
-
-    @m_roles( PUBLIC )
+    @m_roles(PUBLIC)
     def index(self):
         return self.index_helper()
 
-
-    @m_roles( PUBLIC )
+    @m_roles(PUBLIC)
     def view(self):
         return self.view_helper()
 
-    def view_helper(self, render = True):
+    def view_helper(self, render=True):
 
         rq = self.request
         obj_id = int(rq.matchdict.get('id'))
 
         obj = self.get_object(obj_id, self.fetch_func)
         eform, jscode = self.edit_form(obj, readonly=True)
-        if rq.user.has_roles( * self.managing_roles ) or self.can_modify(obj):
+        if rq.user.has_roles(* self.managing_roles) or self.can_modify(obj):
             eform.get('footer').add(
-                a('Edit', class_ = 'btn btn-primary offset-md-2',
-                    href=rq.route_url(self.edit_route, id=obj.id)) )
+                t.a('Edit', class_='btn btn-primary offset-md-2',
+                    href=rq.route_url(self.edit_route, id=obj.id)))
 
         if not render:
             return (eform, jscode)
         return self.render_edit_form(eform, jscode)
 
-
-    @m_roles( PUBLIC )
+    @m_roles(PUBLIC)
     def lookup(self):
         return self.lookup_helper()
 
-    @m_roles( PUBLIC )
+    @m_roles(PUBLIC)
     def action(self):
 
         _m = self.request.method
@@ -218,9 +214,7 @@ class BaseViewer(object):
 
         return error_page(self.request, 'HTTP method not implemented!')
 
-
-
-    @m_roles( PUBLIC )
+    @m_roles(PUBLIC)
     def add(self):
         return self.add_helper()
 
@@ -231,25 +225,24 @@ class BaseViewer(object):
 
             obj = self.object_class()
             try:
-                #d = self.parse_form(rq.params)
-                self.update_object( obj, self.parse_form(rq.params) )
+                self.update_object(obj, self.parse_form(rq.params))
 
             except ParseFormError as e:
                 err_msg = str(e)
                 field = e.field
-                eform, jscode = self.edit_form(obj, update_dict = rq.params,
-                                    create = True if obj.id is None else False)
+                eform, jscode = self.edit_form(obj, update_dict=rq.params,
+                                               create=True if obj.id is None else False)
                 eform.get(field).add_error(err_msg)
                 # for debugging purposes, add debug text to form
-                eform.add(literal(f'<!--\n[[EXC: ParseFormError at: {field} with: {err_msg}]]\n-->'))
+                eform.add(t.literal(f'<!--\n[[EXC: ParseFormError at: {field} with: {err_msg}]]\n-->'))
                 if not render:
                     return (eform, jscode)
                 return self.render_edit_form(eform, jscode)
 
             return HTTPFound(
-                location = self.request.route_url(
+                location=self.request.route_url(
                     self.edit_route if rq.params['_method'].endswith('_edit')
-                        else self.view_route,
+                    else self.view_route,
                     id=obj.id))
 
         dbh = self.dbh
@@ -259,7 +252,6 @@ class BaseViewer(object):
         if not render:
             return (eform, jscode)
         return self.render_edit_form(eform, jscode)
-
 
     @m_roles(PUBLIC)
     def edit(self):
@@ -272,7 +264,7 @@ class BaseViewer(object):
 
         obj = self.get_object(obj_id, self.fetch_func)
 
-        if not (rq.user.has_roles( * self.managing_roles) or self.can_modify(obj)):
+        if not (rq.user.has_roles(* self.managing_roles) or self.can_modify(obj)):
             raise RuntimeError('Current user cannot modify this object!')
 
         if rq.method == 'POST':
@@ -286,16 +278,16 @@ class BaseViewer(object):
             except ParseFormError as e:
                 err_msg = str(e)
                 field = e.field
-                eform, jscode = self.edit_form(obj, update_dict = rq.params)
+                eform, jscode = self.edit_form(obj, update_dict=rq.params)
                 eform.get(field).add_error(err_msg)
                 if not render:
                     return (eform, jscode)
                 return self.render_edit_form(eform, jscode)
 
             return HTTPFound(
-                location = self.request.route_url(
+                location=self.request.route_url(
                     self.edit_route if rq.params['_method'].endswith('_edit')
-                        else self.view_route,
+                    else self.view_route,
                     id=obj.id))
 
         eform, jscode = self.edit_form(obj)
@@ -303,7 +295,6 @@ class BaseViewer(object):
         if not render:
             return (eform, jscode)
         return self.render_edit_form(eform, jscode)
-
 
     def parse_form(self, form, d=None, fields={}):
         """ fields format:
@@ -348,7 +339,7 @@ class BaseViewer(object):
                 elif len(f) == 3:
                     if f[1] == list:
                         try:
-                            d[key] = [ f[2](x) for x in form.getall(name)]
+                            d[key] = [f[2](x) for x in form.getall(name)]
                         except Exception as e:
                             raise ParseFormError(str(e), name) from e
                     else:
@@ -362,27 +353,24 @@ class BaseViewer(object):
 
     def hidden_fields(self, obj):
         request = self.request
-        return fieldset (
-            input_hidden(name='rhombus-stamp', value='%15f' % obj.stamp.timestamp() if obj.stamp else -1),
-            input_hidden(name='rhombus-sesskey', value=generate_sesskey(request.user.id, obj.id)),
+        return t.fieldset(
+            t.input_hidden(name='rhombus-stamp', value='%15f' % obj.stamp.timestamp() if obj.stamp else -1),
+            t.input_hidden(name='rhombus-sesskey', value=generate_sesskey(request.user.id, obj.id)),
             name="rhombus-hidden"
         )
 
-
     def render_edit_form(self, eform, jscode):
-        return render_to_response(self.template_edit,
-            {   'html': eform,
-                'code': jscode,
-            }, request = self.request
-        )
-
+        return render_to_response(self.template_edit, {
+            'html': eform,
+            'code': jscode,
+        }, request=self.request)
 
     def get_object(self, obj_id, func):
         rq = self.request
         res = func([obj_id],
-                groups = None if rq.user.has_roles( * self.viewing_roles )
-                                else rq.user.groups,
-                user = rq.user)
+                   groups=None if rq.user.has_roles(* self.viewing_roles)
+                   else rq.user.groups,
+                   user=rq.user)
         if len(res) == 0:
             raise RuntimeError('Cannot find object! Please check object id!')
 
@@ -399,20 +387,18 @@ def generate_sesskey(user_id, obj_id=None):
 
 
 def check_stamp(request, obj):
-    print( "\n>> Time stamp >>", obj.stamp.timestamp(), float(request.params['rhombus-stamp']), "\n")
-    if (request.method == 'POST' and
-        abs( obj.stamp.timestamp() - float(request.params['rhombus-stamp']) ) > 0.01):
-            return error_page(request,
-                'Data entry has been modified by %s at %s. Please cancel and re-edit your entry.'
-                % (obj.lastuser.login, obj.stamp)
-            )
+    print("\n>> Time stamp >>", obj.stamp.timestamp(), float(request.params['rhombus-stamp']), "\n")
+    if (request.method == 'POST' and abs(obj.stamp.timestamp() - float(request.params['rhombus-stamp'])) > 0.01):
+        return error_page(request,
+                          f'Data entry has been modified by {obj.lastuser.login} at {obj.stamp}.'
+                          f' Please cancel and re-edit your entry.')
     return True
 
 
 def form_submit_bar(create=True):
     if create:
-        return custom_submit_bar(('Add', 'save'), ('Add and continue editing', 'save_edit')).set_offset(2)
-    return custom_submit_bar(('Save', 'save'), ('Save and continue editing', 'save_edit')).set_offset(2)
+        return t.custom_submit_bar(('Add', 'save'), ('Add and continue editing', 'save_edit')).set_offset(2)
+    return t.custom_submit_bar(('Save', 'save'), ('Save and continue editing', 'save_edit')).set_offset(2)
 
 
 def select2_lookup(**keywords):
@@ -421,7 +407,7 @@ def select2_lookup(**keywords):
         keywords['template'] = "templateSelection: function(data, container) { return data.text.split('|', 1); },"
     else:
         keywords['template'] = ''
-    return  '''
+    return '''
   $('#%(tag)s').select2( {
         minimumInputLength: %(minlen)d,
         placeholder: '%(placeholder)s',
@@ -439,13 +425,15 @@ def select2_lookup(**keywords):
 
 CLASS = 'class_'
 
+
 def container(*args, **kwargs):
     if CLASS in kwargs:
         class_ = 'container ' + kwargs[CLASS]
         del kwargs[CLASS]
     else:
         class_ = 'container'
-    return div(*args, class_=class_, **kwargs)
+    return t.div(*args, class_=class_, **kwargs)
+
 
 def row(*args, **kwargs):
     if CLASS in kwargs:
@@ -453,7 +441,8 @@ def row(*args, **kwargs):
         del kwargs[CLASS]
     else:
         class_ = 'row'
-    return div(*args, class_=class_, **kwargs)
+    return t.div(*args, class_=class_, **kwargs)
+
 
 def button(*args, **kwargs):
     if CLASS in kwargs:
@@ -461,4 +450,6 @@ def button(*args, **kwargs):
         del kwargs[CLASS]
     else:
         class_ = 'btn btn-info'
-    return span(*args, class_=class_, **kwargs)
+    return t.span(*args, class_=class_, **kwargs)
+
+# EOF

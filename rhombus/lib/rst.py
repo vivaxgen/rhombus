@@ -3,7 +3,7 @@ from docutils import nodes
 from docutils.parsers.rst import Directive, states, directives
 
 from rhombus.lib.utils import get_dbhandler
-from rhombus.views import literal
+from rhombus.lib.tags import literal
 
 class EnumKeyList(Directive):
 

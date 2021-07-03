@@ -1,6 +1,7 @@
 
 from rhombus.lib.modals import popup, modal_delete
 
+from rhombus.lib.roles import PUBLIC, SYSADM, SYSVIEW, EK_VIEW, EK_CREATE, EK_MODIFY, EK_DELETE
 from rhombus.views import *
 from rhombus.views.generics import error_page
 
