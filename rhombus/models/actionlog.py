@@ -1,10 +1,13 @@
 
-from .core import *
-from .ek import *
-from .user import *
+from .core import (Base, Column, types, Identity, ForeignKey, relationship, UniqueConstraint,
+                   current_timestamp, dbsession)
+from .ek import EK
+from .user import User, Group
+from rhombus.lib.utils import get_userid
 
 from datetime import datetime
 import json
+
 
 class ActionLog(Base):
     """ Action Log """
@@ -12,14 +15,14 @@ class ActionLog(Base):
     __tablename__ = 'actionlogs'
     id = Column(types.Integer, Identity(), primary_key=True)
     user_id = Column(types.Integer, ForeignKey('users.id'), nullable=False,
-            default=get_userid)
+                     default=get_userid)
     action_id = Column(types.Integer, ForeignKey('eks.id'))
     status = Column(types.String(1), server_default='P')
     objs = Column(types.String(128), nullable=False, server_default='')
     stamp = Column(types.TIMESTAMP, nullable=False, default=current_timestamp())
 
     def message(self):
-        fmt_objects = json.loads( self.objs )
+        fmt_objects = json.loads(self.objs)
         return str(User.get(self.user_id)) + (EK.get(self.action_id).desc[2:] % fmt_objects)
 
     def timestamp(self):
@@ -40,13 +43,11 @@ class ActionLog(Base):
         else:
             return '%d second(s) ago' % delta_time.seconds
 
-
-
     @staticmethod
     def add(action_id, *args, **kwargs):
         actionlog = ActionLog()
         actionlog.action_id = action_id
-        actionlog.objs = json.dumps( args )
+        actionlog.objs = json.dumps(args)
         dbsession.add(actionlog)
 
         if kwargs:
@@ -55,14 +56,14 @@ class ActionLog(Base):
         for k in kwargs:
             if k == 'affected_user_id':
                 actionlog.status = 'U'
-                UserActionLog.add(user_id = get_userid(), actionlog_id = actionlog.id)
+                UserActionLog.add(user_id=get_userid(), actionlog_id=actionlog.id)
                 if get_userid() != kwargs[k]:
-                    UserActionLog.add(user_id = kwargs[k], actionlog_id = actionlog.id)
+                    UserActionLog.add(user_id=kwargs[k], actionlog_id=actionlog.id)
 
             elif k == 'affected_group_id':
-                group = Group.get( kwargs[k] )
+                group = Group.get(kwargs[k])
                 for u in group.users:
-                    UserActionLog.add( user_id = u.id, actionlog_id = actionlog.id )
+                    UserActionLog.add(user_id=u.id, actionlog_id=actionlog.id)
                 actionlog.status = 'U'
 
             else:
@@ -78,7 +79,7 @@ class UserActionLog(Base):
     actionlog_id = Column(types.Integer, ForeignKey('actionlogs.id'), nullable=False)
     stamp = Column(types.TIMESTAMP, nullable=False, default=current_timestamp())
 
-    __table_args__ = ( UniqueConstraint('user_id', 'actionlog_id'), {} )
+    __table_args__ = (UniqueConstraint('user_id', 'actionlog_id'), {})
 
     actionlog = relationship(ActionLog, uselist=False)
 
@@ -90,6 +91,6 @@ class UserActionLog(Base):
 
     @staticmethod
     def add(user_id, actionlog_id):
-        dbsession.add( UserActionLog(user_id = user_id, actionlog_id = actionlog_id) )
+        dbsession.add(UserActionLog(user_id=user_id, actionlog_id=actionlog_id))
 
-
+# EOF
