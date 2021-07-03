@@ -34,7 +34,7 @@ from .stampmixin import StampMixIn
 from .autoupdatemixin import AutoUpdateMixIn
 
 log = logging.getLogger(__name__)
-__version__ = '20150216'
+__version__ = '20210702'
 
 
 # global variables
@@ -296,3 +296,5 @@ class DataLogger(object):
 class BaseMixIn(StampMixIn, AutoUpdateMixIn):
     """ BaseMixIn combined StampMixIn with AutoUpdate MixIn)
     """
+
+# EOF
