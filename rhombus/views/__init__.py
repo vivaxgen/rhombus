@@ -306,11 +306,16 @@ class BaseViewer(object):
 
 
     def parse_form(self, form, d=None, fields={}):
+        """ fields format:
+            key: (name, modifier1, modifier2)
+
+            if modifier1 is list, will convert each item using modifier2
+
+        """
         d = d or dict()
         fields = fields or self.form_fields
         d['_stamp_'] = float(form['rhombus-stamp'])
 
-        #raise
         for key, f in fields.items():
 
             nullable = False
@@ -324,34 +329,36 @@ class BaseViewer(object):
                 key = key[:-1]
                 required = True
 
-            if f[0] in form:
-                if nullable and form[f[0]] == '':
+            name = f[0]
+            value = form[f[0]].strip()
+
+            if name in form:
+                if nullable and value == '':
                     continue
-                if required and form[f[0]] == '':
-                    raise ParseFormError('This field is mandatory!', f[0])
+                if required and value == '':
+                    raise ParseFormError('This field is mandatory!', name)
                 if len(f) == 2:
                     try:
-                        val = f[1](form[f[0]])
+                        val = f[1](value)
                         if nullable and (val is None or val == ''):
                             continue
                         d[key] = val
                     except Exception as e:
-                        raise ParseFormError(str(e), f[0]) from e
+                        raise ParseFormError(str(e), name) from e
                 elif len(f) == 3:
                     if f[1] == list:
                         try:
-                            d[key] = [ f[2](x) for x in form.getall(f[0])]
+                            d[key] = [ f[2](x) for x in form.getall(name)]
                         except Exception as e:
-                            raise ParseFormError(str(e), f[0]) from e
+                            raise ParseFormError(str(e), name) from e
                     else:
-                        raise ParseFormError('Error in parsing input', f[0])
+                        raise ParseFormError('Error in parsing input', name)
                 else:
-                    d[key] = form[f[0]]
+                    d[key] = value
             elif required:
-                raise ParseFormError('You must fill this field!', f[0])
+                raise ParseFormError('You must fill this field!', name)
 
         return d
-
 
     def hidden_fields(self, obj):
         request = self.request
