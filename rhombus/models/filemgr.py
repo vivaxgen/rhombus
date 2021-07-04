@@ -7,6 +7,14 @@ from rhombus.lib.utils import get_groupid
 import pathlib
 
 
+mimetype_mapping = {
+    '.png': 'image/png',
+    '.jpg': 'image/jpg',
+    '.gif': 'image/gif',
+    '.pdf': 'application/pdf',
+}
+
+
 @registered
 class File(BaseMixIn, Base):
     """ File
@@ -90,18 +98,7 @@ class File(BaseMixIn, Base):
             raise RuntimeError('Parent path not found: %s' % ppath)
 
         if not mimetype:
-            mimetype = {
-                '.png': 'image/png',
-                '.jpg': 'image/jpg',
-                '.gif': 'image/gif',
-                '.pdf': 'application/pdf',
-            }.get(pathlib.Path(filename.lower()).suffix, 'application/octet-stream')
-
-            mimetype_2 = 'image/png' if filename.endswith('.png') else (
-                       'image/jpg' if filename.endswith('.jpg') else (
-                           'image/gif' if filename.endswith('.gif') else (
-                               'application/pdf' if filename.endswith('.pdf') else
-                       'application/octet-stream' )))
+            mimetype = mimetype_mapping.get(pathlib.Path(filename.lower()).suffix, 'application/octet-stream')
 
         fullpath = ppath + filename if not ppath.endswith('/') else ppath + '/' + filename
 
