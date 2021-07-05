@@ -1,19 +1,10 @@
 
 from .core import (Base, BaseMixIn, Column, types, ForeignKey, relationship, backref, registered,
-                   NoResultFound)
+                   NoResultFound, object_session)
 from .ek import EK
 from rhombus.lib.utils import get_groupid
 
-import pathlib
-
-
-mimetype_mapping = {
-    '.png': 'image/png',
-    '.jpg': 'image/jpg',
-    '.gif': 'image/gif',
-    '.pdf': 'application/pdf',
-}
-
+import mimetypes
 
 @registered
 class File(BaseMixIn, Base):
@@ -98,7 +89,7 @@ class File(BaseMixIn, Base):
             raise RuntimeError('Parent path not found: %s' % ppath)
 
         if not mimetype:
-            mimetype = mimetype_mapping.get(pathlib.Path(filename.lower()).suffix, 'application/octet-stream')
+            mimetype = mimetypes.guess_type(filename)[0]
 
         fullpath = ppath + filename if not ppath.endswith('/') else ppath + '/' + filename
 
