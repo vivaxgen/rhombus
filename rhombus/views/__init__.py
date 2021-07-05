@@ -1,6 +1,6 @@
 
 import logging
-from pyramid.response import Response
+from pyramid.response import Response, FileIter
 from pyramid.renderers import render_to_response
 from pyramid.httpexceptions import HTTPFound
 
@@ -110,6 +110,7 @@ class BaseViewer(object):
     # routes point to editing & viewing
     edit_route = None
     view_route = None
+    attachment_route = None
 
     # form fields to indicate column: form_field_name
     # eg: {
@@ -296,6 +297,30 @@ class BaseViewer(object):
             return (eform, jscode)
         return self.render_edit_form(eform, jscode)
 
+    #
+    # attachment() is used to serve file attachment
+
+    @m_roles(PUBLIC)
+    def attachment(self):
+
+        rq = self.request
+        obj_id = int(rq.matchdict.get('id'))
+        fieldname = rq.matchdict.get('fieldname')
+
+        obj = self.get_object(obj_id, self.fetch_func)
+        file_instance = getattr(obj, fieldname)
+        return Response(app_iter=FileIter(file_instance.fp()),
+                        content_type=file_instance.mimetype,
+                        request=rq)
+
+    def attachment_link(self, obj, attrname):
+        return t.div(t.a('View',
+                         href=self.request.route_url(self.attachment_route, id=obj.id,
+                                                     fieldname=attrname)))
+
+    # parse_form() is uset to parse html form and convert the value as necessary
+    # to a dictionary
+
     def parse_form(self, form, d=None, fields={}):
         """ fields format:
             key: (name, modifier1, modifier2)
@@ -320,10 +345,8 @@ class BaseViewer(object):
                 key = key[:-1]
                 required = True
 
-            name = f[0]
-            value = form[f[0]].strip()
-
-            if name in form:
+            if (name := f[0]) in form:
+                value = form[name].strip() if type(form[name]) == str else form[name]
                 if nullable and value == '':
                     continue
                 if required and value == '':

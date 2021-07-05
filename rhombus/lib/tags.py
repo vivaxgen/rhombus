@@ -379,6 +379,42 @@ class input_file(input_text):
         return ''
 
 
+class input_file_attachment(input_file):
+
+    def set_view_link(self, html):
+        self._view_link = html
+        return self
+
+    def set_routefunc(self, routefunc):
+        self._routename = routefunc
+
+    def view_link(self):
+        if self.value is None:
+            return 'Not available'
+        if hasattr(self, '_view_link'):
+            return literal(self._view_link)
+        return ''
+
+    def __str__(self):
+        if self.static:
+            # show as static; label and view link (open new tab)
+            return literal(input_plaintext_template.format(
+                        name=escape(self.name),
+                        label=escape(self.label), value=escape(self.value),
+                        placeholder=self.placeholder,
+                        class_div = 'form-group',
+                        class_label = 'col-md-%d control-label' % self.offset,
+                        class_value = 'col-md-%d' % self.size,
+                        class_input = 'form-control' + (' is-invalid' if self.error else ''),
+                        text=self.view_link(),
+                        help_span = self.help(),
+                        info = self.info_text(),
+                )
+            )
+        else:
+            return self.as_input()
+
+
 class checkboxes(htmltag):
 
     def __init__(self, name, label, boxes, offset=3, static=False, **kwargs):
