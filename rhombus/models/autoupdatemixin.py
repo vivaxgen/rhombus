@@ -39,6 +39,14 @@ class AutoUpdateMixIn(object):
 
     __excluded_fields__ = {'id', }
 
+    def update(self, obj):
+        if isinstance(obj, dict):
+            self.update_fields_with_dict(obj)
+            self.update_ek_with_dict(obj)
+        else:
+            self.update_fields_with_object(obj)
+        return self
+
     @classmethod
     def bulk_load(cls, a_list, dbh):
         """ bulk load from a list of dictionary object """
