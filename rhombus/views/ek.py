@@ -2,6 +2,9 @@
 from rhombus.lib.modals import popup, modal_delete
 
 from rhombus.lib.roles import PUBLIC, SYSADM, SYSVIEW, EK_VIEW, EK_CREATE, EK_MODIFY, EK_DELETE
+from rhombus.lib.tags import (div, table, thead, tbody, th, tr, td, literal, selection_bar, br, ul, li, a, i,
+                              form, POST, GET, fieldset, input_text, input_hidden, input_select, input_password,
+                              submit_bar, h3, p, input_textarea, h2)
 from rhombus.views import *
 from rhombus.views.generics import error_page
 
