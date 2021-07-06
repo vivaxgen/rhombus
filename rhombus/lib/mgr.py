@@ -49,6 +49,9 @@ def init_argparser( parser = None):
     p.add_argument('--listuser', default=False, action='store_true',
         help = 'list user(s) from a userclass')
 
+    p.add_argument('--listgroup', default=False, action='store_true',
+                   help='list all groups')
+
     # ekeys
 
     p.add_argument('--listenumkey', default=False, action='store_true')
@@ -170,6 +173,9 @@ def do_rbmgr(args, settings, dbh = None):
 
     elif args.listuser:
         do_listuser(args, dbh, settings)
+
+    elif args.listgroup:
+        do_listgroup(args, dbh, settings)
 
     elif args.exportuserclass:
         do_exportuserclass(args, dbh, settings)
@@ -351,6 +357,12 @@ def do_listuser(args, dbh, settings):
 
     for u in dbh.get_userclass(args.userclass).users:
         cout(' %s' % u.login)
+
+
+def do_listgroup(args, dbh, settings):
+
+    for g in dbh.get_groups():
+        cout(f' {g.name}')
 
 
 def do_exportuserclass(args, dbh, settings):
