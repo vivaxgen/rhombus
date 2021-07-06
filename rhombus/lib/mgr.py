@@ -361,7 +361,7 @@ def do_listuser(args, dbh, settings):
 
 def do_listgroup(args, dbh, settings):
 
-    for g in dbh.get_groups():
+    for g in dbh.Group.query(dbh.session()).all():
         cout(f' {g.name}')
 
 
