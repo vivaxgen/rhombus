@@ -3,7 +3,7 @@ from rhombus.lib.utils import get_dbhandler
 from rhombus.lib.roles import SYSADM
 from rhombus.lib.tags import (div, table, thead, tbody, th, tr, td, literal, selection_bar, br, ul, li, a, i,
                               form, POST, GET, fieldset, input_text, input_hidden, input_select, input_password,
-                              submit_bar, h3, p)
+                              submit_bar, h3, p, input_textarea)
 from rhombus.views import *
 
 import io, yaml
