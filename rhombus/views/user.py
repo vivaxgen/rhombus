@@ -2,7 +2,9 @@
 from rhombus.lib.utils import get_dbhandler
 from rhombus.lib.roles import PUBLIC, SYSADM, GUEST, EK_VIEW, USERCLASS_VIEW, USER_VIEW, GROUP_VIEW
 from rhombus.lib.modals import popup, modal_delete
-from rhombus.lib.tags import div, table, thead, tbody, th, tr, td, literal, selection_bar, br, ul, li, a, i
+from rhombus.lib.tags import (div, table, thead, tbody, th, tr, td, literal, selection_bar, br, ul, li, a, i,
+                              form, POST, GET, fieldset, input_text, input_hidden, input_select, input_password,
+                              submit_bar, h3, p)
 
 from rhombus.views import *
 from rhombus.views.generics import error_page
