@@ -93,6 +93,8 @@ class htmltag(object):
     def __contains__(self, identifier):
         return identifier in self.elements
 
+    def __iadd__(self, element):
+        return self.add(element)
 
     def attributes(self, attrs_only=False):
         attrs = []
@@ -208,6 +210,9 @@ class input_text(htmltag):
         else:
             info = ''
         return info
+
+    def ro(self):
+        return 'readonly' if self.static else ''
 
 
 class input_show(input_text):
@@ -526,6 +531,9 @@ class br(htmltag):
 
 class fieldset(doubletag):
     _tag = 'fieldset'
+
+class label(doubletag):
+    _tag = 'label'
 
 class p(doubletag):
     _tag = 'p'
