@@ -7,7 +7,7 @@ from pyramid.httpexceptions import HTTPFound
 from rhombus.lib.roles import PUBLIC, SYSADM, SYSVIEW, DATAADM, DATAVIEW
 from rhombus.lib.utils import get_dbhandler, random_string, cerr, cout
 from rhombus.views.generics import not_authorized, error_page
-import rhombus.lib.tags as t
+import rhombus.lib.tags_b46 as t
 
 import sqlalchemy.exc
 import time
@@ -402,6 +402,9 @@ class BaseViewer(object):
 
     def set_object(self, obj):
         raise NotImplementedError
+
+    def ffn(self, ident):
+        return self.form_fields[ident][0]
 
 
 def generate_sesskey(user_id, obj_id=None):
