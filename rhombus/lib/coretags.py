@@ -188,6 +188,14 @@ class h2(doubletag):
     _t = 'h2'
 
 
+class h3(doubletag):
+    _t = 'h3'
+
+
+class h4(doubletag):
+    _t = 'h4'
+
+
 class p(doubletag):
     _t = 'p'
 
@@ -226,6 +234,7 @@ class selecttag(doubletag):
 
 class optiontag(doubletag):
     _t = 'option'
+
 
 # lists and definitions
 
