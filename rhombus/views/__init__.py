@@ -10,6 +10,7 @@ from rhombus.views.generics import not_authorized, error_page
 import rhombus.lib.tags_b46 as t
 
 import sqlalchemy.exc
+import mimetypes
 import time
 
 log = logging.getLogger(__name__)
@@ -309,8 +310,9 @@ class BaseViewer(object):
 
         obj = self.get_object(obj_id, self.fetch_func)
         file_instance = getattr(obj, fieldname)
+        content_encoding = mimetypes.guess_type(file_instance.filename)[1]
         return Response(app_iter=FileIter(file_instance.fp()),
-                        content_type=file_instance.mimetype,
+                        content_type=file_instance.mimetype, content_encoding=content_encoding,
                         request=rq)
 
     def attachment_link(self, obj, attrname):
