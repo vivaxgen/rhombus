@@ -75,8 +75,8 @@ class AutoUpdateMixIn(object):
             d['lastuser'] = self.lastuser.login
         return d
 
-    def update_fields_with_dict(self, a_dict, fields=None, exclude=None):
-        fields = fields or self.get_plain_fields()
+    def update_fields_with_dict(self, a_dict, fields=None, exclude=None, additional_fields=[]):
+        fields = (fields or self.get_plain_fields()) + additional_fields
         nullable_fields = self.get_nullable_fields()
         for f in fields:
             if exclude and f in exclude:
@@ -90,8 +90,8 @@ class AutoUpdateMixIn(object):
                         continue
                 setattr(self, f, a_dict.get(f))
 
-    def update_fields_with_object(self, an_obj, fields=None, exclude=None):
-        fields = fields or self.get_plain_fields()
+    def update_fields_with_object(self, an_obj, fields=None, exclude=None, additional_fields=[]):
+        fields = (fields or self.get_plain_fields()) + additional_fields
         for f in fields:
             if exclude and f in exclude:
                 continue
