@@ -1,4 +1,4 @@
-from .core import (Base, BaseMixIn, Column, types, ForeignKey, registered,
+from .core import (Base, BaseMixIn, Column, types, ForeignKey, registered, deferred,
                    NoResultFound, object_session)
 from .ek import EK
 
@@ -26,7 +26,9 @@ class FileAttachment(Base, BaseMixIn):
     mimetype = EK.proxy('mimetype_id', '@MIMETYPE')
     """ mimetype for this file """
 
-    bindata = Column(types.LargeBinary, nullable=False, server_default='')
+    size = Column(types.Integer, nullable=False, server_default='0')
+    bindata = deferred(Column(types.LargeBinary, nullable=False, server_default=''))
+
     """ actual data """
 
     flags = Column(types.Integer, nullable=False, server_default='0')
@@ -34,8 +36,14 @@ class FileAttachment(Base, BaseMixIn):
 
     __ek_fields__ = ['type', 'mimetype']
 
+    def __str__(self):
+        return f'<{self.__class__.__name__} filename: {self.filename} size: {len(self.bindata)}>'
+
+    def __repr__(self):
+        return self.__str__()
+
     def fp(self):
-        if not self.bindata or len(self.bindata) == 0:
+        if self.size == 0:
             return io.BytesIO(b'')
         return io.BytesIO(self.bindata)
 
@@ -44,7 +52,9 @@ class FileAttachment(Base, BaseMixIn):
         if hasattr(d, 'filename') and hasattr(d, 'file'):
             # FieldStorageClass-like objects
             self.filename = d.filename
-            self.bindata = d.file.read()
+            buf = d.file.read()
+            self.bindata = buf
+            self.size = len(buf)
             self.mimetype = mimetypes.guess_type(self.filename)[0]
 
         else:
@@ -60,7 +70,8 @@ class FileAttachment(Base, BaseMixIn):
 
         def _setter(inst, value):
             """ various value need to be considered """
-            if value == b'': return None
+            if value == b'':
+                return None
             sess = object_session(inst) or get_dbhandler().session()
             file_instance = getattr(inst, attrname)
             if file_instance is None:
