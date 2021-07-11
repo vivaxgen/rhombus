@@ -20,9 +20,10 @@ class form(doubletag):
     """ form is a container as well """
     _t = 'form'
 
-    def __init__(self, name, action='#', method=GET, readonly=False, enctype=FORM_URLENCODED, **kwargs):
+    def __init__(self, name, action='#', method=POST, readonly=False, update_dict=None, enctype=FORM_URLENCODED, **kwargs):
         super().__init__(name=name, **(kwargs | dict(method=method, action=action, enctype=enctype)))
         self.readonly = readonly
+        self.update_dict = update_dict
 
     def set_readonly(self, readonly=True):
         self.readonly = readonly
@@ -42,7 +43,9 @@ class input_text(htmltag):
                  extra_control=None, readonly=False, placeholder='', update_dict=None, **kwargs):
         super().__init__(name=name, **kwargs)
         self.label = label
-        self.value = (update_dict.get(name, None) if update_dict else value) or value
+        #self.value = (update_dict.get(name, None) if update_dict else value) or value
+        self.value = value
+        self.update_dict = update_dict
         self.placeholder = placeholder
         self.error = None
         self.info = info
@@ -92,17 +95,28 @@ class input_text(htmltag):
                 return c
         return None
 
+    def get_value(self):
+        if self.update_dict is False:
+            return self.value
+        if self.update_dict is None:
+            # check form
+            form = self.get_form()
+            if form.update_dict in [False, None]:
+                return self.value
+            return form.update_dict.get(self.name, None) or self.value
+        return self.update_dict.get(self.name, None) or self.value
+
     def ro(self):
         return self.readonly or self.get_form().readonly
 
     def class_value(self, size=None):
-        return f'col-md-{self.size or size}'
+        return f'col-md-{self.size or size} pl-2'
 
     def class_label(self):
         return f'col-md-{self.offset} control-label'
 
     def class_input(self):
-        return 'form-control' + (' is-invalid' if self.error else '')
+        return 'form-control pl-2 pr-2' + (' is-invalid' if self.error else '')
 
     def class_div(self):
         return 'form-group'
@@ -112,12 +126,24 @@ class input_text(htmltag):
             return div(class_='form-group form-inline row').add(*elements).r()
         return self.r_contents(elements)
 
-    def r(self, value=None, readonly=False):
+    def as_plaintext(self, value=None):
         elements = [
-            label(self.label, class_=f"{self.class_label()} align-self-start pt-2", for_=self.name),
+            label(self.label, class_=f"{self.class_label()} align-self-start pt-2 pb-2 pl-1 pr-0", for_=self.name),
+            div(class_=self.class_value() + 'pl-10')[
+                value or self.value,
+                self.error_text()
+            ],
+            self.info_text()
+        ]
+        return self.div_wrap(elements)
+
+    def r(self, value=None, readonly=False):
+        # set value first
+        elements = [
+            label(self.label, class_=f"{self.class_label()} align-self-start pt-2 pl-1 pr-0", for_=self.name),
             div(class_=self.class_value())[
                 inputtag(type=self._type, id=self.id, name=self.name,
-                         value=value or self.value, class_=self.class_input(), placeholder=self.placeholder,
+                         value=value or self.get_value(), class_=self.class_input(), placeholder=self.placeholder,
                          style=self.style(), readonly=self.ro() or readonly),
                 self.error_text()
             ],
@@ -153,10 +179,10 @@ class input_textarea(input_text):
             rows, size = 4, self.size
 
         return div(class_='form-group form-inline row')[
-            label(self.label, class_=f"{self.class_label()} align-self-start pt-2", for_=self.name),
+            label(self.label, class_=f"{self.class_label()} align-self-start pt-2 pl-1 pr-0", for_=self.name),
             div(class_=self.class_value(size))[
                 textareatag(id=self.id, name=self.name, class_=self.class_input(), style=self.style(),
-                            readonly=self.ro())[self.value],
+                            readonly=self.ro())[self.get_value()],
                 self.extra_control(),
                 self.error_text()
             ],
@@ -215,7 +241,7 @@ class input_select(input_text):
             options.append(optiontag(l, value=v, selected=selected))
 
         elements = [
-            label(self.label, class_=f"{self.class_label()} align-self-start pt-2", for_=self.name),
+            label(self.label, class_=f"{self.class_label()} align-self-start pt-2 pl-1 pr-0", for_=self.name),
             div(class_=self.class_value())[
                 selecttag(*options, id=self.id, name=self.name, class_=self.class_input(), multiple=multiple,
                           style=self.style(), readonly=self.ro()),
@@ -239,19 +265,41 @@ class input_select_ek(input_select):
 
 
 class input_file(input_text):
+    _type = 'file'
 
-    def r(self):
-        return div(class_=f'{self.class_div} form-inline row')[
-            label(self.label, class_=f'{self.class_label} align-self-baseline pt2',
-                  for_=self.name),
-            div(class_=f'{self.class_value}')[
-                f"<input type='file' id='{self.name}'' class='{self.class_input}' "
-                f"name='{self.name}' value='{self.value}' />"
+    def set_view_link(self, html):
+        self._view_link = html
+        return self
+
+    def view_link(self):
+        if hasattr(self, '_view_link'):
+            return self._view_link
+        return ''
+
+    def r(self, value=None):
+        if self.ro():
+            return self.as_plaintext(value=self.view_link())
+
+        elements = [
+            label(self.label, class_=f"{self.class_label()} align-self-start pt-2 pl-1 pr-0", for_=self.name),
+            div(class_=self.class_value())[
+                inputtag(type=self._type, id=self.id, name=self.name, class_=self.class_input() + ' pt-1'),
+                self.error_text()
             ],
-            self.help_span,
-            self.extra_control,
-            self.info_text()
+            self.info_text(),
+            self.view_link()
         ]
+        return self.div_wrap(elements)
+
+
+class input_file_attachment(input_file):
+
+    def view_link(self):
+        if self.value is None:
+            return 'Not available'
+        if hasattr(self, '_view_link'):
+            return literal(self._view_link)
+        return ''
 
 
 #
