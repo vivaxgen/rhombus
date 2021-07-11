@@ -57,8 +57,11 @@ class FileAttachment(Base, BaseMixIn):
             self.size = len(buf)
             self.mimetype = mimetypes.guess_type(self.filename)[0]
 
-        else:
+        elif isinstance(d, dict) or isinstance(d, FileAttachment):
             super().update(d)
+
+        else:
+            raise RuntimeError('fileattachment must be updated by either FieldStorage, dictionary, or itself')
 
         return self
 
@@ -79,6 +82,7 @@ class FileAttachment(Base, BaseMixIn):
                 sess.add(file_instance)
                 setattr(inst, attrname, file_instance)
             file_instance.update(value)
+            sess.flush([file_instance])
 
         return property(_getter, _setter, doc=attrname)
 
