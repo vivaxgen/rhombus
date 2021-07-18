@@ -47,6 +47,8 @@ class QueryConstructor(object):
                 classes.append(f.class_)
             if isinstance(val, list):
                 exprs.append(f.in_(val))
+            elif isinstance(val, tuple):
+                exprs.append(f.in_(val))
             elif '%' in val:
                 exprs.append(f.ilike(val))
             else:
