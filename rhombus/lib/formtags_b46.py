@@ -342,6 +342,7 @@ class custom_submit_bar(htmltag):
         html = div(class_='form-group', style='display: none' if self.hide else '')
         buttons = div(class_='col-md-10 offset-md-%d' % self.offset)
         for b in self.buttons:
+            assert type(b) == tuple or type(b) == list
             buttons.add(
                 button(b[0], class_="btn btn-primary", type="submit", name="_method",
                        id="_method.%s" % b[1], value=b[1])
