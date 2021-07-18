@@ -196,6 +196,14 @@ class h4(doubletag):
     _t = 'h4'
 
 
+class h5(doubletag):
+    _t = 'h5'
+
+
+class h6(doubletag):
+    _t = 'h6'
+
+
 class p(doubletag):
     _t = 'p'
 
@@ -243,11 +251,11 @@ class ul(doubletag):
 
     def __init__(self, *args, **kwargs):
         super().__init__(**kwargs)
-        self.add_contents(*args)
+        self.add(*args)
 
     def add(self, *args):
         for arg in args:
-            if not isinstance(args, li):
+            if not isinstance(arg, li):
                 raise RuntimeError('UL/OL should only have LI content')
             self.contents.append(arg)
 
