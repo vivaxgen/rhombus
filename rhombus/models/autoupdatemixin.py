@@ -12,6 +12,8 @@ from sqlalchemy import Column
 from sqlalchemy.inspection import inspect
 from sqlalchemy.orm.session import object_session
 
+from itertools import chain
+
 
 class AutoUpdateMixIn(object):
 
@@ -32,12 +34,18 @@ class AutoUpdateMixIn(object):
 
     # rel fields are all relationship parsed automatically when
     # get_rel_fields() is called
+    # fk fields (foreign_keys) are fields connected to rel fields
     __rel_fields__ = None
+    __fk_fields__ = None
 
     # auxiliary fields
     __aux_fields__ = None
 
     __excluded_fields__ = {'id', }
+
+    @classmethod
+    def __init_subclass__(cls):
+        print(f'class: {cls.__name__}')
 
     def update(self, obj):
         if isinstance(obj, dict):
@@ -46,6 +54,9 @@ class AutoUpdateMixIn(object):
         else:
             self.update_fields_with_object(obj)
         return self
+
+    def serialized_code(self):
+        raise NotImplementedError()
 
     @classmethod
     def bulk_load(cls, a_list, dbh):
@@ -111,12 +122,18 @@ class AutoUpdateMixIn(object):
                 setattr(self, f_, dbh.EK.getid(a_dict[f], session))
 
     def create_dict_from_fields(self, fields=None, exclude=None):
-        fields = fields or (self.get_plain_fields() + self.__ek_fields__)
+        fields = fields or (
+            (self.get_plain_fields() | set(self.__ek_fields__) | self.get_rel_fields()) - self.get_fk_fields())
         d = {}
         for f in fields:
+            print(f, getattr(self, f))
             if exclude and f in exclude:
                 continue
-            d[f] = getattr(self, f)
+            if (val := getattr(self, f)) is not None:
+                if isinstance(val, AutoUpdateMixIn):
+                    d[f] = str(val)
+                else:
+                    d[f] = val
         return d
 
     @classmethod
@@ -132,6 +149,8 @@ class AutoUpdateMixIn(object):
                 cls.__plain_fields__.append(c.name)
                 if c.nullable:
                     cls.__nullable_fields__.append(c.name)
+            cls.__plain_fields__ = set(cls.__plain_fields__)
+            cls.__nullable_fields__ = set(cls.__nullable_fields__)
         return cls.__plain_fields__
 
     @classmethod
@@ -144,7 +163,18 @@ class AutoUpdateMixIn(object):
     def get_rel_fields(cls):
         if cls.__rel_fields__ is None:
             rels = inspect(cls).relationships
-            cls.__rel_fields__ = list(r.key for r in rels if r.key not in cls.__excluded_fields__)
+            cls.__rel_fields__ = set(r.key for r in rels if r.key not in cls.__excluded_fields__)
+            cls.__fk_fields__ = set(c.name
+                                    for c in chain.from_iterable(r.local_columns for r in rels)
+                                    if c.name not in cls.__excluded_fields__
+                                    )
+            #cls.__fk_fields__ |= set()
         return cls.__rel_fields__
+
+    @classmethod
+    def get_fk_fields(cls):
+        if cls.__fk_fields__ is None:
+            cls.get_rel_fields()
+        return cls.__fk_fields__
 
 # end of file
