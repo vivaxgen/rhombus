@@ -36,11 +36,11 @@ class FileAttachment(Base, BaseMixIn):
 
     __ek_fields__ = ['type', 'mimetype']
 
-    def __str__(self):
-        return f'<{self.__class__.__name__} filename: {self.filename} size: {len(self.bindata)}>'
-
     def __repr__(self):
-        return self.__str__()
+        return f'{self.__class__.__name__}(filename={self.filename}, size={len(self.bindata)})'
+
+    def __str__(self):
+        return self.filename
 
     def fp(self):
         if self.size == 0:
