@@ -7,4 +7,10 @@
 % if text:
   <p>Additional notice of the error has been logged as:</p>
   ${text}
+  <br/>
+% endif
+
+% if stamp:
+  <p>Stamp: ${stamp}</p>
+  <br/>
 % endif
