@@ -462,6 +462,9 @@ class Group(Base, BaseMixIn):
     def __repr__(self):
         return "<Group: %s>" % self.name
 
+    def __str__(self):
+        return self.name
+
     def has_member(self, user):
         if type(user) == int:
             if (self.flags & self.f_composite_group):
