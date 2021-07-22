@@ -250,9 +250,9 @@ class EK(BaseMixIn, Base):
             dbsession = object_session(inst)
             if not dbsession and hasattr(inst, '_dbh_session_'):
                 dbsession = getattr(inst, '_dbh_session_')
-            setattr(inst, attrname, EK._id( value, dbsession, grpname, auto=auto) )
-            #print("*** set attr", attrname, "with", getattr(inst, attrname))
-        return property(_getter, _setter, doc=grpname)
+            setattr(inst, attrname, EK._id(value, dbsession, grpname, auto=auto))
+            # print("*** set attr", attrname, "with", getattr(inst, attrname))
+        return property(_getter, _setter, doc=f'{attrname} {grpname}')
 
 
     @staticmethod
