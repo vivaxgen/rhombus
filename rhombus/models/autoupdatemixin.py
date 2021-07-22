@@ -43,10 +43,6 @@ class AutoUpdateMixIn(object):
 
     __excluded_fields__ = {'id', }
 
-    @classmethod
-    def __init_subclass__(cls):
-        print(f'class: {cls.__name__}')
-
     def update(self, obj):
         if isinstance(obj, dict):
             self.update_fields_with_dict(obj)
@@ -126,7 +122,6 @@ class AutoUpdateMixIn(object):
             (self.get_plain_fields() | set(self.__ek_fields__) | self.get_rel_fields()) - self.get_fk_fields())
         d = {}
         for f in fields:
-            print(f, getattr(self, f))
             if exclude and f in exclude:
                 continue
             if (val := getattr(self, f)) is not None:
@@ -168,7 +163,8 @@ class AutoUpdateMixIn(object):
                                     for c in chain.from_iterable(r.local_columns for r in rels)
                                     if c.name not in cls.__excluded_fields__
                                     )
-            #cls.__fk_fields__ |= set()
+            cls.__fk_fields__ |= set(getattr(cls, ekf).__doc__.split()[0]
+                                     for ekf in cls.__ek_fields__)
         return cls.__rel_fields__
 
     @classmethod
