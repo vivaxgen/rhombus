@@ -180,9 +180,7 @@ class BaseViewer(object):
     def view_helper(self, render=True):
 
         rq = self.request
-        obj_id = int(rq.matchdict.get('id'))
-
-        obj = self.get_object(obj_id, self.fetch_func)
+        obj = self.get_object()
         eform, jscode = self.edit_form(obj, readonly=True)
         if rq.user.has_roles(* self.managing_roles) or self.can_modify(obj):
             eform.get('footer').add(
@@ -262,9 +260,7 @@ class BaseViewer(object):
     def edit_helper(self, render=True):
 
         rq = self.request
-        obj_id = int(rq.matchdict.get('id'))
-
-        obj = self.get_object(obj_id, self.fetch_func)
+        obj = self.get_object()
 
         if not (rq.user.has_roles(* self.managing_roles) or self.can_modify(obj)):
             raise RuntimeError('Current user cannot modify this object!')
@@ -305,10 +301,8 @@ class BaseViewer(object):
     def attachment(self):
 
         rq = self.request
-        obj_id = int(rq.matchdict.get('id'))
         fieldname = rq.matchdict.get('fieldname')
-
-        obj = self.get_object(obj_id, self.fetch_func)
+        obj = self.get_object()
         file_instance = getattr(obj, fieldname)
         content_encoding = mimetypes.guess_type(file_instance.filename)[1]
         return Response(app_iter=FileIter(file_instance.fp()),
@@ -390,8 +384,10 @@ class BaseViewer(object):
             'code': jscode,
         }, request=self.request)
 
-    def get_object(self, obj_id, func):
+    def get_object(self, obj_id=None, func=None, tag='id'):
         rq = self.request
+        obj_id = obj_id or int(self.request.matchdict.get(tag))
+        func = func or self.fetch_func
         res = func([obj_id],
                    groups=None if rq.user.has_roles(* self.viewing_roles)
                    else rq.user.groups,
