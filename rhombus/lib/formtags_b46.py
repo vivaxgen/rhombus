@@ -140,7 +140,8 @@ class input_text(htmltag):
     def r(self, value=None, readonly=False):
         # set value first
         elements = [
-            label(self.label, class_=f"{self.class_label()} align-self-start pt-2 pl-1 pr-0", for_=self.name),
+            label(self.label, class_=f"{self.class_label()} align-self-start pt-2 pl-1 pr-0", for_=self.name)
+            if self.label is not None else '',
             div(class_=self.class_value())[
                 inputtag(type=self._type, id=self.id, name=self.name,
                          value=value or self.get_value(), class_=self.class_input(), placeholder=self.placeholder,
@@ -241,7 +242,8 @@ class input_select(input_text):
             options.append(optiontag(l, value=v, selected=selected))
 
         elements = [
-            label(self.label, class_=f"{self.class_label()} align-self-start pt-2 pl-1 pr-0", for_=self.name),
+            label(self.label, class_=f"{self.class_label()} align-self-start pt-2 pl-1 pr-0", for_=self.name)
+            if self.label is not None else '',
             div(class_=self.class_value())[
                 selecttag(*options, id=self.id, name=self.name, class_=self.class_input(), multiple=multiple,
                           style=self.style(), readonly=self.ro()),
