@@ -1,7 +1,23 @@
+__copyright__ = '''
+ek.py - Rhombus SQLAlchemy enumerated key (EK) module
 
+(c) 2021 Hidayat Trimarsanto <anto@eijkman.go.id> <trimarsanto@gmail.com>
 
-from .core import *
+All right reserved.
+This software is licensed under LGPL v3 or later version.
+Please read the README.txt of this software.
+'''
+
+from .core import (registered, Column, types, Base, BaseMixIn, object_session, column_property,
+                   ForeignKey, deferred, Identity, relationship, UniqueConstraint, backref,
+                   column_mapped_collection, association_proxy, Table, metadata, and_,
+                   NoResultFound)
+
 from rhombus.lib.utils import get_dbhandler, cerr
+
+from json
+from yaml
+
 
 @registered
 class EK(BaseMixIn, Base):
@@ -19,17 +35,14 @@ class EK(BaseMixIn, Base):
 
     member_of_id = Column(types.Integer, ForeignKey('eks.id'), index=True)
     members = relationship('EK', order_by='EK.key',
-                    backref=backref('member_of', remote_side= 'EK.id', uselist=False))
+                           backref=backref('member_of', remote_side='EK.id', uselist=False))
 
     group_id = Column(types.Integer, ForeignKey('groups.id'))
     group = relationship('Group', uselist=False)
 
-    __table_args__ = ( UniqueConstraint('key', 'member_of_id'), {} )
+    __table_args__ = (UniqueConstraint('key', 'member_of_id'), {})
 
-    #cache = idcache()
-
-
-    def __init__(self, key='', desc='',  data='', member_of_id=None, parent=None):
+    def __init__(self, key='', desc='', data='', member_of_id=None, parent=None):
         self.key = key
         self.desc = desc
         if member_of_id:
@@ -52,16 +65,15 @@ class EK(BaseMixIn, Base):
         d['group'] = self.group.name if self.group else None
         d['members'] = [m.as_dict() for m in self.members]
         return d
-        return dict( id = self.id, key = self.key, desc = self.desc,
-                    syskey = self.syskey, data = self.data,
-                    lastuser = self.lastuser.as_dict() if self.lastuser else None,
-                    group = self.group.name if self.group else None,
-                    stamp = self.stamp,
-                    members = [ m.as_dict() for m in self.members ] )
-
+        return dict(id=self.id, key=self.key, desc=self.desc,
+                    syskey=self.syskey, data=self.data,
+                    lastuser=self.lastuser.as_dict() if self.lastuser else None,
+                    group=self.group.name if self.group else None,
+                    stamp=self.stamp,
+                    members=[m.as_dict() for m in self.members])
 
     @staticmethod
-    def from_dict( d, update=False, dbsession=None):
+    def from_dict(d, update=False, dbsession=None):
         assert dbsession, 'Please provide dbsession'
 
         ek = EK()
@@ -73,9 +85,9 @@ class EK(BaseMixIn, Base):
         db_ek = EK.search(ek.key, dbsession=dbsession)
         if db_ek:
             if update:
-                db_ek.update( ek )
+                db_ek.update(ek)
         else:
-            dbsession.add( ek )
+            dbsession.add(ek)
             dbsession.flush()
             db_ek = ek
 
@@ -87,28 +99,27 @@ class EK(BaseMixIn, Base):
 
         if update:
             db_ek = EK.search(ek.key, dbsession=dbsession)
-            db_ek.update( ek )
+            db_ek.update(ek)
         else:
             if ek.group:
                 group_ek = EK.search(ek.group, dbsession=dbsession)
                 ek.member_of_id = group_ek.id
-            dbsession.add( ek )
-            dbsession.flush()
+            dbsession.add(ek)
+            dbsession.flush([ek])
             db_ek = ek
 
         return db_ek
 
-
     def data_from_json(self):
         if self.data:
-            return json.loads( self.data.decode('UTF-8') )
+            return json.loads(self.data.decode('UTF-8'))
         return None
-
 
     @staticmethod
     def _key(id, dbsession):
         key_pair = dbsession.get_key(id)
-        if key_pair: return key_pair[0]
+        if key_pair:
+            return key_pair[0]
 
         ek = EK.get(id, dbsession)
         if ek:
@@ -117,7 +128,6 @@ class EK(BaseMixIn, Base):
 
         return None
 
-
     @staticmethod
     def _id(key, dbsession=None, grp=None, auto=False):
         """ key and grp is the key name (as string) """
@@ -125,22 +135,22 @@ class EK(BaseMixIn, Base):
         if dbsession is None:
             dbsession = get_dbhandler().session()
         id = dbsession.get_id((key, grp))
-        if id: return id
+        if id:
+            return id
 
         ek = EK.search(key, grp, dbsession)
         if not ek:
             if not auto:
-                raise KeyError( "Key: %s/%s is not found!" % (key, grp) )
+                raise KeyError("Key: %s/%s is not found!" % (key, grp))
             if not grp:
                 raise RuntimeError('EK: when set auto creation, group needs to be provided')
             group = EK.search(grp, dbsession=dbsession)
             ek = EK(key, '-', parent=group)
-            dbsession.add( ek )
+            dbsession.add(ek)
             dbsession.flush([ek])
 
         dbsession.set_key((ek.key, grp), ek.id)
         return ek.id
-
 
     @staticmethod
     def getid(key, dbsession, grp=None, auto=False):
@@ -148,7 +158,7 @@ class EK(BaseMixIn, Base):
 
     @staticmethod
     def getids(keys, dbsession, grp=None, auto=False):
-        return [ EK.getid(k, dbsession, grp, auto) for k in keys ]
+        return [EK.getid(k, dbsession, grp, auto) for k in keys]
 
     @staticmethod
     def getkey(id, dbsession):
@@ -156,41 +166,41 @@ class EK(BaseMixIn, Base):
 
     @staticmethod
     def getkeys(ids):
-        return [ EK.getkey(id) for id in ids ]
-
+        return [EK.getkey(id) for id in ids]
 
     @staticmethod
     def search(key, group=None, dbsession=None):
         assert dbsession, "Please provide dbsession!"
-        assert group == None or type(group) == str or isinstance(group, EK), "group argument must be string, None or instance of EK"
-        q = EK.query(dbsession).autoflush(False).filter( EK.key.ilike(key) )
+        assert group is None or type(group) == str or isinstance(group, EK), "group argument must be string, None or instance of EK"
+        q = EK.query(dbsession).autoflush(False).filter(EK.key.ilike(key))
         if group:
             if type(group) == str:
-                q = q.filter( EK.member_of_id == EK._id(group, dbsession=dbsession) )
+                q = q.filter(EK.member_of_id == EK._id(group, dbsession=dbsession))
             else:
-                q = q.filter( EK.member_of_id == group.id)
+                q = q.filter(EK.member_of_id == group.id)
         r = q.all()
-        if r: return r[0]
+        if r:
+            return r[0]
         return None
 
     @staticmethod
     def getmembers(grpname, dbsession):
-        return EK.query(dbsession).filter( EK.member_of_id == EK._id(grpname, dbsession) )
+        return EK.query(dbsession).filter(EK.member_of_id == EK._id(grpname, dbsession))
 
     @staticmethod
     def get_members(grpname, dbsession):
-        return EK.getmember( grpname, dbsession )
+        return EK.getmember(grpname, dbsession)
 
     def __repr__(self):
         return self.key
 
     @staticmethod
     def allparents(dbsession):
-        parents = EK.query(dbsession).filter( EK.key.startswith('@') ).all()
-        return [ (x.id, x.key) for x in parents ]
+        parents = EK.query(dbsession).filter(EK.key.startswith('@')).all()
+        return [(x.id, x.key) for x in parents]
 
     @staticmethod
-    def bulk_update( alist, parent=None, syskey=False, dbsession=False ):
+    def bulk_update(alist, parent=None, syskey=False, dbsession=False):
         """ [ ( '@IDENTIFIER', 'Identifiers', [ ( 'k1', 'd1'), ('k2', 'd2'), ... ] ), ... ] """
         assert dbsession, "FATAL ERROR - must provide dbsession arg"
 
@@ -206,8 +216,8 @@ class EK(BaseMixIn, Base):
             if d is None:
                 # update/add members of this particular key, assuming the key already
                 # exists in the database
-                ek = EK.search( k, dbsession = dbsession )
-                EK.bulk_update( item[2], ek, syskey, dbsession = dbsession )
+                ek = EK.search(k, dbsession=dbsession)
+                EK.bulk_update(item[2], ek, syskey, dbsession=dbsession)
                 continue
             if type(d) == list:
                 d, data = d[0], d[1]
@@ -222,32 +232,35 @@ class EK(BaseMixIn, Base):
                     ek.data = data.encode('UTF-8')
                 else:
                     ek.data = data
-            db_ek = EK.search( k, dbsession = dbsession, group = parent.key if parent else None )
+            db_ek = EK.search(k, dbsession=dbsession, group=parent.key if parent else None)
             if not db_ek:
-                dbsession.add( ek )
+                dbsession.add(ek)
             else:
                 cerr('Trying to update: %s/%s' % (ek.key, parent.key if parent else ''))
             if len(item) == 3:
                 dbsession.flush()
-                EK.bulk_update( item[2], ek, syskey, dbsession = dbsession )
+                EK.bulk_update(item[2], ek, syskey, dbsession=dbsession)
 
     bulk_insert = bulk_update
 
     @staticmethod
     def proxy(attrname, grpname, match_case=False, auto=False):
+
         def _getter(inst):
             _id = getattr(inst, attrname)
-            #print("*** id is", _id, "for attr", attrname)
+            # print("*** id is", _id, "for attr", attrname)
             dbsession = object_session(inst)
             if dbsession is None:
                 dbsession = get_dbhandler().session()
-            key = EK._key( getattr(inst, attrname), dbsession)
+            key = EK._key(getattr(inst, attrname), dbsession)
             if not match_case and key:
                 return key.lower()
             return key
+
         def _setter(inst, value):
-            #print("*** set attr", attrname)
-            if not match_case: value = value.lower()
+            # print("*** set attr", attrname)
+            if not match_case:
+                value = value.lower()
             dbsession = object_session(inst)
             if not dbsession and hasattr(inst, '_dbh_session_'):
                 dbsession = getattr(inst, '_dbh_session_')
@@ -255,21 +268,19 @@ class EK(BaseMixIn, Base):
             # print("*** set attr", attrname, "with", getattr(inst, attrname))
         return property(_getter, _setter, doc=f'{attrname} {grpname}')
 
-
     @staticmethod
-    def dump(_out, query = None, dbsession=None):
+    def dump(_out, query=None, dbsession=None):
         import yaml
         assert dbsession, "Please provide dbsession"
         if not query:
-            query = EK.query(dbsession).filter( EK.member_of_id == None )
-        yaml.safe_dump_all( (x.as_dict() for x in query), _out, default_flow_style = False )
-
+            query = EK.query(dbsession).filter(EK.member_of_id == None)
+        yaml.safe_dump_all((x.as_dict() for x in query), _out, default_flow_style=False)
 
     @classmethod
-    def bulk_dump(cls, dbh, query = None):
+    def bulk_dump(cls, dbh, query=None):
         if not query:
-            query = cls.query(dbh.session()).filter( cls.member_of_id == None )
-        return [ obj.as_dict() for obj in query ]
+            query = cls.query(dbh.session()).filter(cls.member_of_id == None)
+        return [obj.as_dict() for obj in query]
 
     @classmethod
     def bulk_load(cls, a_list, dbh):
@@ -278,7 +289,7 @@ class EK(BaseMixIn, Base):
             cls.from_dict(item, dbsession=session)
 
     @staticmethod
-    def load( _in ):
+    def load(_in):
         import yaml
 
 # end of file
