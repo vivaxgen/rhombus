@@ -31,6 +31,7 @@ class AutoUpdateMixIn(object):
     # ek fields are proxies of any plain fields that relate to EK key, and
     # the variable needs to be filled manually
     __ek_fields__ = []
+    __ek_metainfo__ = {}
 
     # rel fields are all relationship parsed automatically when
     # get_rel_fields() is called
@@ -112,6 +113,8 @@ class AutoUpdateMixIn(object):
         session = dbh.session() if dbh else object_session(self)
         for f in fields:
             if f in a_dict:
+                setattr(self, f, a_dict[f])
+                continue
                 f_ = f + '_id'
                 if not hasattr(self, f_):
                     raise AttributeError(f_)
@@ -163,8 +166,9 @@ class AutoUpdateMixIn(object):
                                     for c in chain.from_iterable(r.local_columns for r in rels)
                                     if c.name not in cls.__excluded_fields__
                                     )
-            cls.__fk_fields__ |= set(getattr(cls, ekf).__doc__.split()[0]
-                                     for ekf in cls.__ek_fields__)
+            for ekf in cls.__ek_fields__:
+                cls.__ek_metainfo__[ekf] = getattr(cls, ekf).__doc__.split()
+            cls.__fk_fields__ |= set(item[0] for item in cls.__ek_metainfo__.values())
         return cls.__rel_fields__
 
     @classmethod
