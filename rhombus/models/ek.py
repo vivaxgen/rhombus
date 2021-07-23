@@ -121,6 +121,7 @@ class EK(BaseMixIn, Base):
     @staticmethod
     def _id(key, dbsession=None, grp=None, auto=False):
         """ key and grp is the key name (as string) """
+        assert grp or key[0] == '@'
         if dbsession is None:
             dbsession = get_dbhandler().session()
         id = dbsession.get_id((key, grp))
