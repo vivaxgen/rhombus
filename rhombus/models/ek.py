@@ -15,8 +15,8 @@ from .core import (registered, Column, types, Base, BaseMixIn, object_session, c
 
 from rhombus.lib.utils import get_dbhandler, cerr
 
-from json
-from yaml
+import json
+import yaml
 
 
 @registered
@@ -270,7 +270,6 @@ class EK(BaseMixIn, Base):
 
     @staticmethod
     def dump(_out, query=None, dbsession=None):
-        import yaml
         assert dbsession, "Please provide dbsession"
         if not query:
             query = EK.query(dbsession).filter(EK.member_of_id == None)
