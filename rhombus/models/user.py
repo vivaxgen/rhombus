@@ -769,8 +769,9 @@ class UserInstance(object):
 
     def has_roles(self, *roles):
         """ check if user at least has one of the roles """
+        dbsess = get_dbhandler().session()
         for rolename in roles:
-            role_id = EK._id(rolename)
+            role_id = EK._id(rolename, grp='@ROLES', dbsession=dbsess)
             if (rolename, role_id) in self.roles:
                 return True
         return False
