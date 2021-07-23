@@ -199,8 +199,11 @@ class DBHandler(object):
         else:
             return ek.EK.query(self.session()).filter(ek.EK.key.startswith('@')).all()
 
-    def get_ekey(self, ekey):
-        return self.EK.search(ekey, dbsession=self.session())
+    def get_ekey(self, ekey, group=None):
+        return self.EK.search(ekey, group=group, dbsession=self.session())
+
+    def get_ek_id(self, key, group=None):
+        return self.EK._id(key, grp=group, dbsession=self.session())
 
     # Universal query system
 
