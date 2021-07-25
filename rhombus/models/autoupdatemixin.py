@@ -134,6 +134,28 @@ class AutoUpdateMixIn(object):
                     d[f] = val
         return d
 
+    def any_modified(self, a_dict, fields):
+        """return True if any field is modified"""
+        for f in fields:
+            if v := a_dict.get(f, None):
+                if v != getattr(self, f):
+                    return True
+        else:
+            return False
+
+    def all_modified(self, a_dict, fields):
+        """return True if all fields are modified"""
+        return self.some_modified(a_dict, fields, len(fields))
+
+    def some_modified(self, a_dict, fields, threshold):
+        """ return True if at least threshold modified"""
+        c = 0
+        for f in fields:
+            if v := a_dict.get(f, None):
+                if v != getattr(self, f):
+                    c += 1
+        return c >= threshold
+
     @classmethod
     def get_plain_fields(cls):
         if cls.__plain_fields__ is None:
