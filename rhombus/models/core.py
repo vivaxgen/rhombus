@@ -239,7 +239,7 @@ class SysLog(Base):
     id = Column(types.Integer, Identity(), primary_key=True)
     stamp = Column(types.TIMESTAMP, nullable=False, default=current_timestamp())
     level = Column(types.SmallInteger)
-    msg = Column(types.String)
+    msg = Column(types.String(256))
 
 
 # DataLog - data log
