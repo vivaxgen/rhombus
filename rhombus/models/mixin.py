@@ -1,12 +1,15 @@
 
-from .core import *
+from .core import (registered, Column, types, Base, BaseMixIn, object_session, column_property,
+                   ForeignKey, deferred, Identity, relationship, UniqueConstraint, backref,
+                   column_mapped_collection, association_proxy, Table, metadata, and_,
+                   NoResultFound, declared_attr)
 from .ek import EK
 from sqlalchemy.orm import exc
 
 
 class DictEmulator(object):
 
-    def __init__(self, getitem_func, setitem_func):
+    def __init__(self, getitem_func, setitem_func, delitem_func=None):
         self._getitem_ = getitem_func
         self._setitem_ = setitem_func
         self._delitem_ = delitem_func
@@ -28,10 +31,10 @@ class EnumDataDict(DictEmulator):
         self._attrname = attrname
 
     def __getitem__(self, key):
-        key_id = EK._id( getattr(self._inst, self._attrname),
-                        dbsession = object_session(self._inst) )
+        key_id = EK._id(getattr(self._inst, self._attrname),
+                        dbsession=object_session(self._inst))
+        return key_id
 
-    
 
 class EnumDataMixIn(BaseMixIn):
     """ EnumDataMixIn
@@ -42,6 +45,7 @@ class EnumDataMixIn(BaseMixIn):
     @declared_attr
     def cat_id(cls):
         return Column(types.Integer, ForeignKey('eks.id'), nullable=False)
+
     @declared_attr
     def cat(cls):
         return EK.proxy('cat_id')
@@ -50,14 +54,17 @@ class EnumDataMixIn(BaseMixIn):
     @declared_attr
     def val_id(cls):
         return Column(types.Integer, ForeignKey('eks.id'), nullable=False)
+
     def val(cls):
         return EK.proxy('val_id')
     """ data enumerated value """
 
     @classmethod
     def proxy(cls, attrname):
+
         def _getter(inst):
             return EnumDataDict(inst)
+
         def _setter(inst):
             raise RuntimeError("Dict-based class cannot be set")
         return property(_getter, _setter) 
@@ -79,6 +86,7 @@ class StringDataMixIn(BaseMixIn):
     @declared_attr
     def cat_id(cls):
         return Column(types.Integer, ForeignKey('eks.id'), nullable=False)
+
     @declared_attr
     def cat(cls):
         return EK.proxy('cat_id')
@@ -94,7 +102,7 @@ class StringDataMixIn(BaseMixIn):
         """
         def _getter(instance):
             if not hasattr(instance, cls.iattr):
-                setattr(instance, cls.iattr, DictInterface( cls, instance.id, attrname ))
+                setattr(instance, cls.iattr, DictInterface(cls, instance.id, attrname))
             return getattr(instance, cls.iattr)
 
         return property(_getter)
@@ -102,36 +110,40 @@ class StringDataMixIn(BaseMixIn):
 
 class DictInterface(object):
 
-    def __init__(self, mixin, instance_id, attrname ):
+    def __init__(self, mixin, instance_id, attrname):
         self.mixin = mixin
         self.instance_id = instance_id
         self.attrname = attrname
 
     def getobj(self, id):
         try:
-            return self.mixin.query().filter( self.mixin.cat_id == id, 
-                        getattr(self.mixin, self.attrname) == self.instance_id ).one()
+            return self.mixin.query()
+            .filter(self.mixin.cat_id == id,
+                    getattr(self.mixin, self.attrname) == self.instance_id)
+            .one()
+
         except exc.NoResultFound:
             raise KeyError('key not found')
 
     def __getitem__(self, key):
-        ek_id = EK.getid( key )
+        ek_id = EK.getid(key)
         obj = self.getobj(ek_id)
         return obj.val
 
     def __setitem__(self, key, value):
-        ek_id = EK.getid( key )
+        ek_id = EK.getid(key)
         try:
             obj = self.getobj(ek_id)
             obj.val = value
         except KeyError:
-            obj = self.mixin(cat_id = ek_id, val = value)
+            obj = self.mixin(cat_id=ek_id, val=value)
             setattr(obj, self.attrname, self.instance_id)
-            dbsession.add( obj )
+            dbsession.add(obj)
 
     def get(self, key, default_value):
         try:
             return self[key]
         except KeyError:
             return default_value
-        
+
+# EOF
