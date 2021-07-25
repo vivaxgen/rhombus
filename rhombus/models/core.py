@@ -217,7 +217,6 @@ class SysReg(Base):
             raise RuntimeError('unknown mimetype')
         dbsession.add(SysReg(key=keyname, bindata=bindata, mimetype=mimetype))
 
-
     @staticmethod
     def getdata(keyname):
         ob = SysReg.getbykey(keyname)
