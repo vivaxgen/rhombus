@@ -40,7 +40,8 @@ class input_text(htmltag):
     _type = 'text'
 
     def __init__(self, name, label, value='', info=None, size=8, offset=3, style=None,
-                 extra_control=None, readonly=False, placeholder='', update_dict=None, **kwargs):
+                 extra_control=None, readonly=False, placeholder='', update_dict=None,
+                 popover=None, **kwargs):
         super().__init__(name=name, **kwargs)
         self.label = label
         #self.value = (update_dict.get(name, None) if update_dict else value) or value
@@ -54,6 +55,7 @@ class input_text(htmltag):
         self._extra_control = extra_control or ''
         self.readonly = readonly
         self._style = style
+        self.popover = popover
 
     def error_text(self):
         if not self.error:
@@ -90,7 +92,7 @@ class input_text(htmltag):
     def get_form(self):
         # travesing through containers to get form
         c = self
-        while ( c := c.container):
+        while (c := c.container):
             if isinstance(c, form):
                 return c
         return None
@@ -139,8 +141,11 @@ class input_text(htmltag):
 
     def r(self, value=None, readonly=False):
         # set value first
+        pop_title, pop_content = self.popover.split('|', 2) if self.popover else ('', '')
         elements = [
-            label(self.label, class_=f"{self.class_label()} align-self-start pt-2 pl-1 pr-0", for_=self.name)
+            label(self.label, class_=f"{self.class_label()} align-self-start pt-2 pl-1 pr-0", for_=self.name,
+                  **{'data-toggle': 'popover', 'data-placement': 'top',
+                     'title': pop_title, 'data-content': pop_content})
             if self.label is not None else '',
             div(class_=self.class_value())[
                 inputtag(type=self._type, id=self.id, name=self.name,
@@ -187,7 +192,7 @@ class input_textarea(input_text):
                 self.extra_control(),
                 self.error_text()
             ],
-            self.info_text()            
+            self.info_text()
         ].r()
 
 
@@ -241,8 +246,11 @@ class input_select(input_text):
                     selected = 'selected'
             options.append(optiontag(l, value=v, selected=selected))
 
+        pop_title, pop_content = self.popover.split('|', 2) if self.popover else ('', '')
         elements = [
-            label(self.label, class_=f"{self.class_label()} align-self-start pt-2 pl-1 pr-0", for_=self.name)
+            label(self.label, class_=f"{self.class_label()} align-self-start pt-2 pl-1 pr-0", for_=self.name,
+                  **{'data-toggle': 'popover', 'data-placement': 'top',
+                     'title': pop_title, 'data-content': pop_content})
             if self.label is not None else '',
             div(class_=self.class_value())[
                 selecttag(*options, id=self.id, name=self.name, class_=self.class_input(), multiple=multiple,
@@ -315,7 +323,7 @@ class submit_bar(htmltag):
         self.value = value
 
     def __str__(self):
-        return literal( submit_bar_template.format( label = self.label, val = self.value ) )
+        return literal(submit_bar_template.format(label=self.label, val=self.value))
 
 
 class custom_submit_bar(htmltag):
@@ -412,7 +420,7 @@ class selection_bar(object):
             hiddens
         )
 
-        return sform, jscode + selection_bar_js % { 'prefix': self.prefix }
+        return sform, jscode + selection_bar_js % {'prefix': self.prefix}
 
 
 # text templates
