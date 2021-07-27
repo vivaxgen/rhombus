@@ -33,3 +33,7 @@ div.form-group {
     flex-grow: 5;
     height: 2px
 }
+
+.popover {
+  max-width: 100%;
+}
