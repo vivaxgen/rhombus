@@ -62,8 +62,9 @@ class AutoUpdateMixIn(object):
         dbh.session().flush(objs)
 
     @classmethod
-    def bulk_dump(cls, dbh):
-        q = cls.query(dbh.session())
+    def bulk_dump(cls, dbh, q=None):
+        """bulk dump either all objects or from q"""
+        q = q or cls.query(dbh.session())
         return [obj.as_dict() for obj in q]
 
     @classmethod
