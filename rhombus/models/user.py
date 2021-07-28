@@ -83,7 +83,7 @@ class UserClass(Base, BaseMixIn):
         return authfunc[self.credscheme['sys']][1](username, self.credscheme)
 
     def as_dict(self):
-        d = super().as_dict()
+        d = super().as_dict(exclude=['users'])
         d['users'] = [u.as_dict() for u in self.users]
         return d
 
@@ -334,7 +334,7 @@ class User(Base, BaseMixIn):
 
     def as_dict(self, exclude=[]):
         # we will handle primarygroup using name, so primarygroup_id is excluded
-        d = super().as_dict(exclude=exclude + ['primarygroup_id'])
+        d = super().as_dict(exclude=exclude + ['primarygroup_id', 'usergroups', 'userdata'])
         d['primarygroup'] = self.primarygroup.name
         d['groups'] = [[ug.group.name, ug.role] for ug in self.usergroups]
         return d
@@ -572,7 +572,8 @@ class Group(Base, BaseMixIn):
             self.update_fields_with_object(obj)
 
     def as_dict(self):
-        d = self.create_dict_from_fields()
+        d = self.create_dict_from_fields(exclude=['users', 'associated_groups',
+                                                  'primaryusers', 'usergroups'])
         d['users'] = [(ug.user.login, ug.role) for ug in self.usergroups]
         d['roles'] = [ek.key for ek in self.roles]
         if (self.flags & self.f_composite_group):
