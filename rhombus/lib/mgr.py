@@ -35,7 +35,7 @@ def init_argparser(parser=None):
     p.add_argument('--importgroup', default=False,
                    help='import group from YAML file')
 
-    p.add_argument('--exportgroup', default=False,
+    p.add_argument('--exportgroups', default=False, action='store_true',
                    help='export group from YAML file')
 
     p.add_argument('--importenumkey', default=False,
@@ -97,6 +97,9 @@ def init_argparser(parser=None):
     p.add_argument('--infile', default='-')
     p.add_argument('--outfile', default='-')
 
+    p.add_argument('--indir')
+    p.add_argument('--outdir')
+
     return db_argparser(p)
 
 
@@ -120,7 +123,7 @@ def main(args):
 
     settings = setup_settings(args)
 
-    if any((args.exportuserclass, args.exportgroup, args.exportenumkey)):
+    if any((args.exportuserclass, args.exportgroups, args.exportenumkey)):
         do_rbmgr(args, settings)
 
     elif not args.rollback and (args.commit or args.initdb):
@@ -153,6 +156,9 @@ def do_rbmgr(args, settings, dbh=None):
 
     elif args.importgroup:
         do_importgroup(args, dbh, settings)
+
+    elif args.exportgroups:
+        do_exportgroups(args, dbh, settings)
 
     elif args.exportenumkey:
         do_exportenumkey(args, dbh, settings)
@@ -302,7 +308,6 @@ def do_listenumkey(args, dbh, settings):
 def do_exportenumkey(args, dbh, settings):
 
     cerr('Exporting enumkey')
-    import yaml
     ekey_list = []
     ekeys = []
     if args.exportenumkey:
@@ -362,21 +367,25 @@ def do_listgroup(args, dbh, settings):
         cout(f' {g.name}')
 
 
+def do_exportgroups(args, dbh, settings):
+    yaml_write(args, dbh.Group.bulk_dump(dbh), 'Group')
+
+
 def do_exportuserclass(args, dbh, settings):
 
+    userclasses = None
     if args.userclass:
         userclasses = dbh.get_userclass([args.userclass])
-    else:
-        userclasses = dbh.get_userclass()
+    yaml_write(args, dbh.UserClass.bulk_dump(dbh, userclasses), 'UserClass')
 
-    outfile = open(args.outfile, 'w')
-    dbh.UserClass.dump(outfile, userclasses)
+
+def do_importuserclass(args, dbh, settings):
+    yaml_read(args, dbh, dbh.UserClass)
 
 
 def do_rbdump(args, dbh, settings):
     """ this function will dump all Rhombus core data to YAML file """
 
-    import yaml
     d = {}
     # dump EK first
     d['_Rb_:EK'] = dbh.EK.bulk_dump(dbh)
@@ -388,7 +397,6 @@ def do_rbdump(args, dbh, settings):
 def do_rbload(args, dbh, settings):
     """ this function will load all Rhombus core data from YAML file """
 
-    import yaml
     d = yaml.load(open(args.infile, 'r'))
 
     # set EK
@@ -410,5 +418,19 @@ def do_syncuserclass(args, dbh, settings):
 
     if not args.synctoken:
         cexit('ERR: Please provide --synctoken')
+
+    raise NotImplementedError('This functionality has not been implemented.')
+
+
+def yaml_write(args, data, msg):
+    with open(args.outfile, 'w') as outstream:
+        yaml.dump_all(data, outstream, default_flow_style=False)
+    cerr(f'[Exported {msg} to {args.outfile}]')
+
+
+def yaml_read(args, dbh, class_):
+    with open(args.infile, 'r') as instream:
+        class_.bulk_load(yaml.safe_load_all(instream), dbh)
+    cerr(f'[Imported {class_.__name__} from {args.infile}')
 
 # end of file
