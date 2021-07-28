@@ -12,6 +12,8 @@ from sqlalchemy import Column
 from sqlalchemy.inspection import inspect
 from sqlalchemy.orm.session import object_session
 
+from rhombus.lib.utils import cerr
+
 from itertools import chain
 
 
@@ -58,8 +60,12 @@ class AutoUpdateMixIn(object):
     @classmethod
     def bulk_load(cls, a_list, dbh):
         """ bulk load from a list of dictionary object """
-        objs = [cls.from_dict(d, dbh) for d in a_list]
-        dbh.session().flush(objs)
+        c = 0
+        for a_dict in a_list:
+            an_obj = cls.from_dict(a_dict, dbh)
+            cerr(f'[I - uploaded {cls.__name__}: {str(an_obj)}]')
+            c += 1
+        cerr(f'[I - {cls.__name__} uploaded: {c}]')
 
     @classmethod
     def bulk_dump(cls, dbh, q=None):
