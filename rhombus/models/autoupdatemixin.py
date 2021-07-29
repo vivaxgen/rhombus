@@ -13,6 +13,7 @@ from sqlalchemy.inspection import inspect
 from sqlalchemy.orm.session import object_session
 
 from rhombus.lib.utils import cerr
+from messy.lib import roles as r
 
 from itertools import chain
 
@@ -45,6 +46,14 @@ class AutoUpdateMixIn(object):
     __aux_fields__ = None
 
     __excluded_fields__ = {'id', }
+
+    # roles
+
+    # managing roles can manage this object regardless of ownership or groups
+    __managing_roles__ = {r.SYSADM, r.DATAADM}
+
+    # modifying roles can manage this object with ownership/group requirement
+    __modifying_roles__ = __managing_roles__
 
     def update(self, obj):
         if isinstance(obj, dict):
