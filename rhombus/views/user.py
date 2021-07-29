@@ -4,8 +4,7 @@ from rhombus.lib.roles import PUBLIC, SYSADM, GUEST, EK_VIEW, USERCLASS_VIEW, US
 from rhombus.lib.modals import popup, modal_delete
 from rhombus.lib.tags import (div, table, thead, tbody, th, tr, td, literal, selection_bar, br, ul, li, a, i,
                               form, POST, GET, fieldset, input_text, input_hidden, input_select, input_password,
-                              submit_bar, h3, p)
-
+                              submit_bar, h3, p, input_show)
 from rhombus.views import *
 from rhombus.views.generics import error_page
 
