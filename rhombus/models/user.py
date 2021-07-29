@@ -296,12 +296,17 @@ class User(Base, BaseMixIn):
         g_jsoncache.save_data(self)
 
     def groupids(self):
+        """return a list of group_ids where this user is member of"""
         dbsession = object_session(self)
-        return [x.group_id for x in UserGroup.query(dbsession).filter(UserGroup.user_id == self.id).all()]
+        grp_ids = [x[0] for x in dbsession.query(UserGroup.group_id).filter(UserGroup.user_id == self.id)]
+        grp_ids2 = [x[0] for x in dbsession.query(AssociatedGroup.group_id)
+                    .filter(AssociatedGroup.assoc_group_id.in_(grp_ids))]
+        return set(grp_ids + grp_ids2)
 
     def group_role_ids(self):
+        """return list of (grp_ids, role_ids) on all available groups and roles"""
         dbsession = object_session(self)
-        grp_ids = [x.group_id for x in UserGroup.query(dbsession).filter(UserGroup.user_id == self.id).all()]
+        grp_ids = self.groupids()
         res = dbsession.execute(group_role_table.select(group_role_table.c.group_id.in_(grp_ids))
                                 .with_only_columns([group_role_table.c.role_id]).distinct())
         role_ids = [item for sublist in res.fetchall() for item in sublist]
