@@ -539,6 +539,14 @@ class Group(Base, BaseMixIn):
         return 0
 
     @staticmethod
+    def _name(grpid, dbsession):
+        assert dbsession
+        grp = Group.get(grpid, dbsession)
+        if grp:
+            return grp.name
+        return None
+
+    @staticmethod
     def bulk_insert(grplist, dbsession):
         """ grplist = [ (grpname, desc, role_list) ] """
         print(grplist)
@@ -760,7 +768,7 @@ class UserInstance(object):
                 grpname = grp
             elif isinstance(grp, int):
                 grp_id = grp
-                grpname = Group.get(grp_id).name
+                grpname = Group._name(grp_id, get_dbhandler().session())
             elif isinstance(grp, Group):
                 grp_id = grp.id
                 grpname = grp.name
