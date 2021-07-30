@@ -34,13 +34,13 @@ class AutoUpdateMixIn(object):
     # ek fields are proxies of any plain fields that relate to EK key, and
     # the variable needs to be filled manually
     __ek_fields__ = []
-    __ek_metainfo__ = {}
 
     # rel fields are all relationship parsed automatically when
     # get_rel_fields() is called
     # fk fields (foreign_keys) are fields connected to rel fields
     __rel_fields__ = None
     __fk_fields__ = None
+    __ek_metainfo__ = None
 
     # auxiliary fields
     __aux_fields__ = None
@@ -198,6 +198,7 @@ class AutoUpdateMixIn(object):
     @classmethod
     def get_rel_fields(cls):
         if cls.__rel_fields__ is None:
+            cls.__ek_metainfo__ = {}
             rels = inspect(cls).relationships
             cls.__rel_fields__ = set(r.key for r in rels if r.key not in cls.__excluded_fields__)
             cls.__fk_fields__ = set(c.name
@@ -214,5 +215,11 @@ class AutoUpdateMixIn(object):
         if cls.__fk_fields__ is None:
             cls.get_rel_fields()
         return cls.__fk_fields__
+
+    @classmethod
+    def get_ek_metainfo(cls):
+        if cls.__ek_metainfo__ is None:
+            cls.get_rel_fields()
+        return cls.__ek_metainfo__
 
 # end of file
