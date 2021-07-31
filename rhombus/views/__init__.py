@@ -140,7 +140,7 @@ class BaseViewer(object):
     def can_modify(self, obj):
         """ return True if obj can be modified by current user
         """
-        return False
+        return obj.can_modify(self.request.user)
 
     def can_view(self, obj):
         """ return True if obj can be viewed by current user

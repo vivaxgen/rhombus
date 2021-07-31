@@ -66,6 +66,9 @@ class AutoUpdateMixIn(object):
     def serialized_code(self):
         raise NotImplementedError()
 
+    def can_modify(self):
+        raise NotImplementedError()
+
     @classmethod
     def bulk_load(cls, a_list, dbh):
         """ bulk load from a list of dictionary object """
