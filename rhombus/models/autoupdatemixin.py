@@ -66,7 +66,7 @@ class AutoUpdateMixIn(object):
     def serialized_code(self):
         raise NotImplementedError()
 
-    def can_modify(self):
+    def can_modify(self, user):
         raise NotImplementedError()
 
     @classmethod
