@@ -20,6 +20,8 @@ import dogpile.cache.util
 
 from rhombus.lib.utils import cout, cerr, get_dbhandler, random_string
 from rhombus.lib import helpers as h
+from rhombus.lib import exceptions as exc
+from rhombus.views import generics
 
 from rhombus.scripts import run
 
@@ -28,6 +30,9 @@ _TITLE_ = ''
 def includeme( config ):
 
     cerr('rhombus configuration with prefix: %s' % config.route_prefix)
+
+    # configure exception handler view
+    config.add_exception_view(generics.autherror_page, exc.AuthError)
 
     config.include('pyramid_mako')
     config.add_static_view(name='rhombus_static', path="rhombus:static/")

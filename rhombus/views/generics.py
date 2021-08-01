@@ -29,7 +29,16 @@ def dberror_page(exc, request):
     transaction.abort()
     text = exc.args[0] if exc.args else ""
     return render_to_response('rhombus:templates/generics/error_page.mako',
-        { 'text': text, 'stamp': str(datetime.now()) } )
+                              {'text': text, 'stamp': str(datetime.now())},
+                              request=request)
+
+
+def autherror_page(exc, request):
+    transaction.abort()
+    text = (exc.args[0] if exc.args else str(exc)) or "You are not authorized to access this resource"
+    return render_to_response('rhombus:templates/generics/not_authorized.mako',
+                              {'text': text, 'stamp': str(datetime.now())},
+                              request=request)
 
 # pages with simple text
 
