@@ -330,6 +330,16 @@ class submit_bar(htmltag):
     def __str__(self):
         return literal(submit_bar_template.format(label=self.label, val=self.value))
 
+    def r(self):
+        html = div(class_='form-group row')[
+            div(class_='col-md-10 offset-md-3')[
+                button(self.label, name='_method', class_='btn btn-primary', type='submit',
+                       value=self.value),
+                button('Reset', type='reset', class_='btn'),
+            ]
+        ]
+        return html.r()
+
 
 class custom_submit_bar(htmltag):
 
