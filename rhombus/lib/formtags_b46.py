@@ -380,7 +380,8 @@ class custom_submit_bar(htmltag):
 
 class selection_bar(object):
 
-    def __init__(self, prefix, action, add=None, others='', hiddens=[], name='', delete_value='delete'):
+    def __init__(self, prefix, action, add=None, others='', hiddens=[], name='',
+                 delete_label='Delete', delete_value='delete'):
         super().__init__()
         self.prefix = prefix
         self.action = action
@@ -388,6 +389,7 @@ class selection_bar(object):
         self.others = others
         self.hiddens = hiddens
         self.name = name or 'selection_bar'
+        self.delete_label = delete_label
         self.delete_value = delete_value
 
     def render(self, html, jscode=''):
@@ -399,7 +401,7 @@ class selection_bar(object):
                 button('Inverse', type='button', class_='btn btn-sm btn-secondary', id=self.prefix + '-select-inverse')
             ],
             div(class_='btn-group')[
-                button(i(class_='fas fa-trash'), 'Delete',
+                button(i(class_='fas fa-trash'), self.delete_label,
                        class_="btn btn-sm btn-danger", id=self.prefix + '-submit-delete',
                        name='_method', value=self.delete_value, type='button')
             ]
