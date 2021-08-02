@@ -7,6 +7,7 @@ from pyramid.httpexceptions import HTTPFound
 from rhombus.lib.roles import PUBLIC, SYSADM, SYSVIEW, DATAADM, DATAVIEW
 from rhombus.lib.utils import get_dbhandler, random_string, cerr, cout
 from rhombus.views.generics import not_authorized, error_page
+from rhombus.models.fileattach import FileAttachment
 import rhombus.lib.tags_b46 as t
 
 import sqlalchemy.exc
