@@ -82,9 +82,12 @@ class input_text(htmltag):
     def info_text(self):
         if self.info:
             if self.info.startswith('popup:'):
-                info = '<div class="col-md-1 form-control-static"><a class="js-newWindow" data-popup="width=400,height=200,scrollbars=yes" href="%s"><span class="glyphicon glyphicon-question-sign" aria-hidden="true"></span></a></div>' % self.info[6:]
+                info = literal('<div class="col-md-1 form-control-static">'
+                               '<a class="js-newWindow" data-popup="width=400,height=200,scrollbars=yes" href="%s">'
+                               '<span class="glyphicon glyphicon-question-sign" aria-hidden="true"></span>'
+                               '</a></div>' % self.info[6:])
             else:
-                info = '<small class="form-text text-muted">' + self.info + '</small>'
+                info = literal('<small class="form-text text-muted">' + self.info + '</small>')
         else:
             info = ''
         return info
@@ -299,9 +302,9 @@ class input_file(input_text):
             label(self.label, class_=f"{self.class_label()} align-self-start pt-2 pl-1 pr-0", for_=self.name),
             div(class_=self.class_value())[
                 inputtag(type=self._type, id=self.id, name=self.name, class_=self.class_input() + ' pt-1'),
-                self.error_text()
+                self.error_text(),
+                self.info_text(),
             ],
-            self.info_text(),
             self.view_link()
         ]
         return self.div_wrap(elements)
