@@ -23,7 +23,7 @@ class FileAttachment(Base, BaseMixIn):
     """ original file name """
 
     mimetype_id = Column(types.Integer, ForeignKey('eks.id'), nullable=False)
-    mimetype = EK.proxy('mimetype_id', '@MIMETYPE')
+    mimetype = EK.proxy('mimetype_id', '@MIMETYPE', auto=True)
     """ mimetype for this file """
 
     size = Column(types.Integer, nullable=False, server_default='0')
