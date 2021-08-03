@@ -1,16 +1,20 @@
 
 # exception class
 
-class SysError( RuntimeError ):
-    pass
 
-class UserError( RuntimeError ):
-    pass
-
-class DBError( RuntimeError ):
-    pass
-
-class AuthError( RuntimeError ):
+class SysError(Exception):
     pass
 
 
+class UserError(Exception):
+    pass
+
+
+class DBError(Exception):
+    pass
+
+
+class AuthError(Exception):
+    pass
+
+# EOF
