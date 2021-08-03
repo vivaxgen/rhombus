@@ -432,8 +432,10 @@ def select2_lookup(**keywords):
         keywords['template'] = "templateSelection: function(data, container) { return data.text.split('|', 1); },"
     else:
         keywords['template'] = ''
+    if not keywords['tag'].startswith('.'):
+        keywords['tag'] = "#" + keywords['tag']
     return '''
-  $('#%(tag)s').select2( {
+  $('%(tag)s').select2( {
         minimumInputLength: %(minlen)d,
         placeholder: '%(placeholder)s',
         dropdownParent: $("#%(parenttag)s"),
