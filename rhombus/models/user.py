@@ -755,6 +755,9 @@ class UserInstance(object):
         self.groups = [(g.name, g.id) for g in [Group.get(gid, dbsession) for gid in groups]]
         self.roles = [(EK._key(rid, dbsession=dbsession), rid) for rid in roles]
 
+    def is_sysadm(self):
+        return self.has_roles(SYSADM, DATAADM)
+
     def in_group(self, *groups):
         """ check if user at least is in one of the groups """
 
@@ -790,10 +793,11 @@ class UserInstance(object):
                 return True
         return False
 
-    def get_groups(self, system=False):
+    def get_groups(self, dbsession, system=False):
         res = []
+        system = system or self.is_sysadm()
         for (grpname, gid) in self.groups:
-            grp = Group.get(gid)
+            grp = Group.get(gid, dbsession)
             if not system and grp.name.startswith('_'):
                 continue
             res.append(grp)

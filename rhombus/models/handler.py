@@ -146,13 +146,22 @@ class DBHandler(object):
         return self.User.search(user, session=self.session())
 
     def get_group(self, group=None, user_id=None):
+        """user_id can be either an integer or an userinstance object or an User object"""
 
         if group is None:
             if user_id is None:
                 return self.get_groups()
             else:
                 # only return groups where the user is a member
-                raise NotImplementedError()
+                if isinstance(user_id, int):
+                    user_id = self.get_user(user_id).userinstance()
+                elif isinstance(user_id, self.User):
+                    user_id = user_id.userinstance()
+
+                if user_id.is_sysadm():
+                    return self.get_groups()
+
+                return user_id.get_groups(self.session())
 
         if type(group) == list:
             return [self.get_group(g) for g in group]
