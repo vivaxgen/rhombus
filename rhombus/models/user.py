@@ -794,10 +794,14 @@ class UserInstance(object):
         return False
 
     def get_groups(self, dbsession, system=False):
+        """return all groups where this user belongs to"""
         res = []
         system = system or self.is_sysadm()
         for (grpname, gid) in self.groups:
-            grp = Group.get(gid, dbsession)
+            if grp := Group.get(gid, dbsession) is None:
+                # the group might have been removed during after this user has logged in,
+                # so just skip
+                continue
             if not system and grp.name.startswith('_'):
                 continue
             res.append(grp)
