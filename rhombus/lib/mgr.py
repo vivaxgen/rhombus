@@ -184,6 +184,9 @@ def do_rbmgr(args, settings, dbh=None):
     elif args.exportuserclass:
         do_exportuserclass(args, dbh, settings)
 
+    elif args.importuserclass:
+        do_importuserclass(args, dbh, settings)
+
     elif args.rbdump:
         do_rbdump(args, dbh, settings)
 
