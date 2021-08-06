@@ -798,7 +798,7 @@ class UserInstance(object):
         res = []
         system = system or self.is_sysadm()
         for (grpname, gid) in self.groups:
-            if grp := Group.get(gid, dbsession) is None:
+            if (grp := Group.get(gid, dbsession)) is None:
                 # the group might have been removed during after this user has logged in,
                 # so just skip
                 continue
