@@ -386,6 +386,7 @@ class BaseViewer(object):
         }, request=self.request)
 
     def get_object(self, obj_id=None, func=None, tag='id'):
+        """get the object instance, ensuring that the current user has the necessary authorization"""
         rq = self.request
         obj_id = obj_id or int(self.request.matchdict.get(tag))
         func = func or self.fetch_func
@@ -394,7 +395,8 @@ class BaseViewer(object):
                    else rq.user.groups,
                    user=rq.user)
         if len(res) == 0:
-            raise RuntimeError('Cannot find object! Please check object id!')
+            raise RuntimeError('Either the object does not exist or you do not have '
+                               'the authorization to access the object!')
 
         self.obj = res[0]
         return self.obj
