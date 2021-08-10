@@ -178,7 +178,7 @@ class input_password(input_text):
 class input_textarea(input_text):
 
     def style(self):
-        return self._style or "font-family:monospace; width:100%;"
+        return self._style or "font-family:monospace; font-size:0.9em; width:100%;"
 
     def r(self):
         # set size first
