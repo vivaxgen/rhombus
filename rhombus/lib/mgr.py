@@ -425,7 +425,13 @@ def do_syncuserclass(args, dbh, settings):
     raise NotImplementedError('This functionality has not been implemented.')
 
 
-def yaml_write(args, data, msg):
+def yaml_write(args, data, msg, printout=False):
+    if printout:
+        # this is for debugging purpose, obviously
+        import pprint
+        for d in data:
+            pprint.pprint(d)
+            pprint.pprint(yaml.dump(d))
     with open(args.outfile, 'w') as outstream:
         yaml.dump_all(data, outstream, default_flow_style=False)
     cerr(f'[Exported {msg} to {args.outfile}]')
