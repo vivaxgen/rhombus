@@ -86,4 +86,7 @@ class FileAttachment(Base, BaseMixIn):
 
         return property(_getter, _setter, doc=attrname)
 
+    def as_dict(self):
+        raise NotImplementedError('this functionality has not been implemented')
+
 # EOF
