@@ -587,10 +587,10 @@ class Group(Base, BaseMixIn):
     def as_dict(self):
         d = self.create_dict_from_fields(exclude=['users', 'associated_groups',
                                                   'primaryusers', 'usergroups'])
-        d['users'] = [(ug.user.login, ug.role) for ug in self.usergroups]
+        d['users'] = [[ug.user.login, ug.role] for ug in self.usergroups]
         d['roles'] = [ek.key for ek in self.roles]
         if (self.flags & self.f_composite_group):
-            d['assoc_groups'] = [(x.associated_group.name, x.role)
+            d['assoc_groups'] = [[x.associated_group.name, x.role]
                                  for x in AssociatedGroup.query(object_session(self))
                                  .filter(AssociatedGroup.group_id == self.id)]
         return d
@@ -625,6 +625,7 @@ class UserGroup(Base):
     user_id = Column(types.Integer, ForeignKey('users.id'), nullable=False)
     group_id = Column(types.Integer, ForeignKey('groups.id'), nullable=False)
     role = Column(types.String(1), nullable=False, server_default='M')
+    # M: member, A: administrator
 
     __table_args__ = (UniqueConstraint('user_id', 'group_id'), {})
 
@@ -662,6 +663,7 @@ class AssociatedGroup(Base):
     group_id = Column(types.Integer, ForeignKey('groups.id'), nullable=False)
     assoc_group_id = Column(types.Integer, ForeignKey('groups.id'), nullable=False)
     role = Column(types.String(1), nullable=False, server_default='R')
+    # R: ?, C: composite member
 
     group = relationship(Group, uselist=False, foreign_keys=[group_id],
                          backref=backref('associated_groups', cascade='all,delete,delete-orphan'))
