@@ -2,6 +2,7 @@
 import sys
 import yaml
 import transaction
+import os.path
 from rhombus.lib.utils import get_dbhandler, cerr, cout, cexit
 from rhombus.scripts import setup_settings, arg_parser
 
@@ -370,8 +371,20 @@ def do_listgroup(args, dbh, settings):
         cout(f' {g.name}')
 
 
+def do_exporteks(args, dbh, settings):
+    yaml_write(args, dbh.EK.bulk_dump(dbh), 'EK')
+
+
+def do_importeks(args, dbh, settings):
+    yaml_read(args, dbh, settings)
+
+
 def do_exportgroups(args, dbh, settings):
     yaml_write(args, dbh.Group.bulk_dump(dbh), 'Group')
+
+
+def do_importgroups(args, dbh, settings):
+    yaml_read(args, dbh, dbh.Group)
 
 
 def do_exportuserclass(args, dbh, settings):
@@ -389,6 +402,17 @@ def do_importuserclass(args, dbh, settings):
 def do_rbdump(args, dbh, settings):
     """ this function will dump all Rhombus core data to YAML file """
 
+    args.outfile = os.path.join(args.outdir, 'eks.yaml')
+    do_exporteks(args, dbh, settings)
+
+    args.outfile = os.path.join(args.outdir, 'groups.yaml')
+    do_exportgroups(args, dbh, settings)
+
+    args.outfile = os.path.join(args.outdir, 'userclasses.yaml')
+    do_exportuserclass(args, dbh, settings)
+
+    return
+
     d = {}
     # dump EK first
     d['_Rb_:EK'] = dbh.EK.bulk_dump(dbh)
@@ -399,6 +423,17 @@ def do_rbdump(args, dbh, settings):
 
 def do_rbload(args, dbh, settings):
     """ this function will load all Rhombus core data from YAML file """
+
+    args.infile = os.path.join(args.indir, 'eks.yaml')
+    do_importeks(args, dbh, settings)
+
+    args.infile = os.path.join(args.indir, 'groups.yaml')
+    do_importgroups(args, dbh, settings)
+
+    args.infile = os.path.join(args.indir, 'userclasses.yaml')
+    do_importuserclass(args, dbh, settings)
+
+    return
 
     d = yaml.load(open(args.infile, 'r'))
 
