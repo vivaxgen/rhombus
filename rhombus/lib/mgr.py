@@ -376,7 +376,7 @@ def do_exporteks(args, dbh, settings):
 
 
 def do_importeks(args, dbh, settings):
-    yaml_read(args, dbh, settings)
+    yaml_read(args, dbh, dbh.EK)
 
 
 def do_exportgroups(args, dbh, settings):
@@ -426,12 +426,15 @@ def do_rbload(args, dbh, settings):
 
     args.infile = os.path.join(args.indir, 'eks.yaml')
     do_importeks(args, dbh, settings)
+    dbh.session().flush()
 
     args.infile = os.path.join(args.indir, 'groups.yaml')
     do_importgroups(args, dbh, settings)
+    dbh.session().flush()
 
     args.infile = os.path.join(args.indir, 'userclasses.yaml')
     do_importuserclass(args, dbh, settings)
+    dbh.session().flush()
 
     return
 
@@ -473,6 +476,7 @@ def yaml_write(args, data, msg, printout=False):
 
 
 def yaml_read(args, dbh, class_):
+    # yaml.safe_load_all is a generator
     with open(args.infile, 'r') as instream:
         class_.bulk_load(yaml.safe_load_all(instream), dbh)
     cerr(f'[Imported {class_.__name__} from {args.infile}')

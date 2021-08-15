@@ -82,7 +82,7 @@ class EK(BaseMixIn, Base):
         ek.data = d.get('data', None)
         ek.syskey = d.get('syskey', None)
 
-        db_ek = EK.search(ek.key, dbsession=dbsession)
+        db_ek = EK.search(ek.key, group=d.get('member_of', None), dbsession=dbsession)
         if db_ek:
             if update:
                 db_ek.update(ek)
