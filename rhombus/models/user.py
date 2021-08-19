@@ -601,8 +601,14 @@ class Group(Base, BaseMixIn):
     @classmethod
     def from_dict(cls, d, dbh):
         obj = super().from_dict(d, dbh)
+        dbsess = dbh.session()
         for role in d['roles']:
-            obj.roles.append(EK.search(role, dbsession=dbh.session()))
+            obj.roles.append(EK.search(role, dbsession=dbsess))
+        for assoc_group in d.get('assoc_groups', []):
+            g = dbh.get_group(assoc_group[0])
+            ag = AssociatedGroup(group_id=obj.id, assoc_group_id=g.id, role=assoc_group[1])
+            dbsess.add(ag)
+
         return obj
 
     @staticmethod
