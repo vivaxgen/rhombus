@@ -71,11 +71,14 @@ class AutoUpdateMixIn(object):
         raise NotImplementedError()
 
     @classmethod
-    def bulk_load(cls, a_list, dbh):
+    def bulk_load(cls, a_list, dbh, with_flush=False):
         """ bulk load from a list of dictionary object """
+        dbsess = dbh.session()
         c = 0
         for a_dict in a_list:
             an_obj = cls.from_dict(a_dict, dbh)
+            if with_flush:
+                dbsess.flush([an_obj])
             cerr(f'[I - uploaded {cls.__name__}: {str(an_obj)}]')
             c += 1
         cerr(f'[I - {cls.__name__} uploaded: {c}]')
