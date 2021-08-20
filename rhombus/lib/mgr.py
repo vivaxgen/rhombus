@@ -475,10 +475,10 @@ def yaml_write(args, data, msg, printout=False):
     cerr(f'[Exported {msg} to {args.outfile}]')
 
 
-def yaml_read(args, dbh, class_):
+def yaml_read(args, dbh, class_, with_flush=False):
     # yaml.safe_load_all is a generator
     with open(args.infile, 'r') as instream:
-        class_.bulk_load(yaml.safe_load_all(instream), dbh)
+        class_.bulk_load(yaml.safe_load_all(instream), dbh, with_flush)
     cerr(f'[Imported {class_.__name__} from {args.infile}')
 
 # end of file
