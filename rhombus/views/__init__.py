@@ -308,6 +308,7 @@ class BaseViewer(object):
         content_encoding = mimetypes.guess_type(file_instance.filename)[1]
         return Response(app_iter=FileIter(file_instance.fp()),
                         content_type=file_instance.mimetype, content_encoding=content_encoding,
+                        content_disposition=f'inline; filename="{file_instance.filename}"',
                         request=rq)
 
     def attachment_link(self, obj, attrname):
