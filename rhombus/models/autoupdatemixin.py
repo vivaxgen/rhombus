@@ -13,7 +13,7 @@ from sqlalchemy.inspection import inspect
 from sqlalchemy.orm.session import object_session
 
 from rhombus.lib.utils import cerr
-from messy.lib import roles as r
+from rhombus.lib import roles as r
 
 from itertools import chain
 
