@@ -77,6 +77,9 @@ class DBHandler(object):
 
     query_constructor_class = QueryConstructor
 
+    # put database exceptions here
+    NoResultFound = exc.NoResultFound
+
     def __init__(self, settings, tag='sqlalchemy.', initial=False):
         """ use settings from configfile, prepare self.engine & self.session """
         cinfo("Connecting to database..")
