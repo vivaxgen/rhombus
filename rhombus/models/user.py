@@ -325,8 +325,9 @@ class User(Base, BaseMixIn):
 
     def has_roles(self, *roles):
         grp_ids, role_ids = self.group_role_ids()
+        dbsess = object_session(self)
         for role in roles:
-            role_id = EK._id(role)
+            role_id = EK._id(role, grp='@ROLES', dbsession=dbsess)
             if role_id in role_ids:
                 return True
         return False
