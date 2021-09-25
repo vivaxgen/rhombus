@@ -458,7 +458,7 @@ class Group(Base, BaseMixIn):
 
     name = Column(types.String(32), nullable=False, unique=True)
     desc = Column(types.String(128), nullable=False, server_default='')
-    scheme = Column(types.JSON, nullable=False, server_default='null')
+    scheme = deferred(Column(types.JSON, nullable=False, server_default='null'))
     flags = Column(types.Integer, nullable=False, server_default='0', default=0)
 
     users = association_proxy('usergroups', 'user', creator=_create_ug_by_user)
