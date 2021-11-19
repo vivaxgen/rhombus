@@ -50,6 +50,7 @@ setup(name='rhombus',
       main = rhombus:main
       [console_scripts]
       rhombus-run = rhombus.scripts.run:main
+      rhombus-shell = rhombus.scripts.shell:main
 
       [pyramid.scaffold]
       rhombus = rhombus.scaffolds:RhombusTemplate
