@@ -18,7 +18,7 @@ from pyramid.events import BeforeRender
 import dogpile.cache
 import dogpile.cache.util
 
-from rhombus.lib.utils import cout, cerr, get_dbhandler, random_string
+from rhombus.lib.utils import cout, cerr, get_dbhandler, random_string, dbhandler_userid_func, set_func_userid
 from rhombus.lib import helpers as h
 from rhombus.lib import exceptions as exc
 from rhombus.views import generics
@@ -244,6 +244,9 @@ def init_app(global_config, settings, prefix=None, dbhandler_factory = get_dbhan
 def main(global_config, **settings):
     """ This function returns a Pyramid WSGI application, and only run by pserve
     """
+
+    cerr('rhombus main() is running...')
+    set_func_userid(dbhandler_userid_func)
 
     config = init_app(global_config, settings)
 
