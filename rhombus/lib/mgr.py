@@ -372,7 +372,12 @@ def do_listgroup(args, dbh, settings):
 
 
 def do_exporteks(args, dbh, settings):
-    yaml_write(args, dbh.EK.bulk_dump(dbh), 'EK')
+    yaml_write(
+        args,
+        dbh.EK.bulk_dump(
+            dbh,
+            q=dbh.EK.query(dbh.session()).filter(dbh.EK.member_of_id==None)),
+        'EK')
 
 
 def do_importeks(args, dbh, settings):

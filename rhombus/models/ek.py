@@ -73,7 +73,7 @@ class EK(BaseMixIn, Base):
                     members=[m.as_dict() for m in self.members])
 
     @staticmethod
-    def from_dict(d, update=False, dbsession=None):
+    def from_dict(d, dbsession=None, update=False):
         assert dbsession, 'Please provide dbsession'
 
         ek = EK()
@@ -92,7 +92,7 @@ class EK(BaseMixIn, Base):
             db_ek = ek
 
         for m in d.get('members', []):
-            m_ek = EK.from_dict(m, update, dbsession)
+            m_ek = EK.from_dict(m, dbsession, update)
             m_ek.member_of = db_ek
 
         return db_ek
@@ -276,13 +276,13 @@ class EK(BaseMixIn, Base):
         yaml.safe_dump_all((x.as_dict() for x in query), _out, default_flow_style=False)
 
     @classmethod
-    def bulk_dump(cls, dbh, query=None):
+    def bulk_dump_xxx(cls, dbh, query=None):
         if not query:
             query = cls.query(dbh.session()).filter(cls.member_of_id == None)
         return [obj.as_dict() for obj in query]
 
     @classmethod
-    def bulk_load(cls, a_list, dbh):
+    def bulk_load_XXX(cls, a_list, dbh, with_flush=None):
         session = dbh.session()
         for item in a_list:
             cls.from_dict(item, dbsession=session)
