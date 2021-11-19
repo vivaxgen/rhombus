@@ -44,7 +44,12 @@ class StampMixIn(object):
 
     @declared_attr
     def lastuser(cls):
-        return relationship('User', uselist=False, foreign_keys=[cls.lastuser_id])
+        kwargs = {}
+        # with User class, the relationship hecomes self-reference/adjacency list hence
+        # needs remote_side to establish the correct many-to-one relationship
+        if cls.__name__ == 'User':
+            kwargs['remote_side'] = [cls.id]
+        return relationship('User', uselist=False, foreign_keys=cls.lastuser_id, **kwargs)
 
     @declared_attr
     def stamp(cls):
