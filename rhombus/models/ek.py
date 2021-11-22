@@ -73,9 +73,10 @@ class EK(BaseMixIn, Base):
                     members=[m.as_dict() for m in self.members])
 
     @staticmethod
-    def from_dict(d, dbsession=None, update=False):
-        assert dbsession, 'Please provide dbsession'
+    def from_dict(d, dbh=None, update=False):
+        assert dbh, 'Please provide dbhandler'
 
+        dbsession = dbh.session()
         ek = EK()
         ek.key = d['key']
         ek.desc = d.get('desc', None)
@@ -92,7 +93,7 @@ class EK(BaseMixIn, Base):
             db_ek = ek
 
         for m in d.get('members', []):
-            m_ek = EK.from_dict(m, dbsession, update)
+            m_ek = EK.from_dict(m, dbh, update)
             m_ek.member_of = db_ek
 
         return db_ek
