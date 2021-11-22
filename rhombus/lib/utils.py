@@ -103,7 +103,9 @@ def generic_userid_func():
 
 
 def dbhandler_userid_func():
-    return get_dbhandler().session().user.id
+    if (user := get_dbhandler().session().user):
+        return user.id
+    return None
 
 
 # functions to deal with user and group
