@@ -22,17 +22,18 @@ class AutoUpdateMixIn(object):
 
     # this is for caching field/column lookup
 
-    # plain fields are fields that directly hold values, and automatically
-    # filled by parsing all columns when the get_plain_fields() is called
+    # __plain_fields__ contains a list of SQL column names that directly
+    # hold values, and will be set automatically when get_plain_fields()
+    # is called
     __plain_fields__ = None
 
-    # nullable fields are plain fields that can have null value, and
-    # automatically filled when get_nullable_fields() is called, as such
-    # nullable fields are subset of plain fields
+    # __nullable_fields__ contains a list of SQL column names that are
+    # nullable plain fields (as such, a subset of __plain_fields__)
+    # and will be set automatically when get_nullable_fields() is called
     __nullable_fields__ = None
 
-    # ek fields are proxies of any plain fields that relate to EK key, and
-    # the variable needs to be filled manually
+    # __ek_fields__ contains the names of proxies of any plain fields
+    # that relate to EK key, and this has to be set manually
     __ek_fields__ = []
 
     # rel fields are all relationship parsed automatically when
