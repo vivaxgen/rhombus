@@ -46,6 +46,18 @@ def silent_rmdir(path):
     shutil.rmtree(path, ignore_errors=True)
 
 
+def add_method(cls):
+    def decorator(func):
+        setattr(cls, func.__name__, func)
+    return decorator
+
+
+def add_classmethod(cls):
+    def decorator(func):
+        setattr(cls, func.__name__, classmethod(func))
+    return decorator
+
+
 # dbhandler
 
 # global var

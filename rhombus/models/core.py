@@ -296,4 +296,15 @@ class BaseMixIn(StampMixIn, AutoUpdateMixIn):
     """ BaseMixIn combined StampMixIn with AutoUpdate MixIn)
     """
 
+    @classmethod
+    def method(cls, func):
+        """ add new method to this class """
+        setattr(cls, func.__name__, func)
+
+    @classmethod
+    def classmethod(cls, func):
+        """ add new class method to this class """
+        setattr(cls, func.__name__, classmethod(func))
+
+
 # EOF
