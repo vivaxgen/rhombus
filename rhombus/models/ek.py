@@ -247,7 +247,7 @@ class EK(BaseMixIn, Base):
     @staticmethod
     def proxy(attrname, grpname, match_case=False, auto=False):
 
-        def _getter(inst):
+        def _ek_proxy_getter(inst):
             _id = getattr(inst, attrname)
             # print("*** id is", _id, "for attr", attrname)
             dbsession = object_session(inst)
@@ -258,7 +258,7 @@ class EK(BaseMixIn, Base):
                 return key.lower()
             return key
 
-        def _setter(inst, value):
+        def _ek_proxy_setter(inst, value):
             # print("*** set attr", attrname)
             if not match_case:
                 value = value.lower()
@@ -267,7 +267,7 @@ class EK(BaseMixIn, Base):
                 dbsession = getattr(inst, '_dbh_session_')
             setattr(inst, attrname, EK._id(value, dbsession, grpname, auto=auto))
             # print("*** set attr", attrname, "with", getattr(inst, attrname))
-        return property(_getter, _setter, doc=f'{attrname} {grpname}')
+        return property(_ek_proxy_getter, _ek_proxy_setter, doc=f'EK.proxy {attrname} {grpname}')
 
     @staticmethod
     def dump(_out, query=None, dbsession=None):
