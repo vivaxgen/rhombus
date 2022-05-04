@@ -205,7 +205,7 @@ class AutoUpdateMixIn(object):
     def _get_all_subclasses(cls):
         """ return a generator that yield subclasses recursively """
         for subclass in cls.__subclasses__():
-            yield from subclass.get_subclasses()
+            yield from subclass._get_all_subclasses()
             yield subclass
 
     @classmethod
@@ -214,17 +214,27 @@ class AutoUpdateMixIn(object):
         return set(cls._get_all_subclasses())
 
 
-@event.listen_for(mapper, 'after_configured')
+@event.listens_for(mapper, 'after_configured')
 def configure_autoupdatemixin_fields():
     # set all custom fields of AutoUpdateMixIn subclasses
     # after all mappers have been configured
 
     for cls in AutoUpdateMixIn.get_all_subclasses():
 
-        # set __plain_fields__ and __nullable_fields__
+        # check if cls is not plain type class
+        if type(cls) is type:
+            cerr(f'skipping {cls} [{type(cls)}]')
+            continue
+        else:
+            cerr(f'configuring {cls} [{type(cls)}]')
 
+        # reset first
         cls.__plain_fields__ = []
         cls.__nullable_fields__ = []
+        cls.__ek_fields__ = set()
+
+        # set __plain_fields__ and __nullable_fields__
+
         for c in inspect(cls).c:
             if not isinstance(c, Column):
                 continue
@@ -238,10 +248,11 @@ def configure_autoupdatemixin_fields():
 
         # set __ek_fields__
 
-        for key, attribute in vars(cls):
+        for key, attribute in vars(cls).items():
             if type(attribute) is property:
                 if getattr(attribute, 'fget').__name__ == '_ek_proxy_getter':
-                    cls.__ek_fields__.append(key)
+                    cls.__ek_fields__.add(key)
+        cerr(f'Configuring {cls} with __ek_fields__ = {cls.__ek_fields__}')
 
         # set __ek_metainfo, __rel_fields__ and __fk_fields__
 
