@@ -101,6 +101,8 @@ def init_argparser(parser=None):
     p.add_argument('--indir')
     p.add_argument('--outdir')
 
+    p.add_argument('--debug', default=False, action='store_true')
+
     return db_argparser(p)
 
 

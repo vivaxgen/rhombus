@@ -37,7 +37,13 @@ def main():
 
     scriptname = args[1]
 
-    execute( scriptname, args[2:] )
+    if '--debug' in args[2:]:
+        from ipdb import launch_ipdb_on_exception
+        with launch_ipdb_on_exception():
+            execute(scriptname, args[2:])
+
+    else:
+        execute(scriptname, args[2:])
 
 
 if __name__ == '__main__':

@@ -1,13 +1,22 @@
 # rbmgr.py
 
 
-def init_argparser( parser = None ):
+def init_argparser(parser=None):
 
     from rhombus.lib import mgr
-    return mgr.init_argparser( parser )
+    return mgr.init_argparser(parser)
 
 
-def main( args ):
+def main(args):
 
     from rhombus.lib import mgr
-    return mgr.main( args )
+
+    if args.debug:
+        from ipdb import launch_ipdb_on_exception
+        with launch_ipdb_on_exception():
+            return mgr.main(args)
+
+    else:
+        return mgr.main(args)
+
+# EOF
