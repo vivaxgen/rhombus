@@ -17,6 +17,8 @@ from sqlalchemy import event, MetaData
 
 from zope.sqlalchemy import register
 
+from rhombus.lib.utils import cerr
+
 __all__ = ['get_base', 'get_dbsession', 'set_datalogger', 'set_before_update_flag']
 
 class RhoSession(Session):
@@ -99,10 +101,12 @@ _dbsession = scoped_session(sessionmaker(class_ = RhoSession))
 register(_dbsession)
 _base = declarative_base(metadata=_metadata)
 
+
 # this is necessary for SQLite to use FOREIGN KEY support (as well as ON DELETE CASCADE)
-#@event.listens_for(Engine, 'connect')
+# @event.listens_for(Engine, 'connect')
 def set_sqlite_pragma(dbapi_connection, connection_record):
-    #raise RuntimeError(dir(connection_record))
+    # raise RuntimeError(dir(connection_record))
+    cerr('[Setting PRAGMA for SQLite]')
     cursor = dbapi_connection.cursor()
     cursor.execute('PRAGMA foreign_keys=ON')
     cursor.close()
