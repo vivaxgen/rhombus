@@ -1,5 +1,5 @@
 __copyright__ = '''
-stampmixin.py - Rhombus SQLAlchemy stamp mixin
+autoupdatemixin.py - Rhombus SQLAlchemy stamp mixin
 
 (c) 2021 Hidayat Trimarsanto <anto@eijkman.go.id> <trimarsanto@gmail.com>
 
@@ -8,8 +8,9 @@ This software is licensed under LGPL v3 or later version.
 Please read the README.txt of this software.
 '''
 
-from sqlalchemy import Column
+from sqlalchemy import Column, event
 from sqlalchemy.inspection import inspect
+from sqlalchemy.orm import mapper
 from sqlalchemy.orm.session import object_session
 
 from rhombus.lib.utils import cerr
@@ -20,41 +21,41 @@ from itertools import chain
 
 class AutoUpdateMixIn(object):
 
-    # this is for caching field/column lookup
+    # the following variables has to be set manually for each subclass
 
-    # __plain_fields__ contains a list of SQL column names that directly
-    # hold values, and will be set automatically when get_plain_fields()
-    # is called
-    __plain_fields__ = None
-
-    # __nullable_fields__ contains a list of SQL column names that are
-    # nullable plain fields (as such, a subset of __plain_fields__)
-    # and will be set automatically when get_nullable_fields() is called
-    __nullable_fields__ = None
-
-    # __ek_fields__ contains the names of proxies of any plain fields
-    # that relate to EK key, and this has to be set manually
-    __ek_fields__ = []
-
-    # rel fields are all relationship parsed automatically when
-    # get_rel_fields() is called
-    # fk fields (foreign_keys) are fields connected to rel fields
-    __rel_fields__ = None
-    __fk_fields__ = None
-    __ek_metainfo__ = None
-
-    # auxiliary fields
-    __aux_fields__ = None
-
+    # fields that are excluded from AutoUpdateMixIn value-update mechanism
     __excluded_fields__ = {'id', }
-
-    # roles
 
     # managing roles can manage this object regardless of ownership or groups
     __managing_roles__ = {r.SYSADM, r.DATAADM}
 
     # modifying roles can manage this object with ownership/group requirement
     __modifying_roles__ = __managing_roles__
+
+    # the following variables will be set automatically after all mappers have
+    # been configured
+
+    # __plain_fields__ contains a list of SQL column names that directly
+    # hold values
+    __plain_fields__ = None
+
+    # __nullable_fields__ contains a list of SQL column names that are
+    # nullable plain fields (as such, a subset of __plain_fields__)
+    __nullable_fields__ = None
+
+    # __ek_fields__ contains the names of proxies of any plain fields
+    # that relate to EK key
+    __ek_fields__ = []
+
+    # __rel_fields__ contains all relationship fields
+    __rel_fields__ = None
+
+    # __fk_fields__ holds foreign_keys fields connected to rel fields
+    __fk_fields__ = None
+
+    # __ek_metainfo__ holds meta information for each EK fields
+    __ek_metainfo__ = None
+    __aux_fields__ = None
 
     def update(self, obj):
         if isinstance(obj, dict):
@@ -182,52 +183,78 @@ class AutoUpdateMixIn(object):
 
     @classmethod
     def get_plain_fields(cls):
-        if cls.__plain_fields__ is None:
-            cls.__plain_fields__ = []
-            cls.__nullable_fields__ = []
-            for c in inspect(cls).c:
-                if not isinstance(c, Column):
-                    continue
-                if c.name in cls.__excluded_fields__:
-                    continue
-                cls.__plain_fields__.append(c.name)
-                if c.nullable:
-                    cls.__nullable_fields__.append(c.name)
-            cls.__plain_fields__ = set(cls.__plain_fields__)
-            cls.__nullable_fields__ = set(cls.__nullable_fields__)
         return cls.__plain_fields__
 
     @classmethod
     def get_nullable_fields(cls):
-        if cls.__nullable_fields__ is None:
-            cls.get_plain_fields()
         return cls.__nullable_fields__
 
     @classmethod
     def get_rel_fields(cls):
-        if cls.__rel_fields__ is None:
-            cls.__ek_metainfo__ = {}
-            rels = inspect(cls).relationships
-            cls.__rel_fields__ = set(r.key for r in rels if r.key not in cls.__excluded_fields__)
-            cls.__fk_fields__ = set(c.name
-                                    for c in chain.from_iterable(r.local_columns for r in rels)
-                                    if c.name not in cls.__excluded_fields__
-                                    )
-            for ekf in cls.__ek_fields__:
-                cls.__ek_metainfo__[ekf] = getattr(cls, ekf).__doc__.split()
-            cls.__fk_fields__ |= set(item[0] for item in cls.__ek_metainfo__.values())
         return cls.__rel_fields__
 
     @classmethod
     def get_fk_fields(cls):
-        if cls.__fk_fields__ is None:
-            cls.get_rel_fields()
         return cls.__fk_fields__
 
     @classmethod
     def get_ek_metainfo(cls):
-        if cls.__ek_metainfo__ is None:
-            cls.get_rel_fields()
         return cls.__ek_metainfo__
+
+    @classmethod
+    def _get_all_subclasses(cls):
+        """ return a generator that yield subclasses recursively """
+        for subclass in cls.__subclasses__():
+            yield from subclass.get_subclasses()
+            yield subclass
+
+    @classmethod
+    def get_all_subclasses(cls):
+        """ return a set of all subclasses of cls """
+        return set(cls._get_all_subclasses())
+
+
+@event.listen_for(mapper, 'after_configured')
+def configure_autoupdatemixin_fields():
+    # set all custom fields of AutoUpdateMixIn subclasses
+    # after all mappers have been configured
+
+    for cls in AutoUpdateMixIn.get_all_subclasses():
+
+        # set __plain_fields__ and __nullable_fields__
+
+        cls.__plain_fields__ = []
+        cls.__nullable_fields__ = []
+        for c in inspect(cls).c:
+            if not isinstance(c, Column):
+                continue
+            if c.name in cls.__excluded_fields__:
+                continue
+            cls.__plain_fields__.append(c.name)
+            if c.nullable:
+                cls.__nullable_fields__.append(c.name)
+        cls.__plain_fields__ = set(cls.__plain_fields__)
+        cls.__nullable_fields__ = set(cls.__nullable_fields__)
+
+        # set __ek_fields__
+
+        for key, attribute in vars(cls):
+            if type(attribute) is property:
+                if getattr(attribute, 'fget').__name__ == '_ek_proxy_getter':
+                    cls.__ek_fields__.append(key)
+
+        # set __ek_metainfo, __rel_fields__ and __fk_fields__
+
+        cls.__ek_metainfo__ = {}
+        rels = inspect(cls).relationships
+        cls.__rel_fields__ = set(r.key for r in rels if r.key not in cls.__excluded_fields__)
+        cls.__fk_fields__ = set(c.name
+                                for c in chain.from_iterable(r.local_columns for r in rels)
+                                if c.name not in cls.__excluded_fields__
+                                )
+        for ekf in cls.__ek_fields__:
+            cls.__ek_metainfo__[ekf] = getattr(cls, ekf).__doc__.split()[1:]
+        cls.__fk_fields__ |= set(item[0] for item in cls.__ek_metainfo__.values())
+
 
 # end of file
