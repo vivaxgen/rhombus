@@ -34,7 +34,7 @@ class FileAttachment(Base, BaseMixIn):
     flags = Column(types.Integer, nullable=False, server_default='0')
     """ optional flags """
 
-    __ek_fields__ = ['type', 'mimetype']
+    # __ek_fields__ = ['type', 'mimetype']
 
     def __repr__(self):
         return f'{self.__class__.__name__}(filename={self.filename}, size={len(self.bindata)})'
