@@ -3,10 +3,11 @@ from rhombus.lib.utils import get_dbhandler
 from rhombus.lib.roles import SYSADM
 from rhombus.lib.tags import (div, table, thead, tbody, th, tr, td, literal, selection_bar, br, ul, li, a, i,
                               form, POST, GET, fieldset, input_text, input_hidden, input_select, input_password,
-                              submit_bar, h3, p, input_textarea)
+                              submit_bar, h2, h3, p, input_textarea)
 from rhombus.views import *
 
 import io, yaml
+
 
 @roles(SYSADM)
 def index(request):
@@ -18,58 +19,64 @@ def index(request):
             th('', style="width: 2em;"), th('UserClass / Domain'), th('Users')
         ],
         tbody()[
-            tuple([ tr()[
-                        td(literal('<input type="checkbox" name="userclass-ids" value="%d" />' % uc.id)),
-                        td('%s' % uc.domain),
-                        td(a('%d' % uc.users.count(), href=request.route_url('rhombus.userclass-view', id=uc.id)) )
-                    ] for uc in userclasses ])
+            tuple([tr()[
+                td(literal('<input type="checkbox" name="userclass-ids" value="%d" />' % uc.id)),
+                td('%s' % uc.domain),
+                td(a('%d' % uc.users.count(), href=request.route_url('rhombus.userclass-view', id=uc.id)))
+            ] for uc in userclasses])
         ]
     ]
 
-    add_button = ( 'New userclass',
-                    request.route_url('rhombus.userclass-edit', id=0)
-    )
+    add_button = ('New userclass',
+                  request.route_url('rhombus.userclass-edit', id=0)
+                  )
 
     bar = selection_bar('userclass-ids', action=request.route_url('rhombus.userclass-action'),
-                    add = add_button)
+                        add=add_button)
     html, code = bar.render(userclass_table)
 
+    html = div(h2('Userclass Listing')).add(html)
+
     return render_to_response('rhombus:templates/generics/page.mako',
-            {   'html': html,
-                'code': code },
-            request = request )
+                              {'html': html,
+                               'code': code,
+                               },
+                              request=request)
 
 
 @roles(SYSADM)
 def view(request):
 
     dbh = get_dbhandler()
-    userclass = dbh.get_userclass( int(request.matchdict['id']) )
+    userclass = dbh.get_userclass(int(request.matchdict['id']))
 
-    html = div( div(h3('Userclass: %s' % userclass.domain)))
+    html = div(h3()[
+        a('Userclass', href=request.route_url('rhombus.userclass')),
+        f': {userclass.domain}',
+    ])
 
     eform = edit_form(userclass, dbh, request, static=True)
-    html.add( div(eform) )
+    html.add(div(eform))
 
     user_table = table(class_='table table-condensed table-striped')[
         thead()[
             th('Login'), th('Name'), th('Primary group')
         ],
         tbody()[
-            tuple([ tr()[
-                        td(a(u.login, href=request.route_url('rhombus.user-view', id=u.id))),
-                        td(u.fullname),
-                        td(a(u.primarygroup.name,
-                            href=request.route_url('rhombus.group-view', id=u.primarygroup_id))),
-                    ] for u in userclass.users ])
+            tuple([tr()[
+                td(a(u.login, href=request.route_url('rhombus.user-view', id=u.id))),
+                td(u.fullname),
+                td(a(u.primarygroup.name,
+                     href=request.route_url('rhombus.group-view', id=u.primarygroup_id))),
+            ] for u in userclass.users])
         ]
     ]
 
     html.add(user_table)
 
     return render_to_response('rhombus:templates/generics/page.mako',
-            { 'content': str(html) },
-            request = request )
+                              {'content': str(html)},
+                              request=request)
 
 
 @roles(SYSADM)
@@ -90,12 +97,13 @@ def edit(request):
         else:
             userclass = dbh.get_userclass(userclass_id)
 
+        html = div(h3('Edit Userclass'))
         editform = edit_form(userclass, dbh, request)
+        html.add(editform)
 
-        return render_to_response( "rhombus:templates/generics/page.mako",
-                {   'html': editform,
-                }, request = request
-        )
+        return render_to_response("rhombus:templates/generics/page.mako",
+                                  {'html': html,
+                                   }, request=request)
 
     elif request.POST:
 
