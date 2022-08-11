@@ -165,7 +165,7 @@ def parse_form( f ):
     d['id'] = int(f['rhombus-userclass_id'])
     d['domain'] = f['rhombus-userclass_domain']
     d['desc'] = f['rhombus-userclass_desc']
-    d['credscheme'] = yaml.load(io.StringIO(f['rhombus-userclass_credscheme']))
+    d['credscheme'] = yaml.load(io.StringIO(f['rhombus-userclass_credscheme']), Loader=yaml.CLoader)
 
     return d
 
