@@ -34,7 +34,7 @@ ${ code | n }
 ##
 <%def name="stylelinks()">
 	<link rel="stylesheet" href="/assets/rb/select2/css/select2.min.css" />
-	<link rel="stylesheet" href="/assets/rb/css/select2-bootstrap4.min.css" />
+	<link rel="stylesheet" href="/assets/rb/css/select2-bootstrap-5-theme.min.css" />
 </%def>
 ##
 ##
