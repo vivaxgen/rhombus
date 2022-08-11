@@ -405,7 +405,7 @@ def user_menu(request):
     authhost = request.registry.settings.get('rhombus.authhost', '')
     # url_login = authhost + '/login?'
     # url_logout = authhost + '/logout?'
-    user_menu_html = ul(class_='navbar-nav me-auto my-2 my-lg-0 navbar-nav-scroll')
+    user_menu_html = ul(class_='navbar-nav me-auto navbar-nav-scroll')
     if request.user:
         user_menu_list = li(class_="nav-item active dropdown")[
             a(class_='nav-link dropdown-toggle', id="navbarUsermenu",
