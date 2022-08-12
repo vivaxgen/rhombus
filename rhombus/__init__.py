@@ -18,6 +18,7 @@ from pyramid.events import BeforeRender
 import dogpile.cache
 import dogpile.cache.util
 
+from rhombus import settingkeys as sk
 from rhombus.lib.utils import cout, cerr, get_dbhandler, random_string, dbhandler_userid_func, set_func_userid
 from rhombus.lib import helpers as h
 from rhombus.lib import exceptions as exc
@@ -108,11 +109,11 @@ def includeme(config):
     override_assets(
         config, settings,
         [
-            ('override.loginpage', 'rhombus:templates/login.mako'),
+            (sk.override_loginpage, 'rhombus:templates/login.mako'),
         ]
     )
 
-    if 'override.assets' in settings:
+    if sk.override_assets in settings:
         assets = settings['override.assets']
         for asset in assets.split('\n'):
             if not asset:
@@ -197,21 +198,21 @@ def init_app(global_config, settings, prefix=None, dbhandler_factory=get_dbhandl
         key_mangler=dogpile.cache.util.sha1_mangle_key
     )
 
-    authcache.configure_from_config(settings, 'rhombus.authcache.')
-    session_expiration_time = int(settings['rhombus.authcache.expiration_time'])
+    authcache.configure_from_config(settings, sk.rb_authcache_)
+    session_expiration_time = int(settings[sk.rb_authcache_expiration_time])
     cache.configure_from_config(settings, 'dogpile.cache.')
 
     # init database
     dbh = dbhandler_factory(settings)
 
-    parent_domain = True if (settings.get('rhombus.authmode', None) == 'master' or
-                    settings.get('rhombus.authhost', None)) else False
+    parent_domain = True if (settings.get(sk.rb_authmode, None) == 'master' or
+                             settings.get(sk.rb_authhost, None)) else False
 
     auth_policy = AuthTktAuthenticationPolicy(
-        secret=settings['rhombus.authsecret'],
+        secret=settings[sk.rb_authsecret],
         callback=authenticate_user,
         parent_domain=parent_domain,
-        cookie_name=settings.get('rhombus.authcookie', 'rb_auth_tkt'),
+        cookie_name=settings.get(sk.rb_authcookie, 'rb_auth_tkt'),
         hashalg='sha512'
     )
 
@@ -233,7 +234,7 @@ def init_app(global_config, settings, prefix=None, dbhandler_factory=get_dbhandl
     config.include(includeme, prefix)
 
     # add static assets directory
-    if 'assets.directory' in settings:
+    if sk.assets_directory in settings:
         config.add_static_view(name='assets', path=settings['assets.directory'])
 
     if include:
@@ -251,9 +252,9 @@ def init_app(global_config, settings, prefix=None, dbhandler_factory=get_dbhandl
                 M = importlib.import_module(include_module)
                 config.include(getattr(M, 'includeme'))
 
-    if 'rhombus.title' in settings:
+    if sk.rb_title in settings:
         global _TITLE_
-        _TITLE_ = settings['rhombus.title']
+        _TITLE_ = settings[sk.rb_title]
 
     return config
 
@@ -285,7 +286,7 @@ def main(global_config, **settings):
     config.add_view('rhombus.views.google.g_callback', route_name='g_callback')
 
     # check if we are running as master
-    if settings.get('rhombus.authmode', None) == 'master':
+    if settings.get(sk.rb_authmode, None) == 'master':
 
         # add confirmation url
         config.add_route('confirm', '/confirm')
@@ -372,11 +373,11 @@ def get_authenticated_userobj(request, token):
     auth_cache = request.auth_cache
     key = token.encode('ASCII')
     userinstance = auth_cache.get(key, session_expiration_time)
-    if not userinstance and 'rhombus.authhost' in request.registry.settings:
+    if not userinstance and sk.rb_authhost in request.registry.settings:
         # in client mode
 
         # verify to authentication host
-        confirmation = confirm_token(request.registry.settings['rhombus.authhost'], token)
+        confirmation = confirm_token(request.registry.settings[sk.rb_authhost], token)
         if confirmation[0]:
 
             # check the existence of the user
@@ -455,7 +456,7 @@ def get_userobj(request):
 
 def set_userobj(request, user_id, userinstance):
 
-    if request.registry.settings.get('rhombus.authhost', None) is not None:
+    if request.registry.settings.get(sk.rb_authhost, None) is not None:
         raise RuntimeError('ERR: only server without Rhombus rhombus.authhost can set '
                            'user instance! Otherwise, please add rhombus.authmode = master '
                            'and remove rhombus.authhost setting.')
@@ -466,7 +467,7 @@ def set_userobj(request, user_id, userinstance):
 
 def del_userobj(request):
 
-    if request.registry.settings.get('rhombus.authhost', None) is not None:
+    if request.registry.settings.get(sk.rb_authhost, None) is not None:
         raise RuntimeError('ERR: only server without Rhombus rhombus.authhost can delete '
                            'user instance!')
 
@@ -511,7 +512,7 @@ def userobj_setter(auth_cache):
 
     def set_userobj(request, user_id, userinstance):
 
-        if request.registry.settings.get('rhombus.authmode', None) != 'master':
+        if request.registry.settings.get(sk.rb_authmode, None) != 'master':
             raise RuntimeError('ERR: only server with Rhombus authmode as master can set '
                                'user instance!')
 
@@ -525,7 +526,7 @@ def userobj_deleter(auth_cache):
 
     def del_userobj(request):
 
-        if request.registry.settings['rhombus.authmode'] != 'master':
+        if request.registry.settings[sk.rb_authmode] != 'master':
             raise RuntimeError('ERR: only server with Rhombus authmode as master can delete '
                                'user instance!')
 
