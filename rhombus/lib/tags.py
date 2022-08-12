@@ -312,7 +312,7 @@ class input_select(input_text):
                     multiple = 'multiple="multiple"' if self.multiple else '',
                     class_label = 'col-md-%d control-label' % self.offset,
                     class_value = 'col-md-%d' % self.size,
-                    class_input = 'form-control' + (' is-invalid' if self.error else ''),
+                    class_input = 'form-select' + (' is-invalid' if self.error else ''),
                     attrs = self.attributes(attrs_only=True),
                     help_span = self.help(),
                     info = self.info_text(),
