@@ -4,7 +4,6 @@
 
 from webhelpers2.html import escape, url_escape, literal
 
-
 GET, POST, PUT, DELETE = 'GET', 'POST', 'PUT', 'DELETE'
 FORM_URLENCODED = 'application/x-www-form-urlencoded'
 FORM_MULTIPART = 'multipart/form-data'
@@ -43,8 +42,9 @@ class htmltag(object):
                 continue
             self.attrs[key.removesuffix('_')] = val
 
-    def r(self):
+    def r(self) -> str:
         """ render string """
+        # this method should be implemented in each corresponding derived class
         raise NotImplementedError()
 
     def __str__(self):
