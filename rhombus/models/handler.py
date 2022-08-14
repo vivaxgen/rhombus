@@ -148,12 +148,12 @@ class DBHandler(object):
 
         return self.User.search(user, session=self.session())
 
-    def get_group(self, group=None, user_id=None):
+    def get_group(self, group=None, user_id=None, systemgroups=False):
         """user_id can be either an integer or an userinstance object or an User object"""
 
         if group is None:
             if user_id is None:
-                return self.get_groups()
+                return self.get_groups(systemgroups=systemgroups)
             else:
                 # only return groups where the user is a member
                 if isinstance(user_id, int):
@@ -174,10 +174,12 @@ class DBHandler(object):
 
         return self.Group.search(group, self.session())
 
-    def get_groups(self):
-        """ return all non-system groups """
+    def get_groups(self, systemgroups=False):
+        """ return all non-system groups, except when systemgroups is True"""
 
         q = user.Group.query(self.session())
+        if systemgroups:
+            return q.all()
         q = q.filter(~user.Group.name.startswith('\\_', escape='\\'))
         return q.all()
 
