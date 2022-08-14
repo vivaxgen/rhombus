@@ -38,7 +38,7 @@ def view(request):
     eform = edit_form(ek, dbh, request, static=True)
     html, code = format_ektable(ek.members, request, ek)
 
-    html = div((h2('Enumerated Key'))).add(eform, br(), html)
+    html = div((h2('Enumerated Key'))).add(eform, br, html)
 
     return render_to_response('rhombus:templates/generics/page.mako',
             {   'html': html,

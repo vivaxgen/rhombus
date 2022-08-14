@@ -55,7 +55,7 @@ def view(request):
         f': {userclass.domain}',
     ])
 
-    eform = edit_form(userclass, dbh, request, static=True)
+    eform = edit_form(userclass, dbh, request, readonly=True)
     html.add(div(eform))
 
     user_table = table(class_='table table-condensed table-striped')[
@@ -75,7 +75,7 @@ def view(request):
     html.add(user_table)
 
     return render_to_response('rhombus:templates/generics/page.mako',
-                              {'content': str(html)},
+                              {'html': html},
                               request=request)
 
 
@@ -146,21 +146,19 @@ def action(request):
     raise NotImplementedError()
 
 
-def edit_form(userclass, dbh, request, static=False):
+def edit_form(userclass, dbh, request, readonly=False):
 
-    eform = form( name='rhombus/userclass', method=POST,
-                action=request.route_url('rhombus.userclass-edit', id=userclass.id))
+    eform = form(name='rhombus/userclass', method=POST, readonly=readonly,
+                 action=request.route_url('rhombus.userclass-edit', id=userclass.id))
     eform.add(
         fieldset(
             input_hidden(name='rhombus-userclass_id', value=userclass.id),
-            input_text('rhombus-userclass_domain', 'Domain', value=userclass.domain,
-                static=static),
-            input_text('rhombus-userclass_desc', 'Description', value=userclass.desc,
-                static=static),
-            input_textarea('rhombus-userclass_credscheme', 'Cred Scheme', value=yaml.dump(userclass.credscheme),
-                    static=static),
-            submit_bar() if not static else a('Edit', class_='btn btn-primary col-md-offset-3',
-                            href=request.route_url('rhombus.userclass-edit', id=userclass.id)),
+            input_text('rhombus-userclass_domain', 'Domain', value=userclass.domain),
+            input_text('rhombus-userclass_desc', 'Description', value=userclass.desc),
+            input_textarea('rhombus-userclass_credscheme', 'Cred Scheme', value=yaml.dump(userclass.credscheme)),
+            submit_bar() if not readonly else a('Edit', class_='btn btn-primary offset-md-3',
+                                                href=request.route_url('rhombus.userclass-edit',
+                                                                       id=userclass.id)),
         )
     )
 

@@ -4,7 +4,7 @@ from rhombus.lib.roles import PUBLIC, SYSADM, GUEST, EK_VIEW, USERCLASS_VIEW, US
 from rhombus.lib.modals import popup, modal_delete
 from rhombus.lib.tags import (div, table, thead, tbody, th, tr, td, literal, selection_bar, br, ul, li, a, i,
                               form, POST, GET, fieldset, input_text, input_hidden, input_select, input_password,
-                              submit_bar, h3, p, input_show)
+                              submit_bar, h3, p)
 from rhombus.views import *
 from rhombus.views.generics import error_page
 
@@ -60,10 +60,10 @@ def view(request):
 
     html = div( div(h3('User View')) )
 
-    eform = edit_form(user, dbh, request, static=True)
+    eform = edit_form(user, dbh, request, readonly=True)
     html.add( eform )
 
-    html.add(br(), p('Groups: %s' % ' | '.join([g.name for g in user.groups or []])))
+    html.add(br, p('Groups: %s' % ' | '.join([g.name for g in user.groups or []])))
 
     return render_to_response('rhombus:templates/generics/page.mako',
         {   'html': html,
@@ -137,31 +137,33 @@ def edit(request):
     raise NotImplementedError()
 
 
-def edit_form(user, dbh, request, static=False):
+def edit_form(user, dbh, request, readonly=False):
 
-    eform = form( name='rhombus/user', method=POST,
+    static = readonly
+    eform = form( name='rhombus/user', method=POST, readonly=readonly,
                 action=request.route_url('rhombus.user-edit', id=user.id))
     eform.add(
         fieldset(
             input_hidden(name='rhombus-user_id', value=user.id),
             input_select('rhombus-user_userclass_id', 'User class', value=user.userclass_id,
-                static=static, options = [ (uc.id, uc.domain) for uc in dbh.get_userclass() ]),
-            input_text('rhombus-user_login', 'Login', value=user.login,
-                static=static),
-            input_text('rhombus-user_lastname', 'Lastname', value=user.lastname,
-                static=static),
-            input_text('rhombus-user_firstname', 'Firstname', value=user.firstname,
-                static=static),
-            input_text('rhombus-user_email', 'Primary email', value=user.email,
-                static=static),
-            input_text('rhombus-user_email2', 'Secondary email', value=user.email2,
-                static=static),
-            input_select('rhombus-user_primarygroup_id', 'Primary group', value=user.primarygroup_id,
-                static=static, options = [ (g.id, g.name) for g in dbh.get_group() ]),
-            input_text('rhombus-user_institution', 'Institution', value=user.institution,
-                    static=static),
-            submit_bar() if not static else a('Edit', class_='btn btn-primary col-md-offset-3',
-                            href=request.route_url('rhombus.user-edit', id=user.id)),
+                         options=[(uc.id, uc.domain) for uc in dbh.get_userclass()]),
+            input_text('rhombus-user_login', 'Login', value=user.login),
+            input_text('rhombus-user_lastname', 'Lastname', value=user.lastname),
+            input_text('rhombus-user_firstname', 'Firstname', value=user.firstname),
+            input_text('rhombus-user_email', 'Primary email', value=user.email),
+            input_text('rhombus-user_email2', 'Secondary email', value=user.email2),
+            input_select(
+                'rhombus-user_primarygroup_id', 'Primary group', value=user.primarygroup_id,
+                static=static,
+                options=[
+                    (g.id, g.name)
+                    for g in dbh.get_group(
+                        systemgroups=True if (readonly or user.has_roles(SYSADM)) else False)
+                ]
+            ),
+            input_text('rhombus-user_institution', 'Institution', value=user.institution),
+            submit_bar() if not static else a('Edit', class_='btn btn-primary offset-md-3',
+                href=request.route_url('rhombus.user-edit', id=user.id)),
         )
     )
 
