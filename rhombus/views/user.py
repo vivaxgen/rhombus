@@ -4,7 +4,7 @@ from rhombus.lib.roles import PUBLIC, SYSADM, GUEST, EK_VIEW, USERCLASS_VIEW, US
 from rhombus.lib.modals import popup, modal_delete
 from rhombus.lib.tags import (div, table, thead, tbody, th, tr, td, literal, selection_bar, br, ul, li, a, i,
                               form, POST, GET, fieldset, input_text, input_hidden, input_select, input_password,
-                              submit_bar, h3, p)
+                              submit_bar, hr, h3, h5, p, custom_submit_bar)
 from rhombus.views import *
 from rhombus.views.generics import error_page
 
@@ -64,6 +64,14 @@ def view(request):
     html.add( eform )
 
     html.add(br, p('Groups: %s' % ' | '.join([g.name for g in user.groups or []])))
+
+    html.add(div(hr, h3('Token Generator', styles="bg-dark;")))
+    tform = form(name='rhombus/token-generator', method=POST,
+                 action=request.route_url('rhombus.user-action'))
+    tform.add(
+        custom_submit_bar(('Generate token', 'generate_token')).set_offset(1).show_reset_button(False)
+    )
+    html.add(tform)
 
     return render_to_response('rhombus:templates/generics/page.mako',
         {   'html': html,
@@ -334,6 +342,17 @@ def action_post(request):
             ('success', 'User %s has been deleted successfully' % ','.join( logins )))
 
         return HTTPFound( location = request.referrer or request.route_url( 'rhombus.user'))
+
+    elif method == 'generate_token':
+
+        from rhombus.lib.rpc import generate_user_token
+
+        token = generate_user_token(request)
+        html = div(h3('User Token'), div('Please save your token in secure location:'), h5(token))
+
+        return render_to_response('rhombus:templates/generics/page.mako',
+                                  {'html': html},
+                                  request=request)
 
 
     raise RuntimeError('FATAL - programming ERROR')
