@@ -108,14 +108,14 @@ def login(request):
 def logout(request):
     request.del_user()
     headers = forget(request)
-    if request.registry.settings.get('rhombus.authmode', None) == 'master':
+    if request.registry.settings.get(ck.rb_authmode, None) == 'master':
         redirect = request.params.get('redirect', None)
         if not redirect:
             redirect = request.referrer or '/'
-        return HTTPFound( location = redirect, headers = headers )
+        return HTTPFound(location=redirect, headers=headers)
     redirect = request.referrer or '/'
-    return HTTPFound( location=redirect,
-                        headers = headers )
+    return HTTPFound(location=redirect,
+                     headers=headers)
 
 
 def confirm(request):
