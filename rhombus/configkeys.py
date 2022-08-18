@@ -3,7 +3,7 @@
 # general rhombus settings
 
 rb_title = 'rhombus.title'
-default_userclass = 'default.userclass'
+rb_default_userclass = 'rhombus.default_userclass'
 
 rb_data_logger = 'rhombus.data_logger'
 

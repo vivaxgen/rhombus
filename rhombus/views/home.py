@@ -11,6 +11,7 @@ from rhombus.views import roles
 from rhombus.lib.roles import SYSADM, SYSVIEW
 from rhombus.models.user import UserClass, UserInstance
 from rhombus.lib.utils import get_dbhandler, random_string
+from rhombus import configkeys as ck
 
 from urllib.parse import urlparse
 import time
@@ -67,7 +68,7 @@ def login(request):
         else:
             msg = 'Email address does not match with any users'
     elif userclass_name is None:
-        userclass_name = request.registry.settings.get('rhombus.default.userclass','_SYSTEM_')
+        userclass_name = request.registry.settings.get(ck.rb_default_userclass, '_SYSTEM_')
 
     if request.POST and msg is None:
 
