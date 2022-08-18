@@ -188,10 +188,7 @@ class RhoRequest(Request):
         return data
 
     def del_ticket(self, ticket):
-        try:
-            del self.session[self.get_sess_ticket(ticket)]
-        except KeyError:
-            pass
+        self.cache.delete(self.get_sess_ticket(ticket))
 
     def get_resource(self, resource_name, default):
         return self.registry.settings.get(resource_name, default)
