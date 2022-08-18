@@ -183,7 +183,7 @@ def include_rpc(config):
 
     config.add_jsonrpc_endpoint('rpc-rb-v1', '/rpc/v1')
     config.add_jsonrpc_method('rhombus.lib.rpc.generate_token', endpoint='rpc-rb-v1', method='generate_token')
-    config.add_jsonrpc_method('rhombus.lib.rpc.check_auth', endpoint='rpc-rb-v1', method='check_auth')
+    config.add_jsonrpc_method('rhombus.lib.rpc.check_token', endpoint='rpc-rb-v1', method='check_token')
     config.add_jsonrpc_method('rhombus.lib.rpc.revoke_token', endpoint='rpc-rb-v1', method='revoke_token')
 
 # EOF
