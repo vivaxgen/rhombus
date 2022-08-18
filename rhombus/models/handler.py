@@ -193,6 +193,30 @@ class DBHandler(object):
     def get_group_by_id(self, id):
         return self.Group.get(id, self.session())
 
+    def auth_user(self, login, passwd, userclass_name=None):
+        """ return userinstance  if login and passwd match """
+
+        user = userclass = None
+        if '/' in login:
+            login, userclass_name = login.split('/')
+            userclass = self.get_userclass(userclass_name)
+        elif '@' in login:
+            users = self.get_user_by_email(login)
+            if len(users) > 1:
+                # email is used by more than 1 users
+                raise ValueError('Email address is used by multiple users!')
+            elif len(users) == 1:
+                user = users[0]
+                userclass = user.userclass
+            else:
+                raise ValueError('Email address does not match with any user')
+        elif userclass_name:
+            userclass = self.get_userclass(userclass_name)
+        else:
+            raise ValueError('Please provide either default userclass_name or user/userclass notation')
+
+        return userclass.auth_user(login, passwd)
+
     # EnumeratedKey methods
 
     def add_ekey(self, ekey, group=None):
