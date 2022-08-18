@@ -15,14 +15,21 @@ import time
 # http://localhost:6543/rpc | python3 -m json.tool
 
 
-def get_userinstance_by_token(request, token):
+def get_userinstance_by_token(request, token, raise_exc=True):
     """ return user, errmsg """
 
     try:
         payload = request.get_data(token, 12 * 3600)
     except KeyError:
+        if raise_exc:
+            raise JsonRpcError(code=-31003,
+                               message='Token does not exist or is already expired/revoked.')
         return None, "token does not exist or is already expired"
     if (time.time() - payload['create_time']) / 3600 > 12:
+        request.del_ticket(token)
+        if raise_exc:
+            raise JsonRpcError(code=-31004,
+                               message='Token is already expired.')
         return None, "token is expired"
     return payload['userinstance'], ''
 
@@ -57,13 +64,11 @@ def generate_token(request, login, passwd):
     if user is None:
         raise JsonRpcError(code=-31002, message='Invalid login/password combination.')
 
-    return generate_user_token(request, user)
+    return {'token': generate_user_token(request, user)}
 
 
 def check_token(request, token):
     userinstance, errmsg = get_userinstance_by_token(request, token)
-    if userinstance is None:
-        return {'auth': False, 'user': None, 'errmsg': errmsg}
     return {'auth': True, 'user': userinstance.login, 'errmsg': None}
 
 
