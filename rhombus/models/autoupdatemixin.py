@@ -108,6 +108,9 @@ class AutoUpdateMixIn(object):
             d['lastuser'] = self.lastuser.login
         return d
 
+    def __json__(self, request):
+        return self.as_dict()
+
     def update_fields_with_dict(self, a_dict, fields=None, exclude=None, additional_fields={}):
         fields = set(fields or self.get_plain_fields()) | set(additional_fields)
         nullable_fields = self.get_nullable_fields()
