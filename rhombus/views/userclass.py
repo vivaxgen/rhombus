@@ -35,13 +35,13 @@ def index(request):
                         add=add_button)
     html, code = bar.render(userclass_table)
 
-    html = div(h2('Userclass Listing')).add(html)
-
-    return render_to_response('rhombus:templates/generics/page.mako',
-                              {'html': html,
-                               'code': code,
-                               },
-                              request=request)
+    return render_to_response(
+        'rhombus:templates/generics/datatables_page.mako', {
+            'title': 'Userclasses',
+            'html': html,
+            'code': code,
+        }, request=request
+    )
 
 
 @roles(SYSADM)
