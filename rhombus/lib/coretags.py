@@ -68,10 +68,11 @@ class htmltag(object):
     def __iadd__(self, element):
         return self.add(element)
 
-    def add(self, *elements):
+    def add(self, *elements, autoregister=True):
         for element in elements:
             self.contents.append(element)
-            self.register_element(element)
+            if autoregister:
+                self.register_element(element)
         return self
 
     def __getitem__(self, arg):
@@ -145,9 +146,9 @@ class htmltag(object):
 class singletag(htmltag):
     _t = ''
 
-    def __init__(self, *args, **kwargs):
+    def __init__(self, *args, autoregister=True, **kwargs):
         super().__init__(**kwargs)
-        self.add(*args)
+        self.add(*args, autoregister=autoregister)
 
     def r(self):
         return f'<{self._t} {self.attributes()} />'
@@ -253,7 +254,8 @@ class ul(doubletag):
         super().__init__(**kwargs)
         self.add(*args)
 
-    def add(self, *args):
+    def add(self, *args, autoregister=None):
+        """ autoregister is not used, just for placeholder """
         for arg in args:
             if not isinstance(arg, li):
                 raise RuntimeError('UL/OL should only have LI content')
