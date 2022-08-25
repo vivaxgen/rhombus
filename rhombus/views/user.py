@@ -223,8 +223,9 @@ def passwd(request):
             if not target_user:
                 eform.get('username').add_error('User does not exist!')
                 return render_to_response('rhombus:templates/generics/page.mako',
-                        { 'content': str(eform) },
-                        request = request )
+                                          {'html': eform},
+                                          request=request
+                                          )
 
         else:
             target_user = dbh.get_user(int(request.POST.get('user_id', -1)))
@@ -249,9 +250,11 @@ def passwd(request):
             eform.get('curr_pass').add_error('Incorrect password!')
 
         if eform:
+            raise
             return render_to_response('rhombus:templates/generics/page.mako',
-                { 'content': str(eform) },
-                request = request )
+                                      {'html': eform},
+                                      request=request
+                                      )
 
         request.session.flash( ('success',
             'Successfully changed password for user %s' % target_user.login) )
@@ -260,8 +263,9 @@ def passwd(request):
     eform = password_form(request.user)
 
     return render_to_response('rhombus:templates/generics/page.mako',
-            { 'content': str(eform) },
-            request = request )
+                              {'html': eform},
+                              request=request,
+                              )
 
 
 def password_form(user):
@@ -269,13 +273,13 @@ def password_form(user):
     eform = form('rhombus.password', method='POST')
     eform.add(
         fieldset()[
-            input_hidden('user_id', value = user.id),
-            input_show('login', 'Login', value = user.login),
+            input_hidden('user_id', value=user.id),
+            input_text('login', 'Login', value=user.login, readonly=True),
             input_password('curr_pass', 'Current password'),
         ],
         fieldset()[
-            input_text('username', 'Username', value = user.login)
-                if user.has_roles(SYSADM) else '',
+            input_text('username', 'Username', value=user.login)
+            if user.has_roles(SYSADM) else '',
             input_password('new_pass', 'New password'),
             input_password('new_pass2', 'Verify password')
         ],
