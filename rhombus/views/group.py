@@ -52,7 +52,7 @@ def view(request):
     grp_id = int(request.matchdict.get('id'))
     group = dbh.get_group_by_id(grp_id)
 
-    grp_form, grp_js = edit_form(group, dbh, request, static=True)
+    grp_form, grp_js = edit_form(group, dbh, request, readonly=True)
 
     if request.user.has_roles(SYSADM, GROUP_CREATE, GROUP_MODIFY, GROUP_DELETE):
         role_table, role_js = format_roletable(group, request)
@@ -398,46 +398,45 @@ def lookup(request):
     return result
 
 
-def edit_form(group, dbh, request, static=False):
+def edit_form(group, dbh, request, readonly=False):
 
     if group.check_flags(group.f_composite_group):
         # prepare composite list
-        ags = [ ag for ag in group.associated_groups if ag.role == 'C' ]
-        composite_ids = [ ag.assoc_group_id for ag in ags ]
-        composite_options = [ (ag.associated_group.id, '%s' % ag.associated_group.name) 
-                            for ag in ags ]
+        ags = [ag for ag in group.associated_groups if ag.role == 'C']
+        composite_ids = [ag.assoc_group_id for ag in ags]
+        composite_options = [(ag.associated_group.id, '%s' % ag.associated_group.name)
+                             for ag in ags]
     else:
         composite_ids = composite_options = []
 
-    eform = form( name='rhombus/group', method=POST,
-                action=request.route_url('rhombus.group-edit', id=group.id))
+    eform = form(name='rhombus/group', method=POST,
+                 action=request.route_url('rhombus.group-edit', id=group.id),
+                 readonly=readonly)
     eform.add(
         fieldset(
             input_hidden(name='rhombus-group_id', value=group.id),
-            input_text('rhombus-group_name', 'Group Name', value=group.name,
-                static=static),
-            input_text('rhombus-group_desc', 'Description', value=group.desc,
-                static=static),
-            input_textarea('rhombus-group_scheme', 'Scheme', value=group.scheme,
-                    static=static),
+            input_text('rhombus-group_name', 'Group Name', value=group.name),
+            input_text('rhombus-group_desc', 'Description', value=group.desc),
+            input_textarea('rhombus-group_scheme', 'Scheme', value=group.scheme),
             input_hidden(name='rhombus-group_options', value=1),
             checkboxes('rhombus-group_options_fields', "Options", [
-                    ('rhombus-group_composite', 'Composite',
-                            group.check_flags(group.f_composite_group))]),
+                       (
+                           'rhombus-group_composite', 'Composite',
+                           group.check_flags(group.f_composite_group)
+                       )]),
             input_select('rhombus-group_composite_ids', 'Composite of', multiple=True,
-                            options = composite_options, value = composite_ids, static=static),
-            submit_bar() if not static else a('Edit', class_='btn btn-primary offset-md-3',
-                            href=request.route_url('rhombus.group-edit', id=group.id)),
+                         options=composite_options, value=composite_ids),
+            submit_bar() if not readonly else a('Edit', class_='btn btn-primary offset-md-3',
+                                                href=request.route_url('rhombus.group-edit', id=group.id)),
             name="rhombus-group-fieldset"
         )
     )
 
     jscode = select2_template(tag="rhombus-group_composite_ids", minlen=3,
-                placeholder="Type a group name",
-                parenttag="rhombus-group-fieldset",
-                url=request.route_url('rhombus.group-lookup')
-
-    )
+                              placeholder="Type a group name",
+                              parenttag="rhombus-group-fieldset",
+                              url=request.route_url('rhombus.group-lookup')
+                              )
 
     return (eform, jscode)
 
