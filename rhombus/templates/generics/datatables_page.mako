@@ -1,6 +1,6 @@
 <%inherit file="rhombus:templates/base.mako" />
 
-<h2>Group Listing</h2>
+<h2>${title or ''}</h2>
 
 <div class='row'><div class='col-md-10'>
 
@@ -13,12 +13,12 @@
 ##  START OF METHODS
 ##
 <%def name="stylelinks()">
-  <link href="${request.static_url('rhombus:static/datatables/datatables.min.css')}" rel="stylesheet" />
+  <link href="/assets/rb/datatables/datatables.min.css" rel="stylesheet" />
 </%def>
 ##
 ##
 <%def name="jslinks()">
-	<script src="${request.static_url('rhombus:static/datatables/datatables.min.js')}"></script>
+	<script src="/assets/rb/datatables/datatables.min.js"></script>
 </%def>
 ##
 ##

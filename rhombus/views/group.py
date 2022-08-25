@@ -28,19 +28,21 @@ def index(request):
 
     if request.user.has_roles(SYSADM, GROUP_CREATE):
 
-        add_button = ( 'New group',
-                        request.route_url('rhombus.group-edit', id=0)
-        )
+        add_button = ('New group',
+                      request.route_url('rhombus.group-edit', id=0)
+                      )
 
         bar = selection_bar('group-ids', action=request.route_url('rhombus.group-action'),
-                    add = add_button)
+                            add=add_button)
         html, code = bar.render(html, code)
 
-
-    return render_to_response('rhombus:templates/group/index.mako',
-                {   'html': html,
-                    'code': code,
-                }, request=request )
+    return render_to_response(
+        'rhombus:templates/generics/datatables_page.mako', {
+            'title': 'Groups',
+            'html': html,
+            'code': code,
+        }, request=request
+    )
 
 
 @roles( PUBLIC )
