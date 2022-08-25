@@ -441,10 +441,10 @@ def edit_form(group, dbh, request, readonly=False):
     return (eform, jscode)
 
 
-def parse_form( f ):
+def parse_form(f):
 
     d = dict()
-    d['id'] = int(f['rhombus-group_id'])
+    d['id'] = int(f['rhombus-group_id'] or 0)
     d['name'] = f['rhombus-group_name']
     d['desc'] = f['rhombus-group_desc']
     d['scheme'] = f['rhombus-group_scheme']
@@ -454,7 +454,7 @@ def parse_form( f ):
         if 'rhombus-group_composite' in f:
             d['flags-on'] = d['flags-on'] | Group.f_composite_group
             if 'rhombus-group_composite_ids' in f:
-                d['composite_ids'] = [ int(i) for i in f.getall('rhombus-group_composite_ids') ]
+                d['composite_ids'] = [int(gid) for gid in f.getall('rhombus-group_composite_ids')]
             else:
                 d['composite_ids'] = []
         else:
