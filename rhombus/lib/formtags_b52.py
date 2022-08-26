@@ -263,8 +263,8 @@ class input_select(input_text):
             label(self.label,
                   class_=f"{self.class_label()} d-flex justify-content-end align-self-start pt-2 pl-1 pr-0",
                   for_=self.name,
-                  **{'data-toggle': 'popover', 'data-placement': 'top',
-                     'title': pop_title, 'data-content': pop_content})
+                  **{'data-bs-toggle': 'popover', 'data-bs-placement': 'top',
+                     'data-bs-title': pop_title, 'data-bs-content': pop_content})
             if self.label is not None else '',
             div(class_=self.class_value())[
                 selecttag(*options, id=self.id, name=self.name, class_=self.class_input(), multiple=multiple,
@@ -356,8 +356,8 @@ class checkboxes(input_text):
             label(self.label,
                   class_=f"{self.class_label()} d-flex justify-content-end align-self-start pt-2 pl-1 pr-0",
                   for_=self.name,
-                  **{'data-toggle': 'popover', 'data-placement': 'top',
-                     'title': pop_title, 'data-content': pop_content})
+                  **{'data-bs-toggle': 'popover', 'data-bs-placement': 'top',
+                     'data-bs-title': pop_title, 'data-bs-content': pop_content})
             if self.label is not None else '',
             div(*self.contents, class_=self.class_value(), autoregister=False),
             self.info_text()
