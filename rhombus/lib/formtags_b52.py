@@ -149,8 +149,8 @@ class input_text(htmltag):
             label(self.label,
                   class_=f"{self.class_label()} d-flex justify-content-end align-self-start pt-2 pl-1 pr-0",
                   for_=self.name,
-                  **{'data-toggle': 'popover', 'data-placement': 'top',
-                     'title': pop_title, 'data-content': pop_content})
+                  **{'data-bs-toggle': 'popover', 'data-bs-placement': 'top',
+                     'data-bs-title': pop_title, 'data-bs-content': pop_content})
             if self.label is not None else '',
             div(class_=self.class_value())[
                 inputtag(type=self._type, id=self.id, name=self.name,
@@ -185,13 +185,19 @@ class input_textarea(input_text):
         else:
             rows, size = 4, self.size
 
+        # set value first
+        pop_title, pop_content = self.popover.split('|', 2) if self.popover else ('', '')
+
         return div(class_='form-group form-inline row')[
             label(self.label,
                   class_=f"{self.class_label()} d-flex justify-content-end align-self-start pt-2 pl-1 pr-0",
-                  for_=self.name),
+                  for_=self.name,
+                  **{'data-bs-toggle': 'popover', 'data-bs-placement': 'top',
+                     'data-bs-title': pop_title, 'data-bs-content': pop_content})
+            if self.label is not None else '',
             div(class_=self.class_value(size))[
                 textareatag(id=self.id, name=self.name, class_=self.class_input(), style=self.style(),
-                            readonly=self.ro())[self.get_value()],
+                            readonly=self.ro(), rows=rows)[self.get_value()],
                 self.extra_control(),
                 self.error_text()
             ],
