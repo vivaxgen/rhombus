@@ -339,7 +339,7 @@ class checkboxes(input_text):
         for (box_name, box_label, box_value) in boxes:
             self.add(checkbox_item(box_name, box_label, box_value))
 
-    def __str__(self):
+    def __str__XXX(self):
         return literal( checkboxes_template.format(
                 class_div = 'form-group',
                 class_label = 'col-md-%d control-label' % self.offset,
@@ -357,12 +357,11 @@ class checkboxes(input_text):
                   **{'data-toggle': 'popover', 'data-placement': 'top',
                      'title': pop_title, 'data-content': pop_content})
             if self.label is not None else '',
-            div(*self.contents, class_=self.class_value()),
+            div(*self.contents, class_=self.class_value(), autoregister=False),
             self.info_text()
         ]
 
-        buff = self.div_wrap(elements)
-        return buff
+        return self.div_wrap(elements)
 
 
 checkboxes_template = '''\
@@ -374,15 +373,13 @@ checkboxes_template = '''\
 </div>'''
 
 
-class checkbox_item(htmltag):
+class checkbox_item(input_text):
 
-    def __init__(self, name, label, value, static=False):
-        super().__init__( name = name )
-        self.label = label
-        self.value = value
-        self.static = static
+    def __init__(self, name, label, value, readonly=False):
+        super().__init__(name=name, label=label, value=value, readonly=readonly)
 
-    def __str__(self):
+
+    def __str__XXX(self):
         return literal(
             '<div class="form-check form-check-inline justify-content-start align-self-end pt-2 pl-1 pr-0">'
                 '<input type="checkbox" class="form-check-input" name="%s" id="%s" %s />'
@@ -391,6 +388,12 @@ class checkbox_item(htmltag):
             )
 
     def r(self):
+        if self.ro():
+            return literal(
+                '<div class="form-check form-check-inline justify-content-start align-self-end pt-2 pl-1 pr-0">'
+                f'<label class="form-check-label {"badge rounded-pill text-bg-info" if self.value else "text-muted"}">{self.label}</label>'
+                '</div>'
+            )
         elements = [
             literal('<input type="checkbox" class="form-check-input" name="%s" id="%s" %s />')
         ]
