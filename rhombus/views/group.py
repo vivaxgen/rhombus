@@ -515,10 +515,10 @@ def format_roletable(group, request):
         ]
     ]
     role_bar = selection_bar('role-ids', action=request.route_url('rhombus.group-role_action'),
-            others = button(label="Add role",
-                        class_="btn btn-sm btn-success", id='group-add-role',
-                        name='_method', value='add-role', type='button'),
-            hiddens=[('group_id', group.id), ])
+                             others=button("Add role",
+                                           class_="btn btn-sm btn-success", id='group-add-role',
+                                           name='_method', value='add-role', type='button'),
+                             hiddens=[('group_id', group.id), ])
     role_table, role_js = role_bar.render(role_table)
 
     role_content = div(class_='form-group')
@@ -589,10 +589,10 @@ def format_usertable(group, request):
         ]
     ]
     user_bar = selection_bar('user-ids', action=request.route_url('rhombus.group-user_action'),
-            others = button(label="Add member",
-                        class_="btn btn-sm btn-success", id='group-add-member',
-                        name='_method', value='add-member', type='button'),
-            hiddens=[('group_id', group.id), ])
+                             others=button("Add member",
+                                           class_="btn btn-sm btn-success", id='group-add-member',
+                                           name='_method', value='add-member', type='button'),
+                             hiddens=[('group_id', group.id), ])
     user_table, user_js = user_bar.render(user_table)
 
     content = div(class_='form-group form-inline')
