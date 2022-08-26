@@ -172,7 +172,7 @@ def edit_form(user, dbh, request, readonly=False):
                 options=[
                     (g.id, g.name)
                     for g in dbh.get_group(
-                        systemgroups=True if (readonly or user.has_roles(SYSADM)) else False)
+                        systemgroups=True if (readonly or request.user.has_roles(SYSADM)) else False)
                 ]
             ),
             input_text('rhombus-user_institution', 'Institution', value=user.institution),
