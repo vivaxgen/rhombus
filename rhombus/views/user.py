@@ -153,9 +153,8 @@ def edit(request):
 
 def edit_form(user, dbh, request, readonly=False):
 
-    static = readonly
-    eform = form( name='rhombus/user', method=POST, readonly=readonly,
-                action=request.route_url('rhombus.user-edit', id=user.id))
+    eform = form(name='rhombus/user', method=POST, readonly=readonly,
+                 action=request.route_url('rhombus.user-edit', id=user.id))
     eform.add(
         fieldset(
             input_hidden(name='rhombus-user_id', value=user.id),
@@ -168,7 +167,6 @@ def edit_form(user, dbh, request, readonly=False):
             input_text('rhombus-user_email2', 'Secondary email', value=user.email2),
             input_select(
                 'rhombus-user_primarygroup_id', 'Primary group', value=user.primarygroup_id,
-                static=static,
                 options=[
                     (g.id, g.name)
                     for g in dbh.get_group(
@@ -176,8 +174,10 @@ def edit_form(user, dbh, request, readonly=False):
                 ]
             ),
             input_text('rhombus-user_institution', 'Institution', value=user.institution),
-            submit_bar() if not static else a('Edit', class_='btn btn-primary offset-md-3',
-                href=request.route_url('rhombus.user-edit', id=user.id)),
+            submit_bar() if not readonly else a('Edit',
+                                                class_='btn btn-primary offset-md-3',
+                                                href=request.route_url('rhombus.user-edit',
+                                                                       id=user.id)),
         )
     )
 
