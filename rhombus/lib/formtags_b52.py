@@ -163,14 +163,10 @@ class input_text(htmltag):
         return self.div_wrap(elements)
 
 
-class input_hidden(htmltag):
+class input_hidden(inputtag):
 
-    def __init__(self, name, value, **kwargs):
-        super().__init__(name=name, **kwargs)
-        self.value = value
-
-    def r(self):
-        return inputtag(type='hidden', id=self.id or self.name, name=self.name or self.id, value=self.value).r()
+    def __init__(self, **kwargs):
+        super().__init__(type='hidden', **kwargs)
 
 
 class input_password(input_text):

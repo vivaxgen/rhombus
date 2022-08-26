@@ -97,7 +97,7 @@ class htmltag(object):
         for (key, val) in self.attrs.items():
             if val is True:
                 attrs.append(escape(key))
-            elif val not in [None, False]:
+            elif not (val is None or val is False):
                 attrs.append(f'{escape(key)}="{escape(val)}"')
 
         return ' '.join(attrs)
