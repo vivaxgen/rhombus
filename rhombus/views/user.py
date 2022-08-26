@@ -12,6 +12,7 @@ from sqlalchemy import or_
 
 import urllib.parse
 
+
 @roles(SYSADM)
 def index(request):
 
@@ -23,29 +24,34 @@ def index(request):
             th('', style='width: 2em'), th('Username'), th('Userclass/Domain')
         ],
         tbody()[
-            tuple(
-                [ tr()
-                    [   td(literal('<input type="checkbox" name="user-ids" value="%d">' % u.id)),
-                        td(a('%s' % u.login, href=request.route_url('rhombus.user-view', id=u.id))),
-                        td('%s' % u.userclass.domain)
-                    ]   for u in users
-                ]
-            )
+            tuple([
+                tr()[
+                    td(literal('<input type="checkbox" name="user-ids" value="%d">' % u.id)),
+                    td(a('%s' % u.login, href=request.route_url('rhombus.user-view', id=u.id))),
+                    td('%s' % u.userclass.domain)
+                ] for u in users
+            ])
         ]
     ]
 
-    add_button = ( 'New user',
-                    request.route_url('rhombus.user-edit', id=0)
+    add_button = (
+        'New user',
+        request.route_url('rhombus.user-edit', id=0)
     )
 
-    bar = selection_bar('user-ids', action=request.route_url('rhombus.user-action'),
-                    add = add_button)
+    bar = selection_bar(
+        'user-ids', action=request.route_url('rhombus.user-action'),
+        add=add_button
+    )
     html, code = bar.render(user_table)
 
-    return render_to_response('rhombus:templates/generics/page.mako',
-            {   'html': html,
-                'code': code
-            }, request = request )
+    return render_to_response(
+        'rhombus:templates/generics/datatables_page.mako', {
+            'title': 'Users',
+            'html': html,
+            'code': code,
+        }, request=request
+    )
 
 
 @roles(PUBLIC)
