@@ -131,10 +131,12 @@ class input_text(htmltag):
             return div(class_='form-group form-inline row').add(*elements).r()
         return self.r_contents(elements)
 
-    def as_plaintext(self, value=None):
+    def as_plaintext(self, value=None, class_=None):
         elements = [
-            label(self.label, class_=f"{self.class_label()} align-self-start pt-2 pb-2 pl-1 pr-0", for_=self.name),
-            div(class_=self.class_value() + 'pl-10')[
+            label(self.label,
+                  class_=f"{self.class_label()} d-flex justify-content-end align-self-center ",
+                  for_=self.name),
+            div(class_=class_ or (self.class_value() + ' pl-10'))[
                 value or self.value,
                 self.error_text()
             ],
@@ -307,7 +309,7 @@ class input_file(input_text):
 
     def r(self, value=None):
         if self.ro():
-            return self.as_plaintext(value=self.view_link())
+            return self.as_plaintext(value=self.view_link(), class_='col-md-8 pt-2 pb-2')
 
         elements = [
             label(self.label,

@@ -312,9 +312,11 @@ class BaseViewer(object):
                         request=rq)
 
     def attachment_link(self, obj, attrname):
-        return t.div(t.a('View',
+        return t.div(t.a(obj.attachment.filename,
                          href=self.request.route_url(self.attachment_route, id=obj.id,
-                                                     fieldname=attrname)))
+                                                     fieldname=attrname)),
+                     class_='col-md-4 d-flex align-self-center',
+                     )
 
     # parse_form() is uset to parse html form and convert the value as necessary
     # to a dictionary
