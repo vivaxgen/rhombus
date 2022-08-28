@@ -327,9 +327,20 @@ class input_file(input_text):
 
 class input_file_attachment(input_file):
 
+    # XXX TODO: add checkbox to remove current attachment under the file input field
+
+    def info_text(self):
+        if self.ro() or self.value is None:
+            return ''
+        name = self.name + '-XCB'
+        return literal(
+            f'<input type="checkbox" class="form-check-input" name="{name}" id="{name}" /> '
+            f'<label class="form-check-label" for="{name}"> Remove existing attachment</label>'
+        )
+
     def view_link(self):
         if self.value is None:
-            return 'Not available'
+            return div('Not available', class_='col-md-2 d-flex align-self-center')
         if hasattr(self, '_view_link'):
             return literal(self._view_link)
         return ''

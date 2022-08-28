@@ -72,11 +72,19 @@ class FileAttachment(Base, BaseMixIn):
             return getattr(inst, attrname)
 
         def _setter(inst, value):
-            """ various value need to be considered """
+            """ various value need to be considered
+                if value is b'' or empty bytes, no modification
+                if value is None, remove the current FileAttachment, and set None
+                if value is other than above, set the value properly
+            """
             if value == b'':
                 return None
             sess = object_session(inst) or get_dbhandler().session()
             file_instance = getattr(inst, attrname)
+            if value is None and file_instance is not None:
+                setattr(inst, attrname, None)
+                sess.delete(file_instance)
+                return
             if file_instance is None:
                 file_instance = FileAttachment()
                 sess.add(file_instance)

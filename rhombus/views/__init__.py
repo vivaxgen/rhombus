@@ -120,7 +120,11 @@ class BaseViewer(object):
     #   'data': ('rhombus-user-extdata', json.loads ),
     #   'user_id: ('rhombus-user-user_id', int),
     #   'text': ('rhombus-user-text', )
-    #   ]
+    #   }
+    # add the following symbols after field name for more control of the fields
+    #   ? - optional value, where the database column is nullable
+    #   ! - mandatory value
+    #   @ - a file attachment field
     form_fields = {}
 
     # Methods to be defined for each viewer
@@ -312,6 +316,8 @@ class BaseViewer(object):
                         request=rq)
 
     def attachment_link(self, obj, attrname):
+        if not obj.attachment:
+            return ''
         return t.div(t.a(obj.attachment.filename,
                          href=self.request.route_url(self.attachment_route, id=obj.id,
                                                      fieldname=attrname)),
@@ -336,14 +342,21 @@ class BaseViewer(object):
 
             nullable = False
             required = False
+            attachment_field = False
             if key.endswith('?'):
                 # value is optional
                 key = key[:-1]
                 nullable = True
-            elif key.endswith('*'):
+            elif key.endswith('*') or key.endswith('!'):
                 # value must exist
                 key = key[:-1]
                 required = True
+            elif key.endswith('@'):
+                # this is a file attachment field which will be accompanied by
+                # a check-box field of 'tag-XCB'
+                key = key[:-1]
+                if form.get(f[0] + '-XCB', '') == 'on':
+                    attachment_field = None
 
             if (name := f[0]) in form:
                 value = form[name].strip() if type(form[name]) == str else form[name]
@@ -368,6 +381,9 @@ class BaseViewer(object):
                     else:
                         raise ParseFormError('Error in parsing input', name)
                 else:
+                    if value == b'' and attachment_field is None:
+                        d[key] = None
+                        continue
                     d[key] = value
             elif required:
                 raise ParseFormError('You must fill this field!', name)
@@ -408,6 +424,7 @@ class BaseViewer(object):
         raise NotImplementedError
 
     def ffn(self, ident):
+        """ ffn - formm field name """
         return self.form_fields[ident][0]
 
 
