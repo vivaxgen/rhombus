@@ -327,8 +327,6 @@ class input_file(input_text):
 
 class input_file_attachment(input_file):
 
-    # XXX TODO: add checkbox to remove current attachment under the file input field
-
     def info_text(self):
         if self.ro() or self.value is None:
             return ''
@@ -354,15 +352,6 @@ class checkboxes(input_text):
         for (box_name, box_label, box_value) in boxes:
             self.add(checkbox_item(box_name, box_label, box_value))
 
-    def __str__XXX(self):
-        return literal( checkboxes_template.format(
-                class_div = 'form-group',
-                class_label = 'col-md-%d control-label' % self.offset,
-                class_value = 'col-md-8',
-                label = self.label,
-                boxes = '\n'.join( str(item) for item in self.contents )
-            ))
-
     def r(self):
         pop_title, pop_content = self.popover.split('|', 2) if self.popover else ('', '')
         elements = [
@@ -379,28 +368,10 @@ class checkboxes(input_text):
         return self.div_wrap(elements)
 
 
-checkboxes_template = '''\
-<div class='{class_div} form-inline row'>
-  <label class='{class_label} align-self-baseline pt-2'>{label}</label>
-  <div class='{class_value}'>
-    {boxes}
-  </div>
-</div>'''
-
-
 class checkbox_item(input_text):
 
     def __init__(self, name, label, value, readonly=False):
         super().__init__(name=name, label=label, value=value, readonly=readonly)
-
-
-    def __str__XXX(self):
-        return literal(
-            '<div class="form-check form-check-inline justify-content-start align-self-end pt-2 pl-1 pr-0">'
-                '<input type="checkbox" class="form-check-input" name="%s" id="%s" %s />'
-                '<label class="form-check-label align-self-end pt-2 pl-1 pr-0" for="%s">%s</label>'
-            '</div>' % ( self.name, self.id, 'checked' if self.value else '', self.id, self.label )
-            )
 
     def r(self):
         if self.ro():
@@ -409,16 +380,14 @@ class checkbox_item(input_text):
                 f'<label class="form-check-label {"badge rounded-pill text-bg-info" if self.value else "text-muted"}">{self.label}</label>'
                 '</div>'
             )
-        elements = [
-            literal('<input type="checkbox" class="form-check-input" name="%s" id="%s" %s />')
-        ]
-        # raise
+
         return literal(
-            '<div class="form-check form-check-inline justify-content-start align-self-end pt-2 pl-1 pr-0">'
-                '<input type="checkbox" class="form-check-input" name="%s" id="%s" %s />'
-                '<label class="form-check-label" for="%s">%s</label>'
-            '</div>' % ( self.name, self.id, 'checked' if self.value else '', self.id, self.label )
+            f'<div class="form-check form-check-inline justify-content-start align-self-end pt-2 pl-1 pr-0">'
+            f'<input type="checkbox" class="form-check-input" name="{self.name}" id="{self.id}" {"checked" if self.value else ""} />'
+            f'<label class="form-check-label" for="{self.id}">{self.label}</label>'
+            f'</div>'
         )
+
 
 #
 # composites
@@ -429,9 +398,6 @@ class submit_bar(htmltag):
         super().__init__()
         self.label = label
         self.value = value
-
-    def __str__(self):
-        return literal(submit_bar_template.format(label=self.label, val=self.value))
 
     def r(self):
         html = div(class_='form-group row')[
