@@ -124,6 +124,17 @@ def db_argparser(p):
 
 def main(args):
 
+    if args.debug:
+        from ipdb import launch_ipdb_on_exception
+        with launch_ipdb_on_exception():
+            cerr('[WARN: running in debug mode]')
+            _main(args)
+    else:
+        _main(args)
+
+
+def _main(args):
+
     settings = setup_settings(args)
 
     if any((args.exportuserclass, args.exportgroups, args.exportenumkey)):
