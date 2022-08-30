@@ -142,7 +142,7 @@ class EK(BaseMixIn, Base):
         ek = EK.search(key, grp, dbsession)
         if not ek:
             if not auto:
-                raise KeyError("Key: %s/%s is not found!" % (key, grp))
+                raise KeyError("Key: %s/%s is not found and auto is False!" % (key, grp))
             if not grp:
                 raise RuntimeError('EK: when set auto creation, group needs to be provided')
             group = EK.search(grp, dbsession=dbsession)
@@ -245,7 +245,14 @@ class EK(BaseMixIn, Base):
     bulk_insert = bulk_update
 
     @staticmethod
-    def proxy(attrname, grpname, match_case=False, auto=False):
+    def proxy(attrname, grpname, match_case=False, auto=False, default=None):
+        """
+            attrname: the field name used in the corresponding class for holding the EK value
+            grpname: the group name for the EK values
+            match_case: whether to use case-sensitive string match
+            auto: whether to automatically store a new value to EK database
+            default: use this default value when None is given
+        """
 
         def _ek_proxy_getter(inst):
             _id = getattr(inst, attrname)
@@ -260,6 +267,8 @@ class EK(BaseMixIn, Base):
 
         def _ek_proxy_setter(inst, value):
             # print("*** set attr", attrname)
+            if value is None and default is not None:
+                value = default
             if not match_case:
                 value = value.lower()
             dbsession = object_session(inst)
@@ -267,19 +276,20 @@ class EK(BaseMixIn, Base):
                 dbsession = getattr(inst, '_dbh_session_')
             setattr(inst, attrname, EK._id(value, dbsession, grpname, auto=auto))
             # print("*** set attr", attrname, "with", getattr(inst, attrname))
+
         return property(_ek_proxy_getter, _ek_proxy_setter, doc=f'EK.proxy {attrname} {grpname}')
 
     @staticmethod
     def dump(_out, query=None, dbsession=None):
         assert dbsession, "Please provide dbsession"
         if not query:
-            query = EK.query(dbsession).filter(EK.member_of_id == None)
+            query = EK.query(dbsession).filter(EK.member_of_id is None)
         yaml.safe_dump_all((x.as_dict() for x in query), _out, default_flow_style=False)
 
     @classmethod
     def bulk_dump_xxx(cls, dbh, query=None):
         if not query:
-            query = cls.query(dbh.session()).filter(cls.member_of_id == None)
+            query = cls.query(dbh.session()).filter(cls.member_of_id is None)
         return [obj.as_dict() for obj in query]
 
     @classmethod
