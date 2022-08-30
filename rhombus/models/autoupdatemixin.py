@@ -57,6 +57,23 @@ class AutoUpdateMixIn(object):
     __ek_metainfo__ = None
     __aux_fields__ = None
 
+    # __init_funcs__ holds functions to be invoked during object instance creation, eg. MyClass()
+    __init_funcs__ = None
+
+    @classmethod
+    def add_init_funcs(cls, *args):
+        if cls.__init_funcs__ is None:
+            cls.__init_funcs__ = args
+        else:
+            cls.__init__funcs__.extend(args)
+
+    def __init__(self, *args, **kwargs):
+        """ *args and **kwargs is just for placeholders """
+        super().__init__(*args, **kwargs)
+        if self.__init_funcs__ is not None:
+            for fn in self.__init_funcs__:
+                fn(self)
+
     def update(self, obj):
         if isinstance(obj, dict):
             self.update_fields_with_dict(obj)
@@ -146,6 +163,7 @@ class AutoUpdateMixIn(object):
                 f_ = f + '_id'
                 if not hasattr(self, f_):
                     raise AttributeError(f_)
+                cerr(f'setting for {f}')
                 setattr(self, f_, dbh.EK.getid(a_dict[f], session))
 
     def create_dict_from_fields(self, fields=None, exclude=None):
@@ -251,7 +269,9 @@ def configure_autoupdatemixin_fields():
 
         # set __ek_fields__
 
-        for key, attribute in vars(cls).items():
+        #for key, attribute in vars(cls).items():
+        for key in dir(cls):
+            attribute = getattr(cls, key)
             if type(attribute) is property:
                 if getattr(attribute, 'fget').__name__ == '_ek_proxy_getter':
                     cls.__ek_fields__.add(key)
