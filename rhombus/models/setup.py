@@ -31,24 +31,28 @@ def setup_db( *ops ):
         for op in ops:
             op()
 
-def setup( dbh, rootpasswd=None ):
+
+def setup(dbh, rootpasswd=None):
     """ populate the database with basic, essential data """
 
     global root_password
 
-    if get_datalogger():
-        get_clsreg().sync()
-        session.commit()
-
     dbsession = dbh.session()
 
-    EK.bulk_update( ek_initlist, dbsession=dbsession )
-    Group.bulk_insert( essential_groups, dbsession=dbsession )
-    UserClass.bulk_insert( system_userclass, dbsession=dbsession )
+    if get_datalogger():
+        get_clsreg().sync()
+        dbsession.commit()
+
+    cerr('[initializing EK]')
+    EK.bulk_update(ek_initlist, dbsession=dbsession)
+    dbsession.flush()
+
+    Group.bulk_insert(essential_groups, dbsession=dbsession)
+    UserClass.bulk_insert(system_userclass, dbsession=dbsession)
 
     group_id = Group._id('_SysAdm_', dbsession)
-    file = File( path='/', group_id = group_id, permanent = True )
-    dbsession.add( file )
+    file = File(path='/', group_id=group_id, permanent=True)
+    dbsession.add(file)
     file.type = 'file/folder'
     file.mimetype = 'application/x-directory'
 
