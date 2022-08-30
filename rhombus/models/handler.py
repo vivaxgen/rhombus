@@ -106,17 +106,18 @@ class DBHandler(object):
         self.session.configure(bind=self.engine)
         self._query_constructor = None
 
-    def initdb(self, create_table=True, init_data=True, rootpasswd=None):
+    def initdb(self, create_table=True, init_data=True, rootpasswd=None, ek_initlist=[]):
         """ prepare the database for the first time by initializing it with
             necessary, basic, default data set """
 
         # WARN! if possible, use alembic to create tables
         if create_table:
             core.Base.metadata.create_all(self.engine)
-            cerr('[rhombus] Database tables created.')
+            cerr('[rhombus database tables created]')
 
         if init_data:
-            from rhombus.models.setup import setup
+            from .setup import setup, ek_initlist as rb_ek_initlist
+            rb_ek_initlist.extend(ek_initlist)
             setup(self, rootpasswd)
             cerr('[rhombus] Database has been initialized.')
 
