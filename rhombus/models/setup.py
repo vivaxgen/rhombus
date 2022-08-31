@@ -63,7 +63,9 @@ def setup(dbh, rootpasswd=None):
         sysuser.set_credential(rootpasswd)
         root_password = rootpasswd
 
-    cerr('INFO: root password is %s\n' % root_password)
+    cerr('[INFO: root password written to password.txt]\n')
+    with open('password.txt', 'w') as f_out:
+        f_out.write(f'{root_password}\n')
 
 
 root_password = random_string(16)
