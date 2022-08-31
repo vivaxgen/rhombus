@@ -127,6 +127,16 @@ class BaseViewer(object):
     #   @ - a file attachment field
     form_fields = {}
 
+    # additional functions to be invoked
+
+    # preupdate and postupdate objects, function signature is func(viewer, object, dict)
+    __preupdate_funcs__ = []
+    __postupdate_funcs__ = []
+
+    # postedit form, function signature is:
+    #   eform, js = func(viewer, obj, eform, js, create, readonly, update_dict)
+    __posteditform_funcs__ = []
+
     # Methods to be defined for each viewer
 
     def index_helper(self):
@@ -137,7 +147,10 @@ class BaseViewer(object):
             update_object should perform the following steps:
             - check permission (eg. if user is authorized to input certain values in the fields, etc)
               and raise AuthorizationError or RuntimeError if necessary
-            - add and flush object to database in case for new object
+            - perform self.preupdate_object(obj, d)
+            - add (check by obj.id is None) to database in case for new object
+            - perform self.postupdate_object(obj, d)
+            - flush object to database
             - handle any integrity error from the database
         """
         raise NotImplementedError()
@@ -170,9 +183,18 @@ class BaseViewer(object):
     # Internal methods
 
     def __init__(self, request):
+
+        # request from the web
         self.request = request
+
+        # database handler
         self.dbh = get_dbhandler()
+
+        # current object instance
         self.obj = None
+
+        # temporary variables to be used by this instance
+        self.vars = {}
 
     @m_roles(PUBLIC)
     def index(self):
@@ -186,7 +208,7 @@ class BaseViewer(object):
 
         rq = self.request
         obj = self.get_object()
-        eform, jscode = self.edit_form(obj, readonly=True)
+        eform, jscode = self.generate_edit_form(obj, readonly=True)
         if rq.user.has_roles(* self.managing_roles) or self.can_modify(obj):
             eform.get('footer').add(
                 t.a('Edit', class_='btn btn-primary offset-md-2',
@@ -235,8 +257,8 @@ class BaseViewer(object):
             except ParseFormError as e:
                 err_msg = str(e)
                 field = e.field
-                eform, jscode = self.edit_form(obj, update_dict=rq.params,
-                                               create=True if obj.id is None else False)
+                eform, jscode = self.generate_edit_form(obj, update_dict=rq.params,
+                                                        create=True if obj.id is None else False)
                 eform.get(field).add_error(err_msg)
                 # for debugging purposes, add debug text to form
                 eform.add(t.literal(f'<!--\n[[EXC: ParseFormError at: {field} with: {err_msg}]]\n-->'))
@@ -252,7 +274,7 @@ class BaseViewer(object):
 
         dbh = self.dbh
         with dbh.session().no_autoflush:
-            eform, jscode = self.edit_form(self.object_class(), create=True)
+            eform, jscode = self.generate_edit_form(self.object_class(), create=True)
 
         if not render:
             return (eform, jscode)
@@ -281,7 +303,7 @@ class BaseViewer(object):
             except ParseFormError as e:
                 err_msg = str(e)
                 field = e.field
-                eform, jscode = self.edit_form(obj, update_dict=rq.params)
+                eform, jscode = self.generate_edit_form(obj, update_dict=rq.params)
                 eform.get(field).add_error(err_msg)
                 if not render:
                     return (eform, jscode)
@@ -293,7 +315,7 @@ class BaseViewer(object):
                     else self.view_route,
                     id=obj.id))
 
-        eform, jscode = self.edit_form(obj)
+        eform, jscode = self.generate_edit_form(obj)
 
         if not render:
             return (eform, jscode)
@@ -398,6 +420,12 @@ class BaseViewer(object):
             name="rhombus-hidden"
         )
 
+    def generate_edit_form(self, obj=None, create=False, readonly=False, update_dict=None):
+        eform, js = self.edit_form(obj, create, readonly, update_dict)
+        for f in self.__posteditform_funcs__:
+            eform, js = f(self, obj, eform, js, create, readonly, update_dict)
+        return eform, js
+
     def render_edit_form(self, eform, jscode):
         return render_to_response(self.template_edit, {
             'html': eform,
@@ -427,6 +455,16 @@ class BaseViewer(object):
         """ ffn - formm field name """
         return self.form_fields[ident][0]
 
+    def preupdate_object(self, obj, d):
+        """ perform necessary stuff before updating object """
+        for f in self.__preupdate_funcs__:
+            f(self, obj, d)
+
+    def postupdate_object(self, obj, d):
+        """ perform necessary stuff after updating object """
+        for f in self.__postupdate_funcs__:
+            f(self, obj, d)
+
 
 def generate_sesskey(user_id, obj_id=None):
     node_id_part = '%08x' % obj_id if obj_id else 'XXXXXXXX'
@@ -438,7 +476,7 @@ def check_stamp(request, obj):
     if (request.method == 'POST' and abs(obj.stamp.timestamp() - float(request.params['rhombus-stamp'])) > 0.01):
         return error_page(request,
                           f'Data entry has been modified by {obj.lastuser.login} at {obj.stamp}.'
-                          f' Please cancel and re-edit your entry.')
+                          f' Please cancel, reload and re-edit your entry.')
     return True
 
 
