@@ -41,11 +41,14 @@ class input_text(htmltag):
 
     def __init__(self, name, label, value='', info=None, size=8, offset=3, style=None,
                  extra_control=None, readonly=False, placeholder='', update_dict=None,
+                 required=False, maxlength=-1,
                  popover=None, **kwargs):
         super().__init__(name=name, **kwargs)
         self.label = label
         #self.value = (update_dict.get(name, None) if update_dict else value) or value
         self.value = value
+        self.required = required
+        self.maxlength = maxlength
         self.update_dict = update_dict
         self.placeholder = placeholder
         self.error = None
@@ -157,6 +160,7 @@ class input_text(htmltag):
             div(class_=self.class_value())[
                 inputtag(type=self._type, id=self.id, name=self.name,
                          value=value or self.get_value(), class_=self.class_input(), placeholder=self.placeholder,
+                         required=self.required, maxlength=self.maxlength if self.maxlength > 0 else False,
                          style=self.style(), readonly=self.ro() or readonly),
                 self.error_text()
             ],
@@ -167,8 +171,8 @@ class input_text(htmltag):
 
 class input_hidden(inputtag):
 
-    def __init__(self, **kwargs):
-        super().__init__(type='hidden', **kwargs)
+    def __init__(self, name, **kwargs):
+        super().__init__(name=name, type='hidden', **kwargs)
 
 
 class input_password(input_text):
