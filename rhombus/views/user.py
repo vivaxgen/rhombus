@@ -279,7 +279,7 @@ def password_form(user):
     eform = form('rhombus.password', method='POST')
     eform.add(
         fieldset()[
-            input_hidden('user_id', value=user.id),
+            input_hidden(name='user_id', value=user.id),
             input_text('login', 'Login', value=user.login, readonly=True),
             input_password('curr_pass', 'Current password'),
         ],
