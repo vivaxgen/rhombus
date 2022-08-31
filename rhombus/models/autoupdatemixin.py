@@ -65,7 +65,7 @@ class AutoUpdateMixIn(object):
         if cls.__init_funcs__ is None:
             cls.__init_funcs__ = args
         else:
-            cls.__init__funcs__.extend(args)
+            cls.__init_funcs__.extend(args)
 
     def __init__(self, *args, **kwargs):
         """ *args and **kwargs is just for placeholders """
