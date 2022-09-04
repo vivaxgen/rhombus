@@ -24,7 +24,7 @@ from pprint import pprint
 
 
 @registered
-class UserClass(Base, BaseMixIn):
+class UserClass(BaseMixIn, Base):
 
     __tablename__ = 'userclasses'
 
@@ -36,13 +36,10 @@ class UserClass(Base, BaseMixIn):
     flags = Column(types.Integer, nullable=False, server_default='0')
 
     def __repr__(self):
-        return "%s" % self.domain
+        return f"UserClass({self.domain})"
 
-    def update(self, d):
-        if isinstance(d, dict):
-            self.update_fields_with_dict(d)
-        else:
-            self.update_fields_with_object(d)
+    def can_modify(self, user):
+        return user.has_roles(SYSADM, DATAADM)
 
     @staticmethod
     def search(domain, session):
