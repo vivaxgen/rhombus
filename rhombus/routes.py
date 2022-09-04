@@ -63,10 +63,11 @@ def includeme(config):
         ('/ek/{id}', 'view'),
     )
 
-    add_route_view(
-        config, 'rhombus.views.userclass', 'rhombus.userclass',
+    add_route_view_class(
+        config, 'rhombus.views.userclass.UserClassViewer', 'rhombus.userclass',
         '/userclass',
         '/userclass/@@action',
+        '/userclass/@@add',
         '/userclass/{id}@@edit',
         ('/userclass/{id}', 'view'),
     )
@@ -77,6 +78,7 @@ def includeme(config):
         '/user/@@action',
         '/user/@@passwd',
         ('/user/@@lookup', 'lookup', 'json'),
+        '/user/@@add',
         '/user/{id}@@edit',
         # '/user/{id}@@passwd',
         ('/user/{id}', 'view'),

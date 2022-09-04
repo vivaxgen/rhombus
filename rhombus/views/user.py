@@ -84,6 +84,10 @@ def view(request):
         }, request = request )
 
 
+def add(request):
+    raise NotImplementedError("Placeholder function")
+
+
 @roles(SYSADM)
 def edit(request):
 
