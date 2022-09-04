@@ -155,8 +155,8 @@ class input_text(htmltag):
                   class_=f"{self.class_label()} d-flex justify-content-end align-self-start pt-2 pl-1 pr-0",
                   for_=self.name,
                   **{'data-bs-toggle': 'popover', 'data-bs-placement': 'top',
-                     'data-bs-title': pop_title, 'data-bs-content': pop_content})
-            if self.label is not None else '',
+                     'data-bs-title': pop_title, 'data-bs-content': pop_content}
+                  ) if self.label is not None else '',
             div(class_=self.class_value())[
                 inputtag(type=self._type, id=self.id, name=self.name,
                          value=value or self.get_value(), class_=self.class_input(), placeholder=self.placeholder,
