@@ -8,9 +8,10 @@ from rhombus.lib.roles import PUBLIC, SYSADM, SYSVIEW, DATAADM, DATAVIEW
 from rhombus.lib.utils import get_dbhandler, random_string, cerr, cout
 from rhombus.views.generics import not_authorized, error_page
 from rhombus.models.fileattach import FileAttachment
-import rhombus.lib.tags_b46 as t
+import rhombus.lib.tags as t
 
 import sqlalchemy.exc
+import yaml
 import mimetypes
 import time
 
@@ -102,6 +103,9 @@ class BaseViewer(object):
 
     # roles that can view instances owned by primary group
     viewing_roles = [SYSVIEW, DATAVIEW, ] + modifying_roles
+
+    # roles that can access all urls
+    accessing_roles = [PUBLIC]
 
     # class to generate new object
     object_class = None
@@ -196,11 +200,11 @@ class BaseViewer(object):
         # temporary variables to be used by this instance
         self.vars = {}
 
-    @m_roles(PUBLIC)
+    @m_roles(* accessing_roles)
     def index(self):
         return self.index_helper()
 
-    @m_roles(PUBLIC)
+    @m_roles(* accessing_roles)
     def view(self):
         return self.view_helper()
 
@@ -218,11 +222,11 @@ class BaseViewer(object):
             return (eform, jscode)
         return self.render_edit_form(eform, jscode)
 
-    @m_roles(PUBLIC)
+    @m_roles(* accessing_roles)
     def lookup(self):
         return self.lookup_helper()
 
-    @m_roles(PUBLIC)
+    @m_roles(* accessing_roles)
     def action(self):
 
         _m = self.request.method
@@ -241,14 +245,18 @@ class BaseViewer(object):
 
         return error_page(self.request, 'HTTP method not implemented!')
 
-    @m_roles(PUBLIC)
+    @m_roles(* accessing_roles)
     def add(self):
         return self.add_helper()
 
     def add_helper(self, render=True):
 
+        if self.object_class is None:
+            raise TypeError(f'{self.__class__}.object_class has not been initialized.')
+
         rq = self.request
         if rq.method == 'POST':
+
 
             obj = self.object_class()
             try:
@@ -280,7 +288,7 @@ class BaseViewer(object):
             return (eform, jscode)
         return self.render_edit_form(eform, jscode)
 
-    @m_roles(PUBLIC)
+    @m_roles(* accessing_roles)
     def edit(self):
         return self.edit_helper()
 
@@ -324,7 +332,7 @@ class BaseViewer(object):
     #
     # attachment() is used to serve file attachment
 
-    @m_roles(PUBLIC)
+    @m_roles(* accessing_roles)
     def attachment(self):
 
         rq = self.request
@@ -437,6 +445,8 @@ class BaseViewer(object):
         rq = self.request
         obj_id = obj_id or int(self.request.matchdict.get(tag))
         func = func or self.fetch_func
+        if func is None and self.fetch_func is None:
+            raise TypeError(f'{self.__class__}.fetch_func has not been initialized.')
         res = func([obj_id],
                    groups=None if rq.user.has_roles(* self.viewing_roles)
                    else rq.user.groups,
@@ -478,6 +488,10 @@ def check_stamp(request, obj):
                           f'Data entry has been modified by {obj.lastuser.login} at {obj.stamp}.'
                           f' Please cancel, reload and re-edit your entry.')
     return True
+
+
+def yaml_load(data):
+    return yaml.load(data, Loader=yaml.Loader)
 
 
 def form_submit_bar(create=True):
