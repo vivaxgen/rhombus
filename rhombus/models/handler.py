@@ -136,6 +136,20 @@ class DBHandler(object):
 
         raise RuntimeError('ERR: unknown data type for getting UserClass!')
 
+    # UserClass
+
+    def get_userclasses(self, groups=None, specs=None, user=None, fetch=True, raise_if_empty=False):
+
+        q = self.construct_query(self.UserClass, specs)
+        if fetch:
+            q = q.order_by(self.UserClass.domain)
+
+        return self.fetch_query(q, fetch, raise_if_empty)
+
+    def get_userclasses_by_ids(self, ids, groups=None, user=None, fetch=True, raise_if_empty=False):
+        return self.get_userclasses(groups, [{'userclass_id': ids}], user=user, fetch=fetch,
+                                    raise_if_empty=raise_if_empty)
+
     def get_user(self, user=None):
 
         if user is None:
