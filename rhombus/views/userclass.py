@@ -20,7 +20,7 @@ class UserClassViewer(BaseViewer):
 
     accessing_roles = [SYSADM]
 
-    #object_class = get_dbhandler().UserClass
+    object_class = get_dbhandler().UserClass
     fetch_func = get_dbhandler().get_userclasses_by_ids
     edit_route = 'rhombus.userclass-edit'
     view_route = 'rhombus.userclass-view'
