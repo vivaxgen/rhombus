@@ -387,7 +387,13 @@ class checkbox_item(input_text):
 
         return literal(
             f'<div class="form-check form-check-inline justify-content-start align-self-end pt-2 pl-1 pr-0">'
-            f'<input type="checkbox" class="form-check-input" name="{self.name}" id="{self.id}" {"checked" if self.value else ""} />'
+
+            # using hidden input with identical name with checkbox input is a hack to ensure
+            # that if the checkbox is not checked, instead of sending the form without the checkbox value,
+            # the browser will instead send the hidden input value.
+            f'<input type="hidden" name="{self.name}" value="off" />'
+            f'<input type="checkbox" class="form-check-input" value="on" name="{self.name}" id="{self.id}" {"checked" if self.value else ""} />'
+
             f'<label class="form-check-label" for="{self.id}">{self.label}</label>'
             f'</div>'
         )
