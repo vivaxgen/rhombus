@@ -308,7 +308,11 @@ class BaseViewer(object):
                     return ok
                 self.update_object(obj, self.parse_form(rq.params))
 
+            except AssertionError:
+                raise
+
             except ParseFormError as e:
+                raise
                 err_msg = str(e)
                 field = e.field
                 eform, jscode = self.generate_edit_form(obj, update_dict=rq.params)
@@ -400,6 +404,8 @@ class BaseViewer(object):
                         if nullable and (val is None or val == ''):
                             continue
                         d[key] = val
+                    except AssertionError:
+                        raise
                     except Exception as e:
                         raise ParseFormError(str(e), name) from e
                 elif len(f) == 3:
@@ -490,8 +496,16 @@ def check_stamp(request, obj):
     return True
 
 
+# parser helpers
+
 def yaml_load(data):
     return yaml.load(data, Loader=yaml.Loader)
+
+
+def boolean_checkbox(value):
+    if value.lower() == 'on':
+        return True
+    return False
 
 
 def form_submit_bar(create=True):
