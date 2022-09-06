@@ -78,6 +78,7 @@ def get_dbhandler(settings=None, tag='sqlalchemy.', initial=False):
         if _DBHANDLER_CLASS_ is None:
             cerr('FATAL ERROR - call set_dbhandler_class() before calling get_dbhandler()')
             sys.exit(1)
+        cerr(f'[Initializing dbhandler with {_DBHANDLER_CLASS_}]')
         _DBHANDLER_ = _DBHANDLER_CLASS_(settings, tag, initial)
 
     elif settings is not None:
@@ -93,9 +94,14 @@ def get_dbhandler_notsafe():
 
 
 def set_dbhandler_class(class_):
-    global _DBHANDLER_CLASS_
+    global _DBHANDLER_CLASS_, _DBHANDLER_
     cerr(f'Setting dbhandler class to {str(class_)}')
     _DBHANDLER_CLASS_ = class_
+    # don't forget to regenerate _DBHANDLER_
+    if _DBHANDLER_ is not None:
+        curr_handler = _DBHANDLER_
+        _DBHANDLER_ = None
+        get_dbhandler(curr_handler.settings, curr_handler.tag, curr_handler.initial)
 
 
 def get_dbhandler_class():
