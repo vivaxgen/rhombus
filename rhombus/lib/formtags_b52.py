@@ -247,7 +247,10 @@ class input_select(input_text):
             if multiple:
                 value = ' | '.join([l for (v, l) in self.options() if v in self.value]) or ''
             else:
-                value = [l for (v, l) in self.options() if v == self.value][0]
+                value = [l for (v, l) in self.options() if v == self.value]
+                if len(value) == 0:
+                    raise ValueError(f'key: {self.value} is not in list of option')
+                value = value[0]
             return super().r(value=value)
 
         # preparing option list
@@ -388,7 +391,7 @@ class checkbox_item(input_text):
         return literal(
             f'<div class="form-check form-check-inline justify-content-start align-self-end pt-2 pl-1 pr-0">'
 
-            # using hidden input with identical name with checkbox input is a hack to ensure
+            # using hidden input with identical name with checkbox input is a workaround to ensure
             # that if the checkbox is not checked, instead of sending the form without the checkbox value,
             # the browser will instead send the hidden input value.
             f'<input type="hidden" name="{self.name}" value="off" />'
