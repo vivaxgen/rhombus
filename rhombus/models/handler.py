@@ -82,6 +82,12 @@ class DBHandler(object):
 
     def __init__(self, settings, tag='sqlalchemy.', initial=False):
         """ use settings from configfile, prepare self.engine & self.session """
+
+        # save args for future usage
+        self.settings = settings
+        self.tag = tag
+        self.initial = initial
+
         cinfo("Connecting to database..")
 
         self.engine = engine_from_config(settings, tag)
