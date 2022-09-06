@@ -257,10 +257,12 @@ class BaseViewer(object):
         rq = self.request
         if rq.method == 'POST':
 
-
             obj = self.object_class()
             try:
                 self.update_object(obj, self.parse_form(rq.params))
+
+            except AssertionError:
+                raise
 
             except ParseFormError as e:
                 err_msg = str(e)
@@ -273,6 +275,12 @@ class BaseViewer(object):
                 if not render:
                     return (eform, jscode)
                 return self.render_edit_form(eform, jscode)
+
+            except sqlalchemy.exc.DataError as err:
+                self.dbh.session().rollback()
+                detail = err.args[0]
+
+                raise RuntimeError(detail)
 
             return HTTPFound(
                 location=self.request.route_url(
@@ -312,7 +320,6 @@ class BaseViewer(object):
                 raise
 
             except ParseFormError as e:
-                raise
                 err_msg = str(e)
                 field = e.field
                 eform, jscode = self.generate_edit_form(obj, update_dict=rq.params)
@@ -320,6 +327,12 @@ class BaseViewer(object):
                 if not render:
                     return (eform, jscode)
                 return self.render_edit_form(eform, jscode)
+
+            except sqlalchemy.exc.DataError as err:
+                self.dbh.session().rollback()
+                detail = err.args[0]
+
+                raise RuntimeError(detail)
 
             return HTTPFound(
                 location=self.request.route_url(
