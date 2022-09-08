@@ -258,7 +258,7 @@ class ul(doubletag):
         """ autoregister is not used, just for placeholder """
         for arg in args:
             if not isinstance(arg, li):
-                raise RuntimeError('UL/OL should only have LI content')
+                raise ValueError(f'UL/OL should only have LI content, not {arg}')
             self.contents.append(arg)
 
 
