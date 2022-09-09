@@ -156,6 +156,22 @@ class DBHandler(object):
         return self.get_userclasses(groups, [{'userclass_id': ids}], user=user, fetch=fetch,
                                     raise_if_empty=raise_if_empty)
 
+    # User
+
+    def get_users(self, groups=None, specs=None, user=None, fetch=True, raise_if_empty=False):
+
+        q = self.construct_query(self.User, specs)
+        if fetch:
+            q = q.order_by(self.User.login)
+
+        return self.fetch_query(q, fetch, raise_if_empty)
+
+    def get_users_by_ids(self, ids, groups=None, user=None, fetch=True, raise_if_empty=False):
+        return self.get_users(groups, [{'user_id': ids}], user=user, fetch=fetch,
+                              raise_if_empty=raise_if_empty)
+
+    # others
+
     def get_user(self, user=None):
 
         if user is None:

@@ -72,8 +72,8 @@ def includeme(config):
         ('/userclass/{id}', 'view'),
     )
 
-    add_route_view(
-        config, 'rhombus.views.user', 'rhombus.user',
+    add_route_view_class(
+        config, 'rhombus.views.user.UserViewer', 'rhombus.user',
         '/user',
         '/user/@@action',
         '/user/@@passwd',

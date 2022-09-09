@@ -220,8 +220,12 @@ class User(Base, BaseMixIn):
                             cascade='all,delete,delete-orphan')
     groups = association_proxy('usergroups', 'group')
 
+    def __init__(self, *args, **kwargs):
+        self.credential = '{X}'
+        super().__init__(*args, **kwargs)
+
     def __str__(self):
-        return "%s/%s" % (self.login, str(self.userclass))
+        return f"{self.login}/{self.userclass.domain}"
 
     def __repr__(self):
         return "%s/%s" % (self.login, str(self.userclass).lower())
@@ -229,7 +233,20 @@ class User(Base, BaseMixIn):
     def get_login(self):
         return "%s/%s" % (self.login, self.userclass.domain)
 
-    def update(self, u):
+    def update(self, obj):
+
+        super().update(obj, exclude=['primarygroup_id'])
+
+        if isinstance(obj, dict):
+            if 'primarygroup_id' in obj:
+                self.set_primarygroup(obj['primarygroup_id'])
+        else:
+            if obj.primarygroup_id:
+                self.set_primarygroup(obj.primarygroup_id)
+
+        return self
+
+    def update_XXX(self, u):
         if isinstance(u, dict):
 
             if 'primarygroup_id' in u:
@@ -248,15 +265,15 @@ class User(Base, BaseMixIn):
 
     def set_primarygroup(self, grp):
 
-        assert self.id
+        # assert self.id
         if type(grp) == int:
             primarygroup_id = grp
         else:
             primarygroup_id = grp.id
 
-        session = object_session(self)
+        session = object_session(self) or get_dbhandler().session()
 
-        if self.primarygroup_id:
+        if self.primarygroup_id and self.id is not None:
             if self.primarygroup_id == primarygroup_id:
                 return
 
@@ -264,7 +281,7 @@ class User(Base, BaseMixIn):
             UserGroup.delete(session, self.id, self.primarygroup_id)
 
         self.primarygroup_id = primarygroup_id
-        UserGroup.add(session, self.id, primarygroup_id)
+        UserGroup.add(session, self, primarygroup_id)
 
     @staticmethod
     def search(login, userclass=None, session=None):
