@@ -18,6 +18,9 @@ from rhombus.lib import roles as r
 
 from itertools import chain
 
+import yaml
+import json
+
 
 class AutoUpdateMixIn(object):
 
@@ -74,12 +77,12 @@ class AutoUpdateMixIn(object):
             for fn in self.__init_funcs__:
                 fn(self)
 
-    def update(self, obj):
+    def update(self, obj, exclude=None):
         if isinstance(obj, dict):
-            self.update_fields_with_dict(obj)
+            self.update_fields_with_dict(obj, exclude=exclude)
             self.update_ek_with_dict(obj)
         else:
-            self.update_fields_with_object(obj)
+            self.update_fields_with_object(obj, exclude=exclude)
         return self
 
     def serialized_code(self):
@@ -107,6 +110,10 @@ class AutoUpdateMixIn(object):
         """bulk dump either all objects or from q"""
         q = q or cls.query(dbh.session())
         return [obj.as_dict() for obj in q]
+
+    @classmethod
+    def to_yamlfile(cls, out, dbh, q=None):
+        yaml.safe_dump_all(cls.bulk_dump(dbh, q), out, default_flow_style=False)
 
     @classmethod
     def from_dict(cls, a_dict, dbh):
@@ -163,7 +170,7 @@ class AutoUpdateMixIn(object):
                 f_ = f + '_id'
                 if not hasattr(self, f_):
                     raise AttributeError(f_)
-                cerr(f'setting for {f}')
+                # cerr(f'setting for {f}')
                 setattr(self, f_, dbh.EK.getid(a_dict[f], session))
 
     def create_dict_from_fields(self, fields=None, exclude=None):
@@ -247,7 +254,8 @@ def configure_autoupdatemixin_fields():
             cerr(f'skipping {cls} [{type(cls)}]')
             continue
         else:
-            cerr(f'configuring {cls} [{type(cls)}]')
+            # cerr(f'configuring {cls} [{type(cls)}]')
+            pass
 
         # reset first
         cls.__plain_fields__ = []
@@ -275,7 +283,7 @@ def configure_autoupdatemixin_fields():
             if type(attribute) is property:
                 if getattr(attribute, 'fget').__name__ == '_ek_proxy_getter':
                     cls.__ek_fields__.add(key)
-        cerr(f'Configuring {cls} with __ek_fields__ = {cls.__ek_fields__}')
+        # cerr(f'Configuring {cls} with __ek_fields__ = {cls.__ek_fields__}')
 
         # set __ek_metainfo, __rel_fields__ and __fk_fields__
 
