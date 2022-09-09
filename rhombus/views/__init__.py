@@ -206,21 +206,29 @@ class BaseViewer(object):
 
     @m_roles(* accessing_roles)
     def view(self):
+        self.obj = self.get_object()
         return self.view_helper()
 
     def view_helper(self, render=True):
 
         rq = self.request
-        obj = self.get_object()
+        obj = self.obj or self.get_object()
         eform, jscode = self.generate_edit_form(obj, readonly=True)
         if rq.user.has_roles(* self.managing_roles) or self.can_modify(obj):
             eform.get('footer').add(
                 t.a('Edit', class_='btn btn-primary offset-md-2',
                     href=rq.route_url(self.edit_route, id=obj.id)))
 
+        if not type(eform) is t.div:
+            eform = t.div(eform)
+        html, jscode = self.view_extender(eform, jscode)
+
         if not render:
-            return (eform, jscode)
-        return self.render_edit_form(eform, jscode)
+            return (html, jscode)
+        return self.render_edit_form(html, jscode)
+
+    def view_extender(self, html, jscode):
+        return html, jscode
 
     @m_roles(* accessing_roles)
     def lookup(self):
@@ -298,12 +306,13 @@ class BaseViewer(object):
 
     @m_roles(* accessing_roles)
     def edit(self):
+        self.obj = self.get_object()
         return self.edit_helper()
 
     def edit_helper(self, render=True):
 
         rq = self.request
-        obj = self.get_object()
+        obj = self.obj or self.get_object()
 
         if not (rq.user.has_roles(* self.managing_roles) or self.can_modify(obj)):
             raise RuntimeError('Current user cannot modify this object!')
