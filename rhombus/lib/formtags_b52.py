@@ -161,7 +161,7 @@ class input_text(htmltag):
                 inputtag(type=self._type, id=self.id, name=self.name,
                          value=value or self.get_value(), class_=self.class_input(), placeholder=self.placeholder,
                          required=self.required, maxlength=self.maxlength if self.maxlength > 0 else False,
-                         style=self.style(), readonly=self.ro() or readonly),
+                         style=self.style(), readonly=self.ro() or readonly, disabled=self.ro() or readonly),
                 self.error_text()
             ],
             self.info_text()
@@ -203,7 +203,7 @@ class input_textarea(input_text):
             if self.label is not None else '',
             div(class_=self.class_value(size))[
                 textareatag(id=self.id, name=self.name, class_=self.class_input(), style=self.style(),
-                            readonly=self.ro(), rows=rows)[self.get_value()],
+                            readonly=self.ro(), disabled=self.ro(), rows=rows)[self.get_value()],
                 self.extra_control(),
                 self.error_text()
             ],
@@ -277,7 +277,7 @@ class input_select(input_text):
             if self.label is not None else '',
             div(class_=self.class_value())[
                 selecttag(*options, id=self.id, name=self.name, class_=self.class_input(), multiple=multiple,
-                          style=self.style(), readonly=self.ro()),
+                          style=self.style(), readonly=self.ro(), disabled=self.ro()),
                 self.extra_control(),
                 self.error_text()
             ],
