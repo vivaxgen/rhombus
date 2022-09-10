@@ -152,3 +152,15 @@ def get_groupid():
     if func_groupid:
         return func_groupid()
     return None
+
+
+# other aux functions
+
+
+def get_file_size(fileobj):
+    fileobj.seek(0, 2)  # Seek to the end of the file
+    size = fileobj.tell()  # Get the position of EOF
+    fileobj.seek(0)  # Reset the file position to the beginning
+    return size
+
+# EOF
