@@ -30,6 +30,10 @@ rb_oauth2_google_redirect_url = 'rhombus.oauth2.google.redirect_uri'
 mako_directories = 'mako.directories'
 assets_directory = 'assets.directory'
 
+# setting for file attachment
+
+rb_attachment_root = 'rhombus.attachment.root'
+
 # settings for overriding resources
 
 override_base = 'override.base'

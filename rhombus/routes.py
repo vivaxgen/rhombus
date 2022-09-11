@@ -3,6 +3,7 @@ from pyramid.session import SignedCookieSessionFactory
 
 from rhombus.lib.utils import cerr, random_string
 from rhombus.lib import exceptions as exc
+from rhombus.models.fileattach import FileAttachment
 from rhombus.views import generics
 from rhombus import configkeys as ck
 
@@ -22,12 +23,16 @@ def includeme(config):
 
     # configure RbRequest
 
-    # configure exception views if debugtoolbar is not enabled
     settings = config.get_settings()
+
+    # configure exception views if debugtoolbar is not enabled
     if 'debugtoolbar.includes' not in settings:
         cerr('WARN: setting up in full deployment configuration!')
         config.add_view('rhombus.views.generics.usererror_page', context=RuntimeError)
         config.add_view('rhombus.views.generics.syserror_page', context=Exception)
+
+    # configure file attachment root
+    FileAttachment.set_root_storage_path(settings[ck.rb_attachment_root])
 
     # configure routes & views
 

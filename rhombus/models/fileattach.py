@@ -2,8 +2,11 @@ from .core import (Base, BaseMixIn, Column, types, ForeignKey, registered, defer
                    NoResultFound, object_session)
 from .ek import EK
 
-from rhombus.lib.utils import get_dbhandler
+from rhombus.lib.utils import get_dbhandler, get_file_size
+from sqlalchemy import event
+from pathlib import Path
 import mimetypes
+import shutil
 import io
 
 
@@ -12,8 +15,11 @@ class FileAttachment(Base, BaseMixIn):
     """ FileAttachment
 
         This class implement general scheme for file attachment handling, which
-        does not require fullpath or hierarchical arrangment and hence simpler than
+        does not require fullpath or hierarchical arrangement and hence simpler than
         models.filemgr.File class.
+
+        For big files, a mechanism to store the data as files in filesystems is also
+        provided.
 
     """
 
@@ -28,11 +34,28 @@ class FileAttachment(Base, BaseMixIn):
 
     size = Column(types.Integer, nullable=False, server_default='0')
     bindata = deferred(Column(types.LargeBinary, nullable=False, server_default=''))
-
     """ actual data """
+
+    fullpath = Column(types.String(128), nullable=True, unique=True)
+    """ path to actual file, hence must be unique to prevent overwriting """
+
+    classtype = Column(types.Integer, nullable=False, server_default='0')
+    """ for inheritance purposes """
 
     flags = Column(types.Integer, nullable=False, server_default='0')
     """ optional flags """
+
+    __table_args__ = (
+    )
+
+    __mapper_args__ = {
+        "polymorphic_on": classtype,
+        "polymorphic_identity": 0,
+    }
+
+    __root_storage_path__ = None
+    __maxsize__ = 25 * 1024
+    """ max of 25M seems reasonable for keeping inside database """
 
     # __ek_fields__ = ['type', 'mimetype']
 
@@ -45,28 +68,69 @@ class FileAttachment(Base, BaseMixIn):
     def fp(self):
         if self.size == 0:
             return io.BytesIO(b'')
-        return io.BytesIO(self.bindata)
+        elif self.fullpath is None:
+            return io.BytesIO(self.bindata)
+        elif self.fullpath:
+            return open(self.get_fs_abspath(), 'rb')
+        raise NotImplementedError('reading from filesystem has not been implemented')
+
+    @classmethod
+    def set_root_storage_path(cls, path):
+        cls.__root_storage_path__ = Path(path)
+
+    def generate_fullpath(self):
+        """ generate a new fullpath composed from self.id and filename """
+        hex_id = f'{self.id:05x}'
+        return Path(hex_id[-3:], f'{{{hex_id}}}-{self.filename}').as_posix()
+
+    def save_from_stream(self, filename, stream):
+        self.filename = filename
+        self.mimetype = mimetypes.guess_type(self.filename)[0]
+        self.size = get_file_size(stream)
+
+        if self.size <= self.__maxsize__:
+            self.fullpath = None
+            self.bindata = stream.read()
+        else:
+            # update the content to actual file
+            if self.id is None:
+                object_session(self).flush([self])
+            self.fullpath = self.generate_fullpath()
+            destpath = self.get_fs_abspath()
+            destpath.parent.mkdir(parents=True, exist_ok=True)
+            with open(destpath, 'wb') as f:
+                shutil.copyfileobj(stream, f)
+                size = get_file_size(f)
+            if not self.size == size:
+                raise RuntimeError(f'ERR - incorrect file size during writing to file {destpath}')
+
+    def get_fs_abspath(self):
+        """ return an absolute path for actual file """
+        if self.__root_storage_path__ is None:
+            raise AssertionError(f'set root storage path first by calling '
+                                 f'{self.__class__.__name__}.set_root_storage_path()')
+        return self.__root_storage_path__ / self.fullpath
 
     def update(self, d):
 
         if hasattr(d, 'filename') and hasattr(d, 'file'):
             # FieldStorageClass-like objects
-            self.filename = d.filename
-            buf = d.file.read()
-            self.bindata = buf
-            self.size = len(buf)
-            self.mimetype = mimetypes.guess_type(self.filename)[0]
+            self.save_from_stream(d.filename, d.file)
 
         elif isinstance(d, dict) or isinstance(d, FileAttachment):
             super().update(d)
+
+        elif hasattr(d, 'seek') and hasattr(d, 'name'):
+            # already a stream object
+            self.save_from_stream(d.name, d)
 
         else:
             raise RuntimeError('fileattachment must be updated by either FieldStorage, dictionary, or itself')
 
         return self
 
-    @staticmethod
-    def proxy(attrname):
+    @classmethod
+    def proxy(cls, attrname):
         """ attrname is the relationship to File """
         def _getter(inst):
             return getattr(inst, attrname)
@@ -80,15 +144,26 @@ class FileAttachment(Base, BaseMixIn):
             if value == b'':
                 return None
             sess = object_session(inst) or get_dbhandler().session()
+
+            # get the file instance referenced by attrname from the current instance
             file_instance = getattr(inst, attrname)
-            if value is None and file_instance is not None:
-                setattr(inst, attrname, None)
-                sess.delete(file_instance)
+
+            if value is None:
+                if file_instance is not None:
+                    # if value is None but file instance exist, delete the file instance
+                    setattr(inst, attrname, None)
+                    sess.delete(file_instance)
                 return
+
+            # if value is valid, continue here
+
             if file_instance is None:
-                file_instance = FileAttachment()
+                # need to initialize file instance first
+                file_instance = cls()
                 sess.add(file_instance)
                 setattr(inst, attrname, file_instance)
+
+            # update & flush file instance
             file_instance.update(value)
             sess.flush([file_instance])
 
@@ -96,5 +171,37 @@ class FileAttachment(Base, BaseMixIn):
 
     def as_dict(self):
         raise NotImplementedError('this functionality has not been implemented')
+
+
+# removal mechanism of file-based storage after attachment delete event
+# there are 2 approaches:
+# 1) removal of the actual file once an object is being deleted from session database
+# 2) removal of all unreferenced files (with lastupdate < mtime < some threshold) by a periodic
+#    sweeping process
+
+
+__PENDING_FILES__ = []
+
+
+#@event.listens_for(FileAttachment, 'after_delete')
+def receive_after_delete(mapper, connection, target):
+    global __PENDING_FILES__
+    for t in target:
+        sess = object_session(t)
+        if sess not in __PENDING_FILES__:
+            curr_list = __PENDING_FILES__[sess] = []
+        if (fullpath := t.fullpath):
+            curr_list.append(fullpath)
+
+
+#@event.listens_for(FileAttachment, 'after_commit')
+def receive_after_commit(session):
+    global __PENDING_FILES__
+    if session in __PENDING_FILES__:
+        deleted_files = __PENDING_FILES__[session]
+        del __PENDING_FILES__[session]
+        for f in deleted_files:
+            # removed files here
+            pass
 
 # EOF
