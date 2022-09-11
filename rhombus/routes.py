@@ -33,6 +33,7 @@ def includeme(config):
 
     # configure file attachment root
     FileAttachment.set_root_storage_path(settings[ck.rb_attachment_root])
+    FileAttachment.set_max_dbsize(int(settings[ck.rb_attachment_maxdbsize]))
 
     # configure routes & views
 

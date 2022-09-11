@@ -33,6 +33,7 @@ assets_directory = 'assets.directory'
 # setting for file attachment
 
 rb_attachment_root = 'rhombus.attachment.root'
+rb_attachment_maxdbsize = 'rhombus.attachment.maxdbsize'
 
 # settings for overriding resources
 

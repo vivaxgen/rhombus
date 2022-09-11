@@ -54,8 +54,9 @@ class FileAttachment(Base, BaseMixIn):
     }
 
     __root_storage_path__ = None
-    __maxsize__ = 25 * 1024
-    """ max of 25M seems reasonable for keeping inside database """
+    __maxdbsize__ = 1024 * 1024
+    __maxsize__ = 250 * 1024 * 1024
+    """ max of 250M seems reasonable for attachment file """
 
     # __ek_fields__ = ['type', 'mimetype']
 
@@ -78,6 +79,10 @@ class FileAttachment(Base, BaseMixIn):
     def set_root_storage_path(cls, path):
         cls.__root_storage_path__ = Path(path)
 
+    @classmethod
+    def set_max_dbsize(cls, size):
+        cls.__maxdbsize__ = size
+
     def generate_fullpath(self):
         """ generate a new fullpath composed from self.id and filename """
         hex_id = f'{self.id:05x}'
@@ -88,7 +93,10 @@ class FileAttachment(Base, BaseMixIn):
         self.mimetype = mimetypes.guess_type(self.filename)[0]
         self.size = get_file_size(stream)
 
-        if self.size <= self.__maxsize__:
+        if self.size > self.__maxsize__:
+            raise RuntimeError(f'Uploaded file exceeds max size of {self.__maxsize__} bytes')
+
+        if self.size <= self.__maxdbsize__:
             self.fullpath = None
             self.bindata = stream.read()
         else:
