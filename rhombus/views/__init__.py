@@ -380,6 +380,13 @@ class BaseViewer(object):
                      class_='col-md-4 d-flex align-self-center',
                      )
 
+    #
+    # fileupload() to facilitate uploading file
+
+    @m_roles(* accessing_roles)
+    def fileupload(self):
+        raise NotImplementedError()
+
     # parse_form() is uset to parse html form and convert the value as necessary
     # to a dictionary
 
@@ -505,8 +512,9 @@ class BaseViewer(object):
 
 
 def generate_sesskey(user_id, obj_id=None):
+    """ universal session key generator based on user_id & obj_id """
     node_id_part = '%08x' % obj_id if obj_id else 'XXXXXXXX'
-    return '%08x%s%s' % (user_id, random_string(8), node_id_part)
+    return '%08x%s%s' % (user_id, random_string(16), node_id_part)
 
 
 def check_stamp(request, obj):
@@ -516,6 +524,21 @@ def check_stamp(request, obj):
                           f'Data entry has been modified by {obj.lastuser.login} at {obj.stamp}.'
                           f' Please cancel, reload and re-edit your entry.')
     return True
+
+
+# response generator
+
+def fileinstance_to_respose(file_instance=None, fp=None, filename=None,
+                            mimetype=None, content_encoding=None, request=None):
+    fp = fp or file_instance.fp()
+    filename = filename or file_instance.filename
+    mimetype = mimetype or file_instance.mimetype
+    content_encoding = content_encoding or mimetypes.guess_type(file_instance.filename)[1]
+    return Response(app_iter=FileIter(fp),
+                    content_type=mimetype,
+                    content_encoding=content_encoding,
+                    content_disposition=f'inline; filename="{filename}"',
+                    request=request)
 
 
 # parser helpers
