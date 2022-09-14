@@ -245,6 +245,17 @@ def get_authenticated_userobj(request, token):
                     return None
 
                 lastname, firstname, email = confirmation[1][:3]
+                if type(uc.credscheme) is not dict or 'primary_group' not in uc.credscheme:
+                    request.session.flash(
+                        (
+                            'danger',
+                            f'Warning: your current login [{login}] is not registered in this system '
+                            f'and automatic remote user registration is disabled. Please contact '
+                            f'the system administrator of this system.'
+                        )
+                    )
+                    return None
+
                 user = uc.add_user(login, lastname, firstname, email, uc.credscheme['primary_group'])
                 request.session.flash(
                     (
