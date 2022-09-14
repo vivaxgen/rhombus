@@ -449,16 +449,15 @@ def parse_form(f):
     d['desc'] = f['rhombus-group_desc']
     d['scheme'] = f['rhombus-group_scheme']
 
-    if 'rhombus-group_options' in f:
-        d['flags-on'] = d['flags-off'] = 0
-        if 'rhombus-group_composite' in f:
-            d['flags-on'] = d['flags-on'] | Group.f_composite_group
-            if 'rhombus-group_composite_ids' in f:
-                d['composite_ids'] = [int(gid) for gid in f.getall('rhombus-group_composite_ids')]
-            else:
-                d['composite_ids'] = []
+    d['flags-on'] = d['flags-off'] = 0
+    if 'rhombus-group_composite' in f and f['rhombus-group_composite'] == 'on':
+        d['flags-on'] = d['flags-on'] | Group.f_composite_group
+        if 'rhombus-group_composite_ids' in f:
+            d['composite_ids'] = [int(gid) for gid in f.getall('rhombus-group_composite_ids')]
         else:
-            d['flags-off'] = d['flags-off'] | Group.f_composite_group
+            d['composite_ids'] = []
+    else:
+        d['flags-off'] = d['flags-off'] | Group.f_composite_group
 
     return d
 
