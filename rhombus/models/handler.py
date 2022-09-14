@@ -183,6 +183,9 @@ class DBHandler(object):
         if type(user) == int:
             return self.User.get(user, self.session())
 
+        if isinstance(user, self.User):
+            return user
+
         return self.User.search(user, session=self.session())
 
     def get_group(self, group=None, user_id=None, systemgroups=False):
@@ -208,6 +211,9 @@ class DBHandler(object):
 
         if type(group) == int:
             return self.Group.get(group, self.session())
+
+        if isinstance(group, self.Group):
+            return group
 
         return self.Group.search(group, self.session())
 
