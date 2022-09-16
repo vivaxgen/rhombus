@@ -780,6 +780,7 @@ class UserInstance(object):
         self.primarygroup_id = primarygroup_id
         self.groups = [(g.name, g.id) for g in [Group.get(gid, dbsession) for gid in groups]]
         self.roles = [(EK._key(rid, dbsession=dbsession), rid) for rid in roles]
+        self.laststamp = -1
 
     def is_sysadm(self):
         return self.has_roles(SYSADM, DATAADM)

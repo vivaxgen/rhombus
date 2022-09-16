@@ -24,6 +24,8 @@ from rhombus.lib import helpers as h
 from rhombus.routes import includeme
 from rhombus.scripts import run
 
+import time
+
 _TITLE_ = ''
 
 
@@ -210,6 +212,7 @@ def auth_cache_factory(auth_cache):
 
 
 def get_authenticated_userobj(request, token):
+    global session_expiration_time
 
     dbh = get_dbhandler()
     db_session = dbh.session()
@@ -221,6 +224,7 @@ def get_authenticated_userobj(request, token):
     auth_cache = request.auth_cache
     key = token.encode('ASCII')
     userinstance = auth_cache.get(key, session_expiration_time)
+    # if there is no current user, userinstance will be NO_VALUE, which has value of False
     if not userinstance and ck.rb_authhost in request.registry.settings:
         # in client mode
 
@@ -297,6 +301,14 @@ def get_authenticated_userobj(request, token):
                         'You have been removed from group(s): %s' % ' '.join(removed)
                     )
                 )
+
+    if userinstance:
+        # check if we need to update laststamp
+        now = int(time.time())
+        if (now - userinstance.laststamp) > session_expiration_time * 0.75:
+            # set new timestamp
+            userinstance.laststamp = now
+            auth_cache.set(key, userinstance)
 
     db_session.user = userinstance or None
 
@@ -376,6 +388,7 @@ def userobj_setter(auth_cache):
                                'user instance!')
 
         user_id = user_id.encode('ASCII')
+        userinstance.laststamp = int(time.time())
         auth_cache.set(user_id, userinstance)
 
     return set_userobj
