@@ -2,6 +2,7 @@
 from pyramid.response import FileResponse
 
 from rhombus.views import *
+from rhombus.views import roles
 from rhombus.lib.fsoverlay import FileOverlay
 from rhombus.lib import rst
 

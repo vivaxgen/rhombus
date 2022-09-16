@@ -2,7 +2,8 @@ from .core import (Base, BaseMixIn, Column, types, ForeignKey, registered, defer
                    NoResultFound, object_session)
 from .ek import EK
 
-from rhombus.lib.utils import get_dbhandler, get_file_size
+from rhombus.lib.utils import get_dbhandler
+from rhombus.lib.fileutils import get_file_size
 from sqlalchemy import event
 from pathlib import Path
 import mimetypes
