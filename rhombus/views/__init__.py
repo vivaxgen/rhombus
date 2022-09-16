@@ -6,6 +6,7 @@ from pyramid.httpexceptions import HTTPFound
 
 from rhombus.lib.roles import PUBLIC, SYSADM, SYSVIEW, DATAADM, DATAVIEW
 from rhombus.lib.utils import get_dbhandler, random_string, cerr, cout
+from rhombus.lib.fileutils import save_file
 from rhombus.views.generics import not_authorized, error_page
 from rhombus.models.fileattach import FileAttachment
 import rhombus.lib.tags as t
@@ -14,6 +15,7 @@ import sqlalchemy.exc
 import yaml
 import mimetypes
 import time
+import pathlib
 
 log = logging.getLogger(__name__)
 
@@ -382,10 +384,40 @@ class BaseViewer(object):
 
     #
     # fileupload() to facilitate uploading file
+    # the sent form should contain sesskey
 
     @m_roles(* accessing_roles)
     def fileupload(self):
-        raise NotImplementedError()
+
+        request = self.request
+
+        sesskey = request.matchdict.get('sesskey')
+        user_id, instance_id = tokenize_sesskey(sesskey)
+        if user_id != request.user.id:
+            raise RuntimeError('Invalid session key!')
+
+        filestorage = request.POST.get('files[]')
+        filename = pathlib.Path(filestorage.filename).name
+
+        tmp_dir = request.registry.settings['cmsfix.tmpdir']
+        dest_path = tmp_dir + '%s.payload' % sesskey
+
+        size, total = save_file(dest_path, filestorage, request)
+
+        if size == total:
+            dbh = get_dbhandler()
+            file_mimetype = mimetypes.guess_type(filename)
+            try:
+                if not file_mimetype[0]:
+                    mimetype_id = dbh.EK._id('application/unknown', grp='@MIMETYPE')
+                else:
+                    mimetype_id = dbh.EK._id(file_mimetype[0], grp='@MIMETYPE')
+            except KeyError:
+                mimetype_id = dbh.EK._id('application/unknown', grp='@MIMETYPE')
+
+            return {'basename': filename, 'size': size, 'mimetype_id': mimetype_id}
+
+        return {}
 
     # parse_form() is uset to parse html form and convert the value as necessary
     # to a dictionary
@@ -511,11 +543,7 @@ class BaseViewer(object):
             f(self, obj, d)
 
 
-def generate_sesskey(user_id, obj_id=None):
-    """ universal session key generator based on user_id & obj_id """
-    node_id_part = '%08x' % obj_id if obj_id else 'XXXXXXXX'
-    return '%08x%s%s' % (user_id, random_string(16), node_id_part)
-
+# stamp handling
 
 def check_stamp(request, obj):
     print("\n>> Time stamp >>", obj.stamp.timestamp(), float(request.params['rhombus-stamp']), "\n")
@@ -526,9 +554,21 @@ def check_stamp(request, obj):
     return True
 
 
+# session key handling
+
+def generate_sesskey(user_id, obj_id=None):
+    """ universal session key generator based on user_id & obj_id """
+    node_id_part = '%08x' % obj_id if obj_id else 'XXXXXXXX'
+    return '%08x%s%s' % (user_id, random_string(16), node_id_part)
+
+
+def tokenize_sesskey(sesskey):
+    raise NotImplementedError()
+
+
 # response generator
 
-def fileinstance_to_respose(file_instance=None, fp=None, filename=None,
+def fileinstance_to_response(file_instance=None, fp=None, filename=None,
                             mimetype=None, content_encoding=None, request=None):
     fp = fp or file_instance.fp()
     filename = filename or file_instance.filename
