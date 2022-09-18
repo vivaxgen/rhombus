@@ -374,9 +374,9 @@ class BaseViewer(object):
                         request=rq)
 
     def attachment_link(self, obj, attrname):
-        if not obj.attachment:
+        if not (attachment := getattr(obj, attrname)):
             return ''
-        return t.div(t.a(obj.attachment.filename,
+        return t.div(t.a(attachment.filename,
                          href=self.request.route_url(self.attachment_route, id=obj.id,
                                                      fieldname=attrname)),
                      class_='col-md-4 d-flex align-self-center',
@@ -557,12 +557,15 @@ def check_stamp(request, obj):
 # session key handling
 
 def generate_sesskey(user_id, obj_id=None):
-    """ universal session key generator based on user_id & obj_id """
+    """ universal url-safe and filesystem-safe session key generator based on user_id & obj_id """
     node_id_part = '%08x' % obj_id if obj_id else 'XXXXXXXX'
     return '%08x%s%s' % (user_id, random_string(16), node_id_part)
 
 
 def tokenize_sesskey(sesskey):
+    # check sanity
+    if '/' in sesskey or '\\' in sesskey:
+        raise ValueError('invalid session key')
     raise NotImplementedError()
 
 
