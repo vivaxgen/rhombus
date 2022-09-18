@@ -57,6 +57,7 @@ class FileAttachment(Base, BaseMixIn):
     __root_storage_path__ = None
     __maxdbsize__ = 1024 * 1024
     __maxsize__ = 250 * 1024 * 1024
+    __subdir__ = 'attachments'
     """ max of 250M seems reasonable for attachment file """
 
     # __ek_fields__ = ['type', 'mimetype']
@@ -78,7 +79,7 @@ class FileAttachment(Base, BaseMixIn):
 
     @classmethod
     def set_root_storage_path(cls, path):
-        cls.__root_storage_path__ = Path(path)
+        cls.__root_storage_path__ = Path(path) / cls.__subdir__
 
     @classmethod
     def set_max_dbsize(cls, size):
