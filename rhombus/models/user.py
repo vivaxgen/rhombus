@@ -230,6 +230,9 @@ class User(Base, BaseMixIn):
     def __repr__(self):
         return "%s/%s" % (self.login, str(self.userclass).lower())
 
+    def can_modify(self, user):
+        return (user.has_roles(SYSADM, DATAADM) or user.id == self.id)
+
     def get_login(self):
         return "%s/%s" % (self.login, self.userclass.domain)
 
