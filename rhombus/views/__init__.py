@@ -161,9 +161,10 @@ class BaseViewer(object):
         """
         raise NotImplementedError()
 
-    def can_modify(self, obj):
+    def can_modify(self, obj=None):
         """ return True if obj can be modified by current user
         """
+        obj = obj or self.obj
         return obj.can_modify(self.request.user)
 
     def can_view(self, obj):
