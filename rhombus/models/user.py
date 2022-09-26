@@ -16,7 +16,7 @@ from .ek import EK
 
 from rhombus.lib.utils import get_dbhandler, cerr
 from rhombus.lib.auth import authfunc
-from rhombus.lib.roles import SYSADM, DATAADM
+from rhombus.lib.roles import SYSADM, DATAADM, USERCLASS_MODIFY, USER_MODIFY
 from passlib.hash import sha256_crypt as pwcrypt
 
 import yaml
@@ -39,7 +39,7 @@ class UserClass(BaseMixIn, Base):
         return f"UserClass({self.domain})"
 
     def can_modify(self, user):
-        return user.has_roles(SYSADM, DATAADM)
+        return user.has_roles(SYSADM, DATAADM, USERCLASS_MODIFY)
 
     @staticmethod
     def search(domain, session):
@@ -231,7 +231,7 @@ class User(Base, BaseMixIn):
         return "%s/%s" % (self.login, str(self.userclass).lower())
 
     def can_modify(self, user):
-        return (user.has_roles(SYSADM, DATAADM) or user.id == self.id)
+        return (user.has_roles(SYSADM, DATAADM, USER_MODIFY) or user.id == self.id)
 
     def get_login(self):
         return "%s/%s" % (self.login, self.userclass.domain)
