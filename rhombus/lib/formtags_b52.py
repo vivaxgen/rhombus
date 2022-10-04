@@ -276,7 +276,8 @@ class input_select(input_text):
                      'data-bs-title': pop_title, 'data-bs-content': pop_content})
             if self.label is not None else '',
             div(class_=self.class_value())[
-                selecttag(*options, id=self.id, name=self.name, class_=self.class_input(), multiple=multiple,
+                selecttag(*options, id=self.id, name=self.name, class_=self.class_input(),
+                          multiple=multiple, required=self.required,
                           style=self.style(), readonly=self.ro(), disabled=self.ro()),
                 self.extra_control(),
                 self.error_text()
@@ -323,7 +324,8 @@ class input_file(input_text):
                   class_=f"{self.class_label()} d-flex justify-content-end align-self-start pt-2 pl-1 pr-0",
                   for_=self.name),
             div(class_=self.class_value())[
-                inputtag(type=self._type, id=self.id, name=self.name, class_=self.class_input() + ' pt-1'),
+                inputtag(type=self._type, id=self.id, name=self.name, required=self.required,
+                         class_=self.class_input() + ' pt-1'),
                 self.error_text(),
                 self.info_text(),
             ],
