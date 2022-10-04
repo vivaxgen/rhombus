@@ -114,6 +114,23 @@ class FileAttachment(Base, BaseMixIn):
             if not self.size == size:
                 raise RuntimeError(f'ERR - incorrect file size during writing to file {destpath}')
 
+    @classmethod
+    def create_from_path(cls, fullpath, filename, session, mimetype=None, use_move=False):
+        fa = cls(filename=filename,
+                 mimetype=mimetype or mimetypes.guess_type(filename)[0],
+                 size=fullpath.stat().st_size)
+        session.add(fa)
+        session.flush([fa])
+        fa.fullpath = fa.generate_fullpath()
+        destpath = fa.get_fs_abspath()
+        destpath.parent.mkdir(parents=True, exist_ok=True)
+        if use_move:
+            shutil.move(fullpath, destpath)
+        else:
+            shutil.copyfile(fullpath, destpath)
+
+        return fa
+
     def get_fs_abspath(self):
         """ return an absolute path for actual file """
         if self.__root_storage_path__ is None:
