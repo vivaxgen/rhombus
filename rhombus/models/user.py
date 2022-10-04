@@ -788,6 +788,9 @@ class UserInstance(object):
     def is_sysadm(self):
         return self.has_roles(SYSADM, DATAADM)
 
+    def is_admin(self, * additional_roles):
+        return self.has_roles(* [SYSADM, DATAADM] + list(additional_roles))
+
     def in_group(self, *groups):
         """ check if user at least is in one of the groups """
 
