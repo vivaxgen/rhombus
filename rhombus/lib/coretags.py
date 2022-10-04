@@ -225,6 +225,10 @@ class pre(doubletag):
     _t = 'pre'
 
 
+class time(doubletag):
+    _t = 'time'
+
+
 class label(doubletag):
     _t = 'label'
 
