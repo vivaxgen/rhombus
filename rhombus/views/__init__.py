@@ -161,11 +161,19 @@ class BaseViewer(object):
         """
         raise NotImplementedError()
 
+    def can_manage(self, obj=None):
+        return self.request.user.has_roles(* self.managing_roles)
+
     def can_modify(self, obj=None):
         """ return True if obj can be modified by current user
         """
+        if self.can_manage():
+            return True
         obj = obj or self.obj
-        return obj.can_modify(self.request.user)
+        if obj is not None and obj.can_modify(self.request.user):
+            # return based on the object permission
+            return True
+        return False
 
     def can_view(self, obj):
         """ return True if obj can be viewed by current user
@@ -268,9 +276,11 @@ class BaseViewer(object):
         rq = self.request
         if rq.method == 'POST':
 
-            obj = self.object_class()
+            self.obj = obj = self.object_class()
             try:
                 self.update_object(obj, self.parse_form(rq.params))
+
+                # with addition, permission check is performed after 
 
             except AssertionError:
                 raise
@@ -317,6 +327,7 @@ class BaseViewer(object):
         rq = self.request
         obj = self.obj or self.get_object()
 
+        # with editing, permission check is performed before any processing
         if not (rq.user.has_roles(* self.managing_roles) or self.can_modify(obj)):
             raise RuntimeError('Current user cannot modify this object!')
 
@@ -488,11 +499,13 @@ class BaseViewer(object):
 
         return d
 
-    def hidden_fields(self, obj):
+    def hidden_fields(self, obj, stamp=None, sesskey=None):
         request = self.request
         return t.fieldset(
-            t.input_hidden(name='rhombus-stamp', value='%15f' % obj.stamp.timestamp() if obj.stamp else -1),
-            t.input_hidden(name='rhombus-sesskey', value=generate_sesskey(request.user.id, obj.id)),
+            t.input_hidden(name='rhombus-stamp',
+                           value=stamp or ('%15f' % obj.stamp.timestamp() if obj.stamp else -1)),
+            t.input_hidden(name='rhombus-sesskey',
+                           value=sesskey or generate_sesskey(request.user.id, obj.id)),
             name="rhombus-hidden"
         )
 
@@ -559,21 +572,28 @@ def check_stamp(request, obj):
 
 def generate_sesskey(user_id, obj_id=None):
     """ universal url-safe and filesystem-safe session key generator based on user_id & obj_id """
-    node_id_part = '%08x' % obj_id if obj_id else 'XXXXXXXX'
-    return '%08x%s%s' % (user_id, random_string(16), node_id_part)
+    obj_id_part = '%08x' % obj_id if obj_id else 'XXXXXXXX'
+    return '%08x%s%s' % (user_id, random_string(16), obj_id_part)
 
 
 def tokenize_sesskey(sesskey):
+    """ returning usee_id and node_id part """
     # check sanity
     if '/' in sesskey or '\\' in sesskey:
         raise ValueError('invalid session key')
-    raise NotImplementedError()
+    user_id = int(sesskey[0:8], 16)
+    obj_id_part = sesskey[24:32]
+    if obj_id_part == 'XXXXXXXX':
+        obj_id = None
+    else:
+        obj_id = int(obj_id_part, 16)
+    return user_id, obj_id
 
 
 # response generator
 
 def fileinstance_to_response(file_instance=None, fp=None, filename=None,
-                            mimetype=None, content_encoding=None, request=None):
+                             mimetype=None, content_encoding=None, request=None):
     fp = fp or file_instance.fp()
     filename = filename or file_instance.filename
     mimetype = mimetype or file_instance.mimetype
