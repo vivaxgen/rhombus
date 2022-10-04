@@ -228,6 +228,9 @@ class pre(doubletag):
 class time(doubletag):
     _t = 'time'
 
+class script(doubletag):
+    _t = 'script'
+
 
 class label(doubletag):
     _t = 'label'
