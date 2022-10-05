@@ -3,8 +3,8 @@
 #
 
 from webhelpers2.html import escape, url_escape, literal
-from .coretags import (FORM_URLENCODED, FORM_MULTIPART, GET, POST, htmltag, doubletag, div, span, label,
-                       inputtag, selecttag, textareatag, optiontag, button, a, i)
+from .coretags import (FORM_URLENCODED, FORM_MULTIPART, GET, POST, htmltag, doubletag, div,
+                       span, label, inputtag, selecttag, textareatag, optiontag, button, a, i)
 from operator import itemgetter
 
 
@@ -21,8 +21,10 @@ class form(doubletag):
     """ form is a container as well """
     _t = 'form'
 
-    def __init__(self, name, action='#', method=POST, readonly=False, update_dict=None, enctype=FORM_URLENCODED, **kwargs):
-        super().__init__(name=name, **(kwargs | dict(method=method, action=action, enctype=enctype)))
+    def __init__(self, name, action='#', method=POST, readonly=False, update_dict=None,
+                 enctype=FORM_URLENCODED, **kwargs):
+        super().__init__(name=name, **(kwargs | dict(method=method, action=action,
+                         enctype=enctype)))
         self.readonly = readonly
         self.update_dict = update_dict
 
@@ -86,10 +88,12 @@ class input_text(htmltag):
     def info_text(self):
         if self.info:
             if self.info.startswith('popup:'):
-                info = literal('<div class="col-md-1 form-control-static">'
-                               '<a class="js-newWindow" data-popup="width=400,height=200,scrollbars=yes" href="%s">'
-                               '<span class="glyphicon glyphicon-question-sign" aria-hidden="true"></span>'
-                               '</a></div>' % self.info[6:])
+                info = literal(
+                    '<div class="col-md-1 form-control-static">'
+                    '<a class="js-newWindow" data-popup="width=400,height=200,scrollbars=yes" href="%s">'
+                    '<span class="glyphicon glyphicon-question-sign" aria-hidden="true"></span>'
+                    '</a></div>' % self.info[6:]
+                )
             else:
                 info = literal('<small class="form-text text-muted">' + self.info + '</small>')
         else:
@@ -160,9 +164,11 @@ class input_text(htmltag):
                   ) if self.label is not None else '',
             div(class_=self.class_value())[
                 inputtag(type=self._type, id=self.id, name=self.name,
-                         value=value or self.get_value(), class_=self.class_input(), placeholder=self.placeholder,
-                         required=self.required, maxlength=self.maxlength if self.maxlength > 0 else False,
-                         style=self.style(), readonly=self.ro() or readonly, disabled=self.ro() or readonly),
+                         value=value or self.get_value(), class_=self.class_input(),
+                         placeholder=self.placeholder, required=self.required,
+                         maxlength=self.maxlength if self.maxlength > 0 else False,
+                         style=self.style(), readonly=self.ro() or readonly,
+                         disabled=self.ro() or readonly),
                 self.error_text()
             ],
             self.info_text()
@@ -203,8 +209,9 @@ class input_textarea(input_text):
                      'data-bs-title': pop_title, 'data-bs-content': pop_content})
             if self.label is not None else '',
             div(class_=self.class_value(size))[
-                textareatag(id=self.id, name=self.name, class_=self.class_input(), style=self.style(),
-                            readonly=self.ro(), disabled=self.ro(), rows=rows)[self.get_value()],
+                textareatag(id=self.id, name=self.name, class_=self.class_input(),
+                            style=self.style(), readonly=self.ro(), disabled=self.ro(),
+                            rows=rows)[self.get_value()],
                 self.extra_control(),
                 self.error_text()
             ],
@@ -267,7 +274,8 @@ class input_select(input_text):
             if self.value:
                 if multiple:
                     if type(self.value) != list:
-                        raise RuntimeError('input_select() with multiple options needs a list as value')
+                        raise RuntimeError(
+                            'input_select() with multiple options needs a list as value')
                     if v in self.value:
                         selected = 'selected'
                 elif v == self.value:
@@ -296,8 +304,8 @@ class input_select(input_text):
 
 class input_select_ek(input_select):
 
-    def __init__(self, name, label, value, parent_ek, group=None, option_filter=None, description=False,
-                 **kwargs):
+    def __init__(self, name, label, value, parent_ek, group=None, option_filter=None,
+                 description=False, **kwargs):
         if parent_ek is None:
             raise RuntimeError('parent_ek cannot be None')
         super().__init__(name, label, value, multiple=False, **kwargs)
