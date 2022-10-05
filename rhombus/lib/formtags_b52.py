@@ -5,6 +5,7 @@
 from webhelpers2.html import escape, url_escape, literal
 from .coretags import (FORM_URLENCODED, FORM_MULTIPART, GET, POST, htmltag, doubletag, div, span, label,
                        inputtag, selecttag, textareatag, optiontag, button, a, i)
+from operator import itemgetter
 
 
 class inline_inputs(div):
@@ -226,7 +227,8 @@ class input_select(input_text):
             self.value = str(self.value)
 
     def options(self):
-        return self._options
+        """ return a sorted list of options """
+        return sorted(self._options, key=itemgetter(1))
 
     def set(self, options=None, value=None, extra_control=None):
         if options:
