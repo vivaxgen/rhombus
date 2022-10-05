@@ -214,9 +214,11 @@ class input_textarea(input_text):
 
 class input_select(input_text):
 
-    def __init__(self, name, label, value='', options=[], multiple=False, extra_control=None, **kwargs):
+    def __init__(self, name, label, value='', options=[], multiple=False, extra_control=None,
+                 sort_option=True, **kwargs):
         """ options: [ (val, label), ...] """
         super().__init__(name, label, value, extra_control=extra_control, **kwargs)
+        self.sort_option = sort_option
         self._options = [(str(o[0]), o[1]) for o in options]
         self.multiple = multiple
 
@@ -228,7 +230,9 @@ class input_select(input_text):
 
     def options(self):
         """ return a sorted list of options """
-        return sorted(self._options, key=itemgetter(1))
+        if self.sort_option:
+            return sorted(self._options, key=itemgetter(1))
+        return self._options
 
     def set(self, options=None, value=None, extra_control=None):
         if options:
