@@ -15,13 +15,6 @@ cinfo = print
 
 class QueryConstructor(object):
 
-    # field specs contains field_tag: column_class
-    field_specs = {
-        'userclass_id': user.UserClass.id,
-        'user_id': user.User.id,
-        'group_id': user.Group.id,
-    }
-
     def __init__(self):
         pass
 
@@ -56,12 +49,16 @@ class QueryConstructor(object):
 
         return and_(*exprs), classes
 
+    # field specs contains field_tag: column_class
     field_specs = {
         'userclass_id': user.UserClass.id,
         'userclass_domain': user.UserClass.domain,
 
         'user_id': user.User.id,
         'user_login': user.User.login,
+
+        'group_id': user.Group.id,
+        'group_name': user.Group.name,
     }
 
 
@@ -170,6 +167,12 @@ class DBHandler(object):
         return self.get_users(groups, [{'user_id': ids}], user=user, fetch=fetch,
                               raise_if_empty=raise_if_empty)
 
+    # Group
+
+    def get_groups(self, groups=None, specs=None, user=None, fetch=True, raise_if_empty=False,
+                   ignore_acl=False):
+        raise NotImplementedError()
+
     # others
 
     def get_user(self, user=None):
@@ -188,12 +191,17 @@ class DBHandler(object):
 
         return self.User.search(user, session=self.session())
 
-    def get_group(self, group=None, user_id=None, systemgroups=False):
+    def get_group(self, group=None, user_id=None, systemgroups=False,
+                  additional_ids=None):
         """user_id can be either an integer or an userinstance object or an User object"""
+
+        g = []
+        if additional_ids is not None:
+            g = [self.get_group_by_id(x) for x in additional_ids]
 
         if group is None:
             if user_id is None:
-                return self.get_groups(systemgroups=systemgroups)
+                return set(self.get_groups(systemgroups=systemgroups) + g)
             else:
                 # only return groups where the user is a member
                 if isinstance(user_id, int):
@@ -202,20 +210,20 @@ class DBHandler(object):
                     user_id = user_id.userinstance()
 
                 if user_id.is_sysadm():
-                    return self.get_groups()
+                    return set(self.get_groups() + g)
 
-                return user_id.get_groups(self.session())
+                return set(user_id.get_groups(self.session()) + g)
 
         if type(group) == list:
-            return [self.get_group(g) for g in group]
+            return set([self.get_group(g) for g in group] + g)
 
         if type(group) == int:
-            return self.Group.get(group, self.session())
+            return set(self.Group.get(group, self.session()) + g)
 
         if isinstance(group, self.Group):
-            return group
+            return set(group + g)
 
-        return self.Group.search(group, self.session())
+        return set(self.Group.search(group, self.session()) + g)
 
     def get_groups(self, systemgroups=False):
         """ return all non-system groups, except when systemgroups is True"""
