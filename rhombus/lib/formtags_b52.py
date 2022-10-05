@@ -249,7 +249,8 @@ class input_select(input_text):
             else:
                 value = [l for (v, l) in self.options() if v == self.value]
                 if len(value) == 0:
-                    raise ValueError(f'key: {self.value} is not in list of option')
+                    raise ValueError(f'key: {self.value} is not in list of option '
+                                     f'for field: {self.name or self.id}')
                 value = value[0]
             return super().r(value=value)
 
