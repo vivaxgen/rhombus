@@ -64,6 +64,12 @@ class UserClass(BaseMixIn, Base):
         # password checking performed here
         if (not user and self.autoadd) or (user and user.credential == '{X}'):
             # credential will be checked by the underlying scheme
+            if type(self.credscheme) is not dict:
+                raise ValueError(f'ERR: credential scheme for userclass {self.domain} '
+                                 f'has not be setup!')
+            if 'sys' not in self.credscheme:
+                raise ValueError(f'ERR: credential scheme for userclass {self.domain} '
+                                 f'does not have "sys" key!')
             ok = authfunc[self.credscheme['sys']][0](username, passwd, self.credscheme)
             if ok:
                 if not user:
