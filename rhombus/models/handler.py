@@ -170,7 +170,7 @@ class DBHandler(object):
     # Group
 
     def get_groups(self, groups=None, specs=None, user=None, fetch=True, raise_if_empty=False,
-                   ignore_acl=False):
+                   systemgroups=False, ignore_acl=False):
         raise NotImplementedError()
 
     # others
@@ -193,7 +193,10 @@ class DBHandler(object):
 
     def get_group(self, group=None, user_id=None, systemgroups=False,
                   additional_ids=None):
-        """user_id can be either an integer or an userinstance object or an User object"""
+        """ user_id can be either an integer or an userinstance object or an User object
+            warning: this method returns unconsistent type, since the returned value depends
+            on the args
+        """
 
         g = []
         if additional_ids is not None:
@@ -214,16 +217,20 @@ class DBHandler(object):
 
                 return set(user_id.get_groups(self.session()) + g)
 
+        # the following steps will ignore additional_ids
+        if any(g):
+            raise ValueError('with the current args, additinal_ids will be ignored')
+
         if type(group) == list:
-            return set([self.get_group(g) for g in group] + g)
+            return [self.get_group(g) for g in group]
 
         if type(group) == int:
-            return set(self.Group.get(group, self.session()) + g)
+            return self.Group.get(group, self.session())
 
         if isinstance(group, self.Group):
-            return set(group + g)
+            return group
 
-        return set(self.Group.search(group, self.session()) + g)
+        return self.Group.search(group, self.session())
 
     def get_groups(self, systemgroups=False):
         """ return all non-system groups, except when systemgroups is True"""
