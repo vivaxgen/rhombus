@@ -544,7 +544,10 @@ class BaseViewer(object):
 
     def ffn(self, ident):
         """ ffn - formm field name """
-        return self.form_fields[ident][0]
+        field_spec = self.form_fields[ident]
+        if type(field_spec) is not tuple:
+            raise ValueError(f'form field: {ident} is not a tuple!')
+        return field_spec[0]
 
     def preupdate_object(self, obj, d):
         """ perform necessary stuff before updating object """
