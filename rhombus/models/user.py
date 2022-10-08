@@ -66,7 +66,7 @@ class UserClass(BaseMixIn, Base):
             # credential will be checked by the underlying scheme
             if type(self.credscheme) is not dict:
                 raise ValueError(f'ERR: credential scheme for userclass {self.domain} '
-                                 f'has not be setup!')
+                                 f'has not been setup!')
             if 'sys' not in self.credscheme:
                 raise ValueError(f'ERR: credential scheme for userclass {self.domain} '
                                  f'does not have "sys" key!')
