@@ -199,6 +199,11 @@ class FileAttachment(Base, BaseMixIn):
     def as_dict(self):
         raise NotImplementedError('this functionality has not been implemented')
 
+    def clear(self):
+        # removing file from fs storage
+        if self.fullpath:
+            Path(self.get_fs_abspath()).unlink(missing_ok=True)
+
 
 # removal mechanism of file-based storage after attachment delete event
 # there are 2 approaches:
