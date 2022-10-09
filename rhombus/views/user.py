@@ -1,10 +1,12 @@
 
 from rhombus.lib.utils import get_dbhandler
-from rhombus.lib.roles import PUBLIC, SYSADM, GUEST, EK_VIEW, USERCLASS_VIEW, USER_VIEW, GROUP_VIEW
+from rhombus.lib.roles import (PUBLIC, SYSADM, GUEST, EK_VIEW, USERCLASS_VIEW, USER_VIEW,
+                               GROUP_VIEW)
 from rhombus.lib.modals import popup, modal_delete
-from rhombus.lib.tags import (div, table, thead, tbody, th, tr, td, literal, selection_bar, br, ul, li, a, i,
-                              form, POST, GET, fieldset, input_text, input_hidden, input_select, input_password,
-                              submit_bar, hr, h3, h5, p, custom_submit_bar)
+from rhombus.lib.tags import (div, table, thead, tbody, th, tr, td, literal, selection_bar, br,
+                              ul, li, a, i, form, POST, GET, fieldset, input_text, input_hidden,
+                              input_select, input_password, submit_bar, hr, h3, h5, p,
+                              custom_submit_bar)
 from rhombus.lib import tags as t
 from rhombus.lib.modals import modal_delete, popup, modal_error
 from rhombus.views import (BaseViewer, render_to_response, form_submit_bar, ParseFormError,
@@ -62,7 +64,9 @@ class UserViewer(BaseViewer):
         tokenform = t.form(name='rhombus/token-generator', method=POST,
                            action=self.request.route_url('rhombus.user-action'))
         tokenform.add(
-            custom_submit_bar(('Generate token', 'generate_token')).set_offset(1).show_reset_button(False)
+            custom_submit_bar(
+                ('Generate token', 'generate_token')
+            ).set_offset(1).show_reset_button(False)
         )
         html.add(tokenform)
 
@@ -114,27 +118,26 @@ class UserViewer(BaseViewer):
                 t.input_select(ff('userclass_id'), 'User class', value=user.userclass_id,
                                offset=2,
                                options=[(uc.id, uc.domain) for uc in dbh.get_userclass()]),
-                t.input_text(ff('login!'), 'Login', value=user.login, offset=2, maxlength=16, required=True),
+                t.input_text(ff('login!'), 'Login', value=user.login, offset=2, maxlength=16,
+                             required=True),
                 t.input_text(ff('lastname'), 'Lastname', value=user.lastname, offset=2),
                 t.input_text(ff('firstname'), 'Firstname', value=user.firstname, offset=2),
-                t.input_text(ff('email!'), 'Primary email', value=user.email, offset=2, required=True),
+                t.input_text(ff('email!'), 'Primary email', value=user.email, offset=2,
+                             required=True),
                 t.input_text(ff('email2'), 'Secondary email', value=user.email2, offset=2),
                 t.input_select(
                     ff('primarygroup_id'), 'Primary group', value=user.primarygroup_id, offset=2,
                     options=[
                         (g.id, g.name)
                         for g in dbh.get_group(
-                            systemgroups=True if (readonly or request.user.has_roles(SYSADM)) else False)
+                            systemgroups=True if (readonly or request.user.has_roles(SYSADM))
+                            else False)
                     ]
                 ),
                 t.input_text(ff('institution'), 'Institution', value=user.institution, offset=2),
             ),
             t.fieldset(
                 form_submit_bar(create) if not readonly else div(),
-                #submit_bar() if not readonly else t.a('Edit',
-                #                                      class_='btn btn-primary offset-md-3',
-                #                                      href=request.route_url('rhombus.user-edit',
-                #                                                             id=user.id)),
                 name='footer',
             )
         )
@@ -219,7 +222,10 @@ class UserViewer(BaseViewer):
             from rhombus.lib.rpc import generate_user_token
 
             token = generate_user_token(request)
-            html = div(h3('User Token'), div('Please save your token in secure location:'), h5(token))
+            html = div(
+                h3('User Token'),
+                div('Please save your token in secure location:'),
+                h5(token))
 
             return render_to_response('rhombus:templates/generics/page.mako',
                                       {'html': html},
@@ -315,7 +321,9 @@ def generate_user_table(users, request):
             tuple([
                 t.tr()[
                     t.td(literal('<input type="checkbox" name="user-ids" value="%d">' % u.id)),
-                    t.td(a('%s' % u.login, href=request.route_url('rhombus.user-view', id=u.id))),
+                    t.td(
+                        a('%s' % u.login, href=request.route_url('rhombus.user-view',
+                                                                 id=u.id))),
                     t.td('%s' % u.userclass.domain)
                 ] for u in users
             ])
@@ -374,7 +382,8 @@ def user_menu(request):
                 i(class_='fas fa-user-circle'),
                 ' ' + request.user.login,
             ],
-            ul(class_='dropdown-menu dropdown-menu-end', ** {'aria-labelledby': 'navbarUsermenu'})[
+            ul(class_='dropdown-menu dropdown-menu-end',
+               ** {'aria-labelledby': 'navbarUsermenu'})[
                 li(a('Profile', class_='dropdown-item',
                      href=request.route_url('rhombus.user-view', id=request.user.id)))
                 if not request.user.has_roles(GUEST) else '',
@@ -383,8 +392,8 @@ def user_menu(request):
                 if not (request.user.has_roles(GUEST) or authhost) else '',
                 li(a('Management', class_='dropdown-item',
                      href=request.route_url('rhombus.dashboard')))
-                if request.user.has_roles(SYSADM, SYSVIEW, DATAADM, DATAVIEW,
-                                          EK_VIEW, USERCLASS_VIEW, USER_VIEW, GROUP_VIEW) else '',
+                if request.user.has_roles(SYSADM, SYSVIEW, DATAADM, DATAVIEW, EK_VIEW,
+                                          USERCLASS_VIEW, USER_VIEW, GROUP_VIEW) else '',
                 li(a('Logout', class_='dropdown-item', href=get_logout_url(request, authhost)))
             ]
         ]
