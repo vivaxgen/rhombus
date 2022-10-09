@@ -791,6 +791,9 @@ class UserInstance(object):
         self.roles = [(EK._key(rid, dbsession=dbsession), rid) for rid in roles]
         self.laststamp = -1
 
+    def __str__(self):
+        return f"{self.login}/{self.domain}"
+
     def is_sysadm(self):
         return self.has_roles(SYSADM, DATAADM)
 
