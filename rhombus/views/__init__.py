@@ -16,6 +16,7 @@ import yaml
 import mimetypes
 import time
 import pathlib
+import urllib.parse
 
 log = logging.getLogger(__name__)
 
@@ -26,7 +27,7 @@ class not_roles(object):
         self.not_roles = role_list
 
 
-msg_0 = 'Please log in first.'
+msg_0 = 'Please log in first. Click {login_link} to login.'
 
 msg_1 = 'Please notify the administrator if you believe that '\
         'you should be able to access this resource.'
@@ -52,7 +53,11 @@ class roles(object):
                 if PUBLIC in self.allowed and request.user:
                     return wrapped(request, **kw)
                 if not request.user:
-                    return not_authorized(request, msg_0)
+                    login_link = t.a('here',
+                                     href=get_login_url(request))
+                    html = t.literal(
+                        msg_0.format(login_link=login_link.r()))
+                    return not_authorized(request, html)
                 if not request.user.has_roles(*self.allowed):
                     return not_authorized(request, msg_1)
                 return wrapped(request, **kw)
@@ -75,7 +80,11 @@ class m_roles(roles):
                 if PUBLIC in self.allowed and request.user:
                     return wrapped(inst, **kw)
                 if not request.user:
-                    return not_authorized(request, msg_0)
+                    login_link = t.a('here',
+                                     href=get_login_url(request))
+                    html = t.literal(
+                        msg_0.format(login_link=login_link.r()))
+                    return not_authorized(request, html)
                 if not request.user.has_roles(*self.allowed):
                     return not_authorized(request, msg_1)
                 return wrapped(inst, **kw)
@@ -591,6 +600,18 @@ def tokenize_sesskey(sesskey):
     else:
         obj_id = int(obj_id_part, 16)
     return user_id, obj_id
+
+
+# login urls
+
+def get_login_url(request, authhost=None):
+    authhost = authhost or request.registry.settings.get('rhombus.authhost', '')
+    return authhost + '/login?' + urllib.parse.urlencode({'came_from': request.url})
+
+
+def get_logout_url(request, authhost=None):
+    authhost = authhost or request.registry.settings.get('rhombus.authhost', '')
+    return authhost + '/logout?'
 
 
 # response generator

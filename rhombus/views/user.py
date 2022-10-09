@@ -7,8 +7,9 @@ from rhombus.lib.tags import (div, table, thead, tbody, th, tr, td, literal, sel
                               submit_bar, hr, h3, h5, p, custom_submit_bar)
 from rhombus.lib import tags as t
 from rhombus.lib.modals import modal_delete, popup, modal_error
-from rhombus.views import (BaseViewer, render_to_response, form_submit_bar, ParseFormError, roles, yaml_load,
-                           Response, HTTPFound, m_roles)
+from rhombus.views import (BaseViewer, render_to_response, form_submit_bar, ParseFormError,
+                           roles, yaml_load, Response, HTTPFound, m_roles, get_login_url,
+                           get_logout_url)
 from rhombus.views import *
 from rhombus.views.generics import error_page
 
@@ -399,31 +400,5 @@ def user_menu(request):
     user_menu_html.add(user_menu_list)
 
     return user_menu_html
-
-
-def get_login_url(request, authhost=None):
-    authhost = authhost or request.registry.settings.get('rhombus.authhost', '')
-    return authhost + '/login?' + urllib.parse.urlencode({'came_from': request.url})
-
-
-def get_logout_url(request, authhost=None):
-    authhost = authhost or request.registry.settings.get('rhombus.authhost', '')
-    return authhost + '/logout?'
-
-
-modal_error_XXX= '''
-<div class="modal-dialog" role="document"><div class="modal-content">
-<div class="modal-header">
-    <button type="button" class="close" data-dismiss="modal" aria-hidden="true">×</button>
-    <h3 id="myModalLabel">Error</h3>
-</div>
-<div class="modal-body">
-    <p>Please select user(s) to be removed</p>
-</div>
-<div class="modal-footer">
-    <button class="btn" data-dismiss="modal" aria-hidden="true">Close</button>
-</div>
-</div></div>
-'''
 
 # EOF
