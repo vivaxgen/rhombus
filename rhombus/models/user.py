@@ -126,7 +126,10 @@ class UserClass(BaseMixIn, Base):
         """
 
         session = object_session(self)
-        pri_grp = Group.search(primarygroup, session)
+        if isinstance(primarygroup, Group):
+            pri_grp = primarygroup
+        else:
+            pri_grp = Group.search(primarygroup, session)
         user_instance = User(login=login, userclass=self,
                              lastname=lastname, firstname=firstname, email=email,
                              primarygroup=pri_grp, credential='{X}')
