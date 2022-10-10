@@ -121,7 +121,9 @@ class UserClass(BaseMixIn, Base):
                 u.set_credential(user[5])
 
     def add_user(self, login, lastname, firstname, email, primarygroup, groups=[]):
-        """ add a new user """
+        """ add a new user and set up the group properly, use this function
+            rather than creating a new User instance for registering new users
+        """
 
         session = object_session(self)
         pri_grp = Group.search(primarygroup, session)
@@ -255,23 +257,6 @@ class User(Base, BaseMixIn):
 
         return self
 
-    def update_XXX(self, u):
-        if isinstance(u, dict):
-
-            if 'primarygroup_id' in u:
-                self.set_primarygroup(u['primarygroup_id'])
-
-            self.update_fields_with_dict(u, exclude=['primary_group_id'])
-
-        else:
-
-            if u.primarygroup_id:
-                self.set_primarygroup(u.primarygroup_id)
-
-            self.update_fields_with_object(u, exclude=['primary_group_id'])
-
-            return
-
     def set_primarygroup(self, grp):
 
         # assert self.id
@@ -324,7 +309,8 @@ class User(Base, BaseMixIn):
     def groupids(self):
         """return a list of group_ids where this user is member of"""
         dbsession = object_session(self)
-        grp_ids = [x[0] for x in dbsession.query(UserGroup.group_id).filter(UserGroup.user_id == self.id)]
+        grp_ids = [x[0] for x in dbsession.query(UserGroup.group_id)
+                   .filter(UserGroup.user_id == self.id)]
         grp_ids2 = [x[0] for x in dbsession.query(AssociatedGroup.group_id)
                     .filter(AssociatedGroup.assoc_group_id.in_(grp_ids))]
         return set(grp_ids + grp_ids2)
@@ -333,8 +319,9 @@ class User(Base, BaseMixIn):
         """return list of (grp_ids, role_ids) on all available groups and roles"""
         dbsession = object_session(self)
         grp_ids = self.groupids()
-        res = dbsession.execute(group_role_table.select(group_role_table.c.group_id.in_(grp_ids))
-                                .with_only_columns([group_role_table.c.role_id]).distinct())
+        res = dbsession.execute(
+            group_role_table.select(group_role_table.c.group_id.in_(grp_ids))
+            .with_only_columns([group_role_table.c.role_id]).distinct())
         role_ids = [item for sublist in res.fetchall() for item in sublist]
         return (grp_ids, role_ids)
 
@@ -343,7 +330,8 @@ class User(Base, BaseMixIn):
         if self.has_roles(SYSADM):
             return User.query(dbsession).all()
         group_ids = self.groupids()
-        user_ids = [x.user_id for x in UserGroup.query(dbsession).filter(UserGroup.group_id.in_(group_ids))]
+        user_ids = [x.user_id for x in UserGroup.query(dbsession)
+                    .filter(UserGroup.group_id.in_(group_ids))]
         return [User.get(u, dbsession) for u in set(user_ids)]
 
     def has_roles(self, *roles):
@@ -440,7 +428,8 @@ class User(Base, BaseMixIn):
         # we need to flush to db to get user.id
         session.flush([obj])
 
-        cerr(f'[New user login: {obj.login} id: {obj.id}] with primarygroup id: {obj.primarygroup_id}')
+        cerr(f'[New user login: {obj.login} id: {obj.id}] with '
+             f'primarygroup id: {obj.primarygroup_id}')
 
         # add to all groups, including primary group
         groups = d['groups']
@@ -467,12 +456,13 @@ def _create_ug_by_user(user):
     return UserGroup(user=user)
 
 
-group_role_table = Table('groups_roles', metadata,
-                         Column('id', types.Integer, Identity(), primary_key=True),
-                         Column('group_id', types.Integer, ForeignKey('groups.id'), nullable=False),
-                         Column('role_id', types.Integer, ForeignKey('eks.id'), nullable=False),
-                         UniqueConstraint('group_id', 'role_id')
-                         )
+group_role_table = Table(
+    'groups_roles', metadata,
+    Column('id', types.Integer, Identity(), primary_key=True),
+    Column('group_id', types.Integer, ForeignKey('groups.id'), nullable=False),
+    Column('role_id', types.Integer, ForeignKey('eks.id'), nullable=False),
+    UniqueConstraint('group_id', 'role_id')
+)
 
 
 @registered
@@ -501,7 +491,8 @@ class Group(Base, BaseMixIn):
         if type(user) == int:
             if (self.flags & self.f_composite_group):
                 # join UserGroup and AssociatedGroup
-                user_ids = [x[0] for x in list(AssociatedGroup.get_usergroup_info_query(self, 'C'))]
+                user_ids = [x[0] for x in
+                            list(AssociatedGroup.get_usergroup_info_query(self, 'C'))]
             else:
                 user_ids = [x[0] for x in
                             object_session(self).query(UserGroup.user_id)
@@ -522,14 +513,16 @@ class Group(Base, BaseMixIn):
             user_id = user
 
         if (self.flags & self.f_composite_group):
-            uginfo = AssociatedGroup.get_usergroup_info_query(self, 'C').filter(UserGroup.user_id == user_id).one()
+            uginfo = AssociatedGroup.get_usergroup_info_query(self, 'C').filter(
+                UserGroup.user_id == user_id).one()
             if uginfo and uginfo[1] == 'A':
                 return True
             return False
 
         try:
-            ug = UserGroup.query(object_session(self)).filter(UserGroup.group_id == self.id,
-                                                              UserGroup.user_id == user_id).one()
+            sess = object_session(self)
+            ug = UserGroup.query(sess).filter(UserGroup.group_id == self.id,
+                                              UserGroup.user_id == user_id).one()
             if ug and ug.role == 'A':
                 return True
         except NoResultFound:
@@ -600,13 +593,16 @@ class Group(Base, BaseMixIn):
 
             if 'composite_ids' in obj:
                 if not self.id:
-                    # this is new object, so we can just attach using SqlAlchemy relationship mechanism
+                    # this is new object, so we can just attach using SqlAlchemy's
+                    # relationship mechanism
                     session = get_dbhandler().session()
                     with session.no_autoflush:
                         for ag_id in obj['composite_ids']:
                             AssociatedGroup.add(self, ag_id, 'C', session)
                 else:
-                    AssociatedGroup.sync(self.id, obj['composite_ids'], session=object_session(self))
+                    sess = object_session(self)
+                    composite_ids = obj['composite_ids']
+                    AssociatedGroup.sync(self.id, composite_ids, session=sess)
 
         else:
             self.update_fields_with_object(obj)
@@ -699,7 +695,8 @@ class AssociatedGroup(Base):
     # R: ?, C: composite member
 
     group = relationship(Group, uselist=False, foreign_keys=[group_id],
-                         backref=backref('associated_groups', cascade='all,delete,delete-orphan'))
+                         backref=backref('associated_groups',
+                                         cascade='all,delete,delete-orphan'))
     associated_group = relationship(Group, uselist=False, foreign_keys=[assoc_group_id])
 
     __table_args__ = (UniqueConstraint('group_id', 'assoc_group_id'), {})
@@ -708,8 +705,9 @@ class AssociatedGroup(Base):
     def get_usergroup_info_query(cls, group, role=None):
         """ return tuples of (user_id, group_id, role) for those associated with the group
         """
-        q = object_session(group).query(UserGroup.user_id, UserGroup.role, UserGroup.group_id, cls.role)\
-            .filter(UserGroup.group_id == cls.assoc_group_id, cls.group_id == group.id)
+        q = object_session(group).query(
+            UserGroup.user_id, UserGroup.role, UserGroup.group_id, cls.role
+        ).filter(UserGroup.group_id == cls.assoc_group_id, cls.group_id == group.id)
         if role:
             q = q.filter(cls.role == role)
         return q
@@ -751,7 +749,8 @@ class AssociatedGroup(Base):
 
         ag = Group.get(grp_id, session)
         if (ag.flags & ag.f_composite_group):
-            raise RuntimeError('Error: composite group cannot consist of another composite group!')
+            raise RuntimeError(
+                'Error: composite group cannot consist of another composite group!')
         if type(group_id) == int:
             ag = cls(group_id=group_id, assoc_group_id=grp_id, role=role)
         elif isinstance(group_id, Group):
