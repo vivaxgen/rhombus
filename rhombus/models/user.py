@@ -242,6 +242,8 @@ class User(Base, BaseMixIn):
         return "%s/%s" % (self.login, str(self.userclass).lower())
 
     def can_modify(self, user):
+        # TODO: only users with managing roles can change userclass, login, and
+        # primary group, while users with modifiying roles and self-user can change the rest
         return (user.has_roles(SYSADM, DATAADM, USER_MODIFY) or user.id == self.id)
 
     def get_login(self):
