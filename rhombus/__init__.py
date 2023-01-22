@@ -8,7 +8,6 @@ This software is licensed under LGPL v3 or later version.
 Please read the README.txt of this software.
 '''
 
-
 from pyramid.config import Configurator
 from pyramid.request import Request
 from pyramid.authentication import AuthTktAuthenticationPolicy
@@ -25,6 +24,9 @@ from rhombus.routes import includeme
 from rhombus.scripts import run
 
 import time
+
+import logging
+logger = logging.getLogger(__name__)
 
 _TITLE_ = ''
 
@@ -196,6 +198,60 @@ class RhoRequest(Request):
         return self.registry.settings.get(resource_name, default)
 
 
+class RhoSecurityPolicy(object):
+    """ Rhombus Security Policy, which combine auth ticket cookie to obtain local cache,
+        compatible for pyramid >= 2.0. This class uses a token to load the actual userinstance
+        from local auth cache. The token is composed of "login|domain|login_time|random_string"
+    """
+
+    def __init__(self, helper, auth_cache):
+        self.helper = helper
+        self.auth_cache = auth_cache
+
+    def identity(self, request):
+        authtoken = self.helper.authenticated_userid(request)
+        if authtoken is None:
+            return None
+        # TODO: check token for hard expire time here
+
+        userinstance = self.auth_cache.get(authtoken)
+
+        if not userinstance and ck.rb_authhost in request.registry.settings:
+            # TODO: in client mode, if userinstance is not yet existed, check to the remote/host
+            # autheticator
+            raise NotImplementedError()
+
+        return userinstance
+        # TODO: check userinstance last stamp
+
+    def authenticated_userid(self, request):
+        userinstance = self.identity(request)
+        if userinstance is None:
+            return None
+        return userinstance
+
+    def permits(self, request, context, permission):
+        pass
+
+    def remember(self, request, userinstance, **kw):
+        authtoken = self._generate_authtoken(userinstance)
+        self.auth_cache.set(authtoken, userinstance)
+        return self.helper.remember(request, authtoken, **kw)
+
+    def forget(self, request, **kw):
+        authtoken = self.helper.authenticated_userid(request)
+        if authtoken:
+            self.auth_cache.delete(authtoken)
+        return self.helper.forget(request, **kw)
+
+    def _generate_authtoken(self, userinstance):
+        return f'{userinstance.login}|{userinstance.domain}|{int(time.time())}|{random_string(128)}'
+
+    def _split_authtoken(self, authtoken):
+        el = authtoken.split('|')
+        return el[0], el[1], int(el[2]), el[3]
+
+
 def authenticate_user(user_id, request):
     """ this will only be called during request.authenticated_userid """
 
@@ -305,7 +361,9 @@ def get_authenticated_userobj(request, token):
     if userinstance:
         # check if we need to update laststamp
         now = int(time.time())
+        logger.info(f'session stamp: {now} - {userinstance.laststamp} = {now - userinstance.laststamp}')
         if (now - userinstance.laststamp) > session_expiration_time * 0.75:
+            logger.info(f'> {session_expiration_time * 0.75}')
             # set new timestamp
             userinstance.laststamp = now
             auth_cache.set(key, userinstance)
