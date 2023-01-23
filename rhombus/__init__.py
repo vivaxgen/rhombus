@@ -252,8 +252,9 @@ class RhoSecurityPolicy(object):
         return self.helper.remember(request, authtoken, **kw)
 
     def forget(self, request, **kw):
-        authtoken = self.helper.authenticated_userid(request)
-        if authtoken:
+        identity = self.helper.identify(request)
+        if identity is not None:
+            authtoken = identity['userid']
             self.auth_cache.delete(authtoken)
         return self.helper.forget(request, **kw)
 

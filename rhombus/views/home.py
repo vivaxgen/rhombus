@@ -107,7 +107,6 @@ def login(request):
 
 
 def logout(request):
-    request.del_user()
     headers = forget(request)
     if request.registry.settings.get(ck.rb_authmode, None) == 'master':
         redirect = request.params.get('redirect', None)
