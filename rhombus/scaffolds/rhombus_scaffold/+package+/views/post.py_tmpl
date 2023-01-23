@@ -74,7 +74,7 @@ class PostViewer(object):
                 input_select('{{package}}-group_id', 'Group', value=post.group_id, offset=1, size=2,
                     options = [ (g.id, g.name) for g in dbh.get_group() ]),
                 input_select('{{package}}-user_id', 'User', value=post.user_id, offset=1, size=2,
-                    options = [ (u.id, u.login) for u in dbh.get_user(request.user.id).group_users() ]),
+                    options = [ (u.id, u.login) for u in dbh.get_user(request.identity.id).group_users() ]),
                 input_select_ek('{{package}}-posttype_id', 'Post type', value=post.posttype_id,
                     parent_ek = dbh.get_ekey('@POSTTYPE'), offset=1, size=2),
                 ],
@@ -105,7 +105,7 @@ class PostViewer(object):
             input_hidden(name='{{package}}-stamp', value='%15f' % post.stamp.timestamp() if post.stamp else -1),
 
             # a special session key to check whether the user and the post are still the same
-            input_hidden(name='{{package}}-sesskey', value=generate_sesskey(request.user.id, post.id)),
+            input_hidden(name='{{package}}-sesskey', value=generate_sesskey(request.identity.id, post.id)),
 
             name="{{package}}.post-hidden"
         )

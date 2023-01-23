@@ -116,7 +116,7 @@ def index(request):
         return error_page('ERR - Path not specified!')
 
     fso_file = FileOverlay.openfile(path)
-    if not fso_file.check_user_permission(request.user.login, 'r'):
+    if not fso_file.check_user_permission(request.identity.login, 'r'):
         return error_page('ERR - authorization error, permission denied.')
 
     return FileResponse( fso_file.abspath )

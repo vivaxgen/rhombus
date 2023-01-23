@@ -117,7 +117,7 @@ class UserClassViewer(BaseViewer):
         if _method == 'delete':
 
             userclass_ids = [int(x) for x in rq.params.getall('userclass-ids')]
-            userclasses = dbh.get_userclasses_by_ids(userclass_ids, groups=None, user=rq.user)
+            userclasses = dbh.get_userclasses_by_ids(userclass_ids, groups=None, user=rq.identity)
 
             if len(userclasses) == 0:
                 return Response(modal_error)
@@ -138,12 +138,12 @@ class UserClassViewer(BaseViewer):
         elif _method == 'delete/confirm':
 
             userclass_ids = [int(x) for x in rq.params.getall('userclass-ids')]
-            userclasses = dbh.get_userclasses_by_ids(userclass_ids, groups=None, user=rq.user)
+            userclasses = dbh.get_userclasses_by_ids(userclass_ids, groups=None, user=rq.identity)
 
             sess = dbh.session()
             count = left = 0
             for uc in userclasses:
-                if uc.can_modify(rq.user):
+                if uc.can_modify(rq.identity):
                     sess.delete(uc)
                     count += 1
                 else:

@@ -9,8 +9,8 @@ Please read the README.txt of this software.
 '''
 
 from pyramid.config import Configurator
-from pyramid.request import Request
-from pyramid.authentication import AuthTktAuthenticationPolicy
+from pyramid.request import Request, RequestLocalCache
+from pyramid.authentication import AuthTktCookieHelper, AuthTktAuthenticationPolicy
 
 from pyramid.events import BeforeRender
 
@@ -73,16 +73,24 @@ def init_app(global_config, settings, prefix=None, dbhandler_factory=get_dbhandl
 
     config = Configurator(
         settings=settings,
-        authentication_policy=auth_policy
+    #    authentication_policy=auth_policy
     )
 
     config.set_request_factory(RhoRequest)
-    config.add_request_method(auth_cache_factory(authcache), 'auth_cache', reify=True)
+    config.set_security_policy(
+        RhoSecurityPolicy(
+            AuthTktCookieHelper(secret=settings.get(ck.rb_authsecret, random_string(24)),
+                                cookie_name=settings.get(ck.rb_authcookie, 'rb_auth_tkt'),
+                                parent_domain=parent_domain),
+            authcache
+        )
+    )
+    # config.add_request_method(auth_cache_factory(authcache), 'auth_cache', reify=True)
     config.add_request_method(auth_cache_factory(cache), 'cache', reify=True)
-    config.add_request_method(get_userobj, 'user', reify=True)
-    config.add_request_method(set_userobj, 'set_user')
-    config.add_request_method(del_userobj, 'del_user')
-    config.add_request_method(get_authenticated_userobj, 'get_authenticated_userobj')
+    # config.add_request_method(get_userobj, 'user', reify=True)
+    # config.add_request_method(set_userobj, 'set_user')
+    # config.add_request_method(del_userobj, 'del_user')
+    # config.add_request_method(get_authenticated_userobj, 'get_authenticated_userobj')
 
     config.add_subscriber(add_global, BeforeRender)
 
@@ -207,13 +215,15 @@ class RhoSecurityPolicy(object):
     def __init__(self, helper, auth_cache):
         self.helper = helper
         self.auth_cache = auth_cache
+        self.identity_cache = RequestLocalCache(self.load_identity)
 
-    def identity(self, request):
-        authtoken = self.helper.authenticated_userid(request)
-        if authtoken is None:
+    def load_identity(self, request):
+        identity = self.helper.identify(request)
+        if identity is None:
             return None
         # TODO: check token for hard expire time here
 
+        authtoken = identity['userid']
         userinstance = self.auth_cache.get(authtoken)
 
         if not userinstance and ck.rb_authhost in request.registry.settings:
@@ -223,6 +233,9 @@ class RhoSecurityPolicy(object):
 
         return userinstance
         # TODO: check userinstance last stamp
+
+    def identity(self, request):
+        return self.identity_cache.get_or_create(request)
 
     def authenticated_userid(self, request):
         userinstance = self.identity(request)

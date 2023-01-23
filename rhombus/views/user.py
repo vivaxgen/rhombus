@@ -130,7 +130,7 @@ class UserViewer(BaseViewer):
                     options=[
                         (g.id, g.name)
                         for g in dbh.get_group(
-                            systemgroups=True if (readonly or request.user.has_roles(SYSADM))
+                            systemgroups=True if (readonly or request.identity.has_roles(SYSADM))
                             else False)
                     ]
                 ),
@@ -241,7 +241,7 @@ class UserViewer(BaseViewer):
         dbh = get_dbhandler()
         #user = dbh.get_user(user_id)
 
-        #if request.user.id != user_id and not request.user.has_roles(SYSADM):
+        #if request.identity.id != user_id and not request.identity.has_roles(SYSADM):
         #    return error_page(request,
         #        'ERR: except system administrator, user can only change his/her own password')
 
@@ -251,7 +251,7 @@ class UserViewer(BaseViewer):
 
         if request.POST:
 
-            user = request.user
+            user = request.identity
             eform = password_form(user)
 
             if user.has_roles(SYSADM):
@@ -303,7 +303,7 @@ class UserViewer(BaseViewer):
             )
             return HTTPFound(location=request.referer or '/')
 
-        eform = password_form(request.user)
+        eform = password_form(request.identity)
 
         return render_to_response('rhombus:templates/generics/page.mako',
                                   {'html': eform},
@@ -371,7 +371,7 @@ def user_menu(request):
     # url_login = authhost + '/login?'
     # url_logout = authhost + '/logout?'
     user_menu_html = ul(class_='navbar-nav me-auto navbar-nav-scroll')
-    if request.user:
+    if request.identity:
         user_menu_list = li(class_="nav-item active dropdown")[
             a(class_='nav-link dropdown-toggle', id="navbarUsermenu",
               ** {'data-bs-toggle': 'dropdown',
@@ -380,20 +380,20 @@ def user_menu(request):
                   }
               )[
                 i(class_='fas fa-user-circle'),
-                ' ' + request.user.login,
+                ' ' + request.identity.login,
             ],
             ul(class_='dropdown-menu dropdown-menu-end',
                ** {'aria-labelledby': 'navbarUsermenu'})[
                 li(a('Profile', class_='dropdown-item',
-                     href=request.route_url('rhombus.user-view', id=request.user.id)))
-                if not request.user.has_roles(GUEST) else '',
+                     href=request.route_url('rhombus.user-view', id=request.identity.id)))
+                if not request.identity.has_roles(GUEST) else '',
                 li(a('Change password', class_='dropdown-item',
                      href=request.route_url('rhombus.user-passwd')))
-                if not (request.user.has_roles(GUEST) or authhost) else '',
+                if not (request.identity.has_roles(GUEST) or authhost) else '',
                 li(a('Management', class_='dropdown-item',
                      href=request.route_url('rhombus.dashboard')))
-                if request.user.has_roles(SYSADM, SYSVIEW, DATAADM, DATAVIEW, EK_VIEW,
-                                          USERCLASS_VIEW, USER_VIEW, GROUP_VIEW) else '',
+                if request.identity.has_roles(SYSADM, SYSVIEW, DATAADM, DATAVIEW, EK_VIEW,
+                                              USERCLASS_VIEW, USER_VIEW, GROUP_VIEW) else '',
                 li(a('Logout', class_='dropdown-item', href=get_logout_url(request, authhost)))
             ]
         ]

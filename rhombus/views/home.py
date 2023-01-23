@@ -82,7 +82,8 @@ def login(request):
             userinstance = userclass.auth_user( login, passwd )
 
             if userinstance is not None:
-                headers = set_user_headers(userinstance, request)
+                #headers = set_user_headers(userinstance, request)
+                headers = remember(request, userinstance)
                 if came_from:
                     o1 = urlparse(came_from)
                     o2 = urlparse(request.host_url)
@@ -171,7 +172,7 @@ def confirm(request):
 def rhombus_css(request):
     """ this will update session, preventing time-out """
 
-    user = request.user
+    user = request.identity
     if user:
         # unauthenticated_userid == autheticated_userid
         key = request.unauthenticated_userid.decode('ASCII')

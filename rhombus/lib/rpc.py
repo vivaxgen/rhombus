@@ -36,7 +36,7 @@ def get_userinstance_by_token(request, token, raise_exc=True):
 
 def generate_user_token(request, user=None):
 
-    user = request.user if user is None else user
+    user = request.identity if user is None else user
 
     token = 'utkn:' + random_string(32)
     payload = {'create_time': time.time(), 'userinstance': user}

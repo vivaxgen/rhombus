@@ -48,17 +48,17 @@ class roles(object):
         if self.allowed or self.disallowed:
             # need to check the roles
             def _view_with_roles(request, **kw):
-                if request.user and request.user.has_roles(*self.disallowed):
+                if request.identity and request.identity.has_roles(*self.disallowed):
                     return not_authorized(request, msg_1)
-                if PUBLIC in self.allowed and request.user:
+                if PUBLIC in self.allowed and request.identity:
                     return wrapped(request, **kw)
-                if not request.user:
+                if not request.identity:
                     login_link = t.a('here',
                                      href=get_login_url(request))
                     html = t.literal(
                         msg_0.format(login_link=login_link.r()))
                     return not_authorized(request, html)
-                if not request.user.has_roles(*self.allowed):
+                if not request.identity.has_roles(*self.allowed):
                     return not_authorized(request, msg_1)
                 return wrapped(request, **kw)
             return _view_with_roles
@@ -75,17 +75,17 @@ class m_roles(roles):
             # need to check the roles
             def _view_with_roles(inst, **kw):
                 request = inst.request
-                if request.user and request.user.has_roles(*self.disallowed):
+                if request.identity and request.identity.has_roles(*self.disallowed):
                     return not_authorized(request, msg_1)
-                if PUBLIC in self.allowed and request.user:
+                if PUBLIC in self.allowed and request.identity:
                     return wrapped(inst, **kw)
-                if not request.user:
+                if not request.identity:
                     login_link = t.a('here',
                                      href=get_login_url(request))
                     html = t.literal(
                         msg_0.format(login_link=login_link.r()))
                     return not_authorized(request, html)
-                if not request.user.has_roles(*self.allowed):
+                if not request.identity.has_roles(*self.allowed):
                     return not_authorized(request, msg_1)
                 return wrapped(inst, **kw)
             return _view_with_roles
@@ -171,7 +171,7 @@ class BaseViewer(object):
         raise NotImplementedError()
 
     def can_manage(self, obj=None):
-        return self.request.user.has_roles(* self.managing_roles)
+        return self.request.identity.has_roles(* self.managing_roles)
 
     def can_modify(self, obj=None):
         """ return True if obj can be modified by current user
@@ -179,7 +179,7 @@ class BaseViewer(object):
         if self.can_manage():
             return True
         obj = obj or self.obj
-        if obj is not None and obj.can_modify(self.request.user):
+        if obj is not None and obj.can_modify(self.request.identity):
             # return based on the object permission
             return True
         return False
@@ -234,7 +234,7 @@ class BaseViewer(object):
         rq = self.request
         obj = self.obj or self.get_object()
         eform, jscode = self.generate_edit_form(obj, readonly=True)
-        if rq.user.has_roles(* self.managing_roles) or self.can_modify(obj):
+        if rq.identity.has_roles(* self.managing_roles) or self.can_modify(obj):
             eform.get('footer').add(
                 t.a('Edit', class_='btn btn-primary offset-md-2',
                     href=rq.route_url(self.edit_route, id=obj.id)))
@@ -337,7 +337,7 @@ class BaseViewer(object):
         obj = self.obj or self.get_object()
 
         # with editing, permission check is performed before any processing
-        if not (rq.user.has_roles(* self.managing_roles) or self.can_modify(obj)):
+        if not (rq.identity.has_roles(* self.managing_roles) or self.can_modify(obj)):
             raise RuntimeError('Current user cannot modify this object!')
 
         if rq.method == 'POST':
@@ -414,7 +414,7 @@ class BaseViewer(object):
 
         sesskey = request.matchdict.get('sesskey')
         user_id, instance_id = tokenize_sesskey(sesskey)
-        if user_id != request.user.id:
+        if user_id != request.identity.id:
             raise RuntimeError('Invalid session key!')
 
         filestorage = request.POST.get('files[]')
@@ -514,7 +514,7 @@ class BaseViewer(object):
             t.input_hidden(name='rhombus-stamp',
                            value=stamp or ('%15f' % obj.stamp.timestamp() if obj.stamp else -1)),
             t.input_hidden(name='rhombus-sesskey',
-                           value=sesskey or generate_sesskey(request.user.id, obj.id)),
+                           value=sesskey or generate_sesskey(request.identity.id, obj.id)),
             name="rhombus-hidden"
         )
 
@@ -538,9 +538,9 @@ class BaseViewer(object):
         if func is None and self.fetch_func is None:
             raise TypeError(f'{self.__class__}.fetch_func has not been initialized.')
         res = func([obj_id],
-                   groups=None if rq.user.has_roles(* self.viewing_roles)
-                   else rq.user.groups,
-                   user=rq.user)
+                   groups=None if rq.identity.has_roles(* self.viewing_roles)
+                   else rq.identity.groups,
+                   user=rq.identity)
         if len(res) == 0:
             raise RuntimeError('Either the object does not exist or you do not have '
                                'the authorization to access the object!')

@@ -14,7 +14,7 @@ from rhombus.lib.tags import *
 #@roles( SYSADM, SYSVIEW )
 def index(request):
 
-    user = request.user
+    user = request.identity
 
     if not user:
         import rhombus.views.home

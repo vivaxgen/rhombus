@@ -26,7 +26,7 @@ def index(request):
 
     html, code = format_grouptable(groups, request)
 
-    if request.user.has_roles(SYSADM, GROUP_CREATE):
+    if request.identity.has_roles(SYSADM, GROUP_CREATE):
 
         add_button = ('New group',
                       request.route_url('rhombus.group-edit', id=0)
@@ -54,12 +54,12 @@ def view(request):
 
     grp_form, grp_js = edit_form(group, dbh, request, readonly=True)
 
-    if request.user.has_roles(SYSADM, GROUP_CREATE, GROUP_MODIFY, GROUP_DELETE):
+    if request.identity.has_roles(SYSADM, GROUP_CREATE, GROUP_MODIFY, GROUP_DELETE):
         role_table, role_js = format_roletable(group, request)
     else:
         role_table, role_js = '', ''
 
-    if request.user.has_roles(SYSADM, GROUP_CREATE, GROUP_DELETE, GROUP_ADDUSER,
+    if request.identity.has_roles(SYSADM, GROUP_CREATE, GROUP_DELETE, GROUP_ADDUSER,
             GROUP_DELUSER):
         user_table, user_js = format_usertable(group, request)
     else:
