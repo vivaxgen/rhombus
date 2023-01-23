@@ -1,6 +1,3 @@
-import logging
-
-log = logging.getLogger( __name__ )
 
 from pyramid.response import Response
 from pyramid.renderers import render_to_response
@@ -16,14 +13,17 @@ from rhombus import configkeys as ck
 from urllib.parse import urlparse
 import time
 
+import logging
+log = logging.getLogger(__name__)
+
 
 def index(request):
-    return render_to_response( "rhombus:templates/home.mako", {}, request=request )
+    return render_to_response("rhombus:templates/home.mako", {}, request=request)
 
 
-@roles( SYSADM, SYSVIEW )
+@roles(SYSADM, SYSVIEW)
 def panel(request):
-    return render_to_response("rhombus:templates/panel.mako", {}, request=request )
+    return render_to_response("rhombus:templates/panel.mako", {}, request=request)
 
 
 def login(request):
@@ -75,14 +75,14 @@ def login(request):
         passwd = request.params.get('password', '')
         userclass_id = int(request.params.get('domain', 1))
 
-        userclass = dbh.get_userclass( userclass_name )
+        userclass = dbh.get_userclass(userclass_name)
 
         if userclass:
 
-            userinstance = userclass.auth_user( login, passwd )
+            userinstance = userclass.auth_user(login, passwd)
 
             if userinstance is not None:
-                #headers = set_user_headers(userinstance, request)
+                # headers = set_user_headers(userinstance, request)
                 headers = remember(request, userinstance)
                 if came_from:
                     o1 = urlparse(came_from)
@@ -92,8 +92,8 @@ def login(request):
                             ('success', 'Welcome %s!' % userinstance.login)
                         )
                 del request.session['came_from']
-                return HTTPFound( location = came_from,
-                                headers = headers )
+                return HTTPFound(location=came_from,
+                                 headers=headers)
 
             msg = 'Invalid username or password!'
 
@@ -101,9 +101,9 @@ def login(request):
             msg = 'Invalid userclass'
 
     return render_to_response("rhombus:templates/login.mako",
-                {   'msg': msg, 'came_from': came_from,
-                    'login': '%s' % (login) },
-                request = request)
+                              {'msg': msg, 'came_from': came_from,
+                               'login': '%s' % (login)},
+                              request=request)
 
 
 def logout(request):
@@ -141,15 +141,15 @@ def confirm(request):
 
     if userinfo:
         dbh = get_dbhandler()
-        user = dbh.get_user( userinstance.id )
+        user = dbh.get_user(userinstance.id)
         # prepare for group sync
 
         usergroups = {}
         for ug in user.usergroups:
             usergroups[ug.group.name] = ug.role
         syncgroups = sorted(
-                [grp_name for grp_name in [g.name for g in dbh.get_groups()]
-                            if grp_name.startswith('sync:')]
+            [grp_name for grp_name in [g.name for g in dbh.get_groups()]
+             if grp_name.startswith('sync:')]
         )
         group_ins = {}
         group_out = []
@@ -158,10 +158,10 @@ def confirm(request):
             if sg in usergroups:
                 group_ins[sg[5:]] = usergroups[sg]
             else:
-                group_out.append( sg[5:])
+                group_out.append(sg[5:])
 
-        userinfo = [ user.lastname, user.firstname, user.email, user.institution,
-                        group_ins, group_out ]
+        userinfo = [user.lastname, user.firstname, user.email, user.institution,
+                    group_ins, group_out]
     else:
         userinfo = []
 
