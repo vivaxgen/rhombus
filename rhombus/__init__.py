@@ -86,8 +86,11 @@ def init_app(global_config, settings, prefix=None, dbhandler_factory=get_dbhandl
             authcache
         )
     )
-    # config.add_request_method(auth_cache_factory(authcache), 'auth_cache', reify=True)
+
+    # add shortcuts to access authcache and cache from a request instance
+    config.add_request_method(auth_cache_factory(authcache), 'auth_cache', reify=True)
     config.add_request_method(auth_cache_factory(cache), 'cache', reify=True)
+
     # config.add_request_method(get_userobj, 'user', reify=True)
     # config.add_request_method(set_userobj, 'set_user')
     # config.add_request_method(del_userobj, 'del_user')
@@ -234,7 +237,7 @@ class RhoSecurityPolicy(object):
         if not userinstance and ck.rb_authhost in request.registry.settings:
             # TODO: in client mode, if userinstance is not yet existed, check to the remote/host
             # autheticator
-            raise NotImplementedError()
+            userinstance = self._perform_remote_login(request, authtoken)
 
         return userinstance
         # TODO: check userinstance last stamp
@@ -271,6 +274,88 @@ class RhoSecurityPolicy(object):
     def _split_authtoken(self, authtoken):
         el = authtoken.split('|')
         return el[0], el[1], int(el[2]), el[3]
+
+    def _perform_remote_login(self, request, authtoken):
+
+        # verify to authentication host
+        confirmation = confirm_token(request.registry.settings[ck.rb_authhost], authtoken)
+        if confirmation[0]:
+
+            dbh = get_dbhandler()
+
+            # check the existence of the user
+            login, userclass, stamp, randstr = self._split_authtoken(authtoken)
+            user = dbh.get_user('%s/%s' % (login, userclass))
+            if user is None:
+                # check is userclass is exists, then add the user automatically to user class
+
+                uc = dbh.get_userclass(userclass)
+                if uc is None:
+                    request.session.flash(
+                        (
+                            'danger',
+                            f'Warning: your current login [{login}] is not registered in this system!'
+                        )
+                    )
+                    return None
+
+                lastname, firstname, email = confirmation[1][:3]
+                if type(uc.credscheme) is not dict or 'primary_group' not in uc.credscheme:
+                    request.session.flash(
+                        (
+                            'danger',
+                            f'Warning: your current login [{login}] is not registered in this system '
+                            f'and automatic remote user registration is disabled. Please contact '
+                            f'the system administrator of this system.'
+                        )
+                    )
+                    return None
+
+                user = uc.add_user(login, lastname, firstname, email, uc.credscheme['primary_group'])
+                request.session.flash(
+                    (
+                        'success',
+                        f'You have been registered to the system under userclass: {uc.domain}'
+                    )
+                )
+
+            # sync groups for this user if necessary
+            added, modified, removed = user.sync_groups(confirmation[1][4], confirmation[1][5])
+
+            # set user
+            userinstance = user.user_instance()
+            self.auth_cache.set(authtoken, userinstance)
+            request.session.flash(
+                (
+                    'success',
+                    f'You have been authenticated remotely as {userinstance.login}!'
+                )
+            )
+            if added:
+                request.session.flash(
+                    (
+                        'success',
+                        'You have been added to group(s): %s.' % ' '.join(added)
+                    )
+                )
+            if modified:
+                request.session.flash(
+                    (
+                        'success',
+                        'Your role has been modified in group(s): %s.' % ' '.join(modified)
+                    )
+                )
+            if removed:
+                request.session.flash(
+                    (
+                        'success',
+                        'You have been removed from group(s): %s' % ' '.join(removed)
+                    )
+                )
+
+            return userinstance
+
+        return None
 
 
 def authenticate_user(user_id, request):

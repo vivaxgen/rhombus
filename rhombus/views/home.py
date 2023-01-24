@@ -127,14 +127,13 @@ def confirm(request):
         ]
     """
 
-    token = request.params.get('principal', '')
-    print('confirmation request for:', token)
+    authtoken = request.params.get('principal', '')
+    print('confirmation request for:', authtoken)
     userinfo = request.params.get('userinfo', 0)
-    if not token:
+    if not authtoken:
         return [False, []]
 
-    key = token.encode('ASCII')
-    userinstance = request.auth_cache.get(key, None)
+    userinstance = request.auth_cache.get(authtoken, None)
 
     if not userinstance:
         return [False, []]
