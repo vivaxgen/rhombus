@@ -24,6 +24,7 @@ from rhombus.routes import includeme
 from rhombus.scripts import run
 
 import time
+import datetime
 
 import logging
 logger = logging.getLogger(__name__)
@@ -175,6 +176,10 @@ class RhoRequest(Request):
 
     # override authentication mechanism
 
+    @property
+    def user(self):
+        return self.identity
+
     # ticket-based data storage, using separate dogpile.cache
 
     def get_sess_ticket(self, ticket=None):
@@ -259,7 +264,9 @@ class RhoSecurityPolicy(object):
         return self.helper.forget(request, **kw)
 
     def _generate_authtoken(self, userinstance):
-        return f'{userinstance.login}|{userinstance.domain}|{int(time.time())}|{random_string(128)}'
+        # use UTC timestamp to allow for different servers in different time zones
+        timestamp = int(datetime.datetime.utcnow().timestamp())
+        return f'{userinstance.login}|{userinstance.domain}|{timestamp}|{random_string(128)}'
 
     def _split_authtoken(self, authtoken):
         el = authtoken.split('|')
