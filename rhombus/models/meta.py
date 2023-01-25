@@ -41,6 +41,9 @@ class RhoSession(Session):
         self.user = None
         super().close()
 
+    def set_user(self, user):
+        self.user = user
+
     ## EK helpers
 
     def get_key(self, id):
