@@ -19,7 +19,9 @@ from zope.sqlalchemy import register
 
 from rhombus.lib.utils import cerr
 
+
 __all__ = ['get_base', 'get_dbsession', 'set_datalogger', 'set_before_update_flag']
+
 
 class RhoSession(Session):
 
@@ -32,7 +34,7 @@ class RhoSession(Session):
 
         # current user information
         self.user = None
-        self.global_user = None	# used for per-process user (eg. in scripts)
+        self.global_user = None	 # used for per-process user (eg. in scripts)
 
         # set flags
         self.before_update_event = True
@@ -44,7 +46,7 @@ class RhoSession(Session):
     def set_user(self, user):
         self.user = user
 
-    ## EK helpers
+    # == EK helpers ==
 
     def get_key(self, id):
         return self._ek_keys.get(id, None)
@@ -76,31 +78,32 @@ def update_lastuser(mapper, conn, instance):
 
 
 def uq_convention(constraint, table):
-    names = [ table.name]
-    names += [ str(c).split('.')[-1] for c in constraint.columns ]
-    return "_".join( names )
+    names = [table.name]
+    names += [str(c).split('.')[-1] for c in constraint.columns]
+    return "_".join(names)
+
 
 def ck_convention(constraint, table):
     # TODO: need more careful implementation here
-    #print(dir(constraint))
-    #print('table name:', table.name)
+    # print(dir(constraint))
+    # print('table name:', table.name)
     return "CK"
 
 
 convention = {
-  "ix": 'ix_%(column_0_label)s',
-  "uq_custom": uq_convention,
-  #"uq": "uq_%(table_name)s_%(column_0_name)s",
-  "uq": "uq_%(uq_custom)s",
-  #"ck": "ck_%(table_name)s_%(constraint_name)s",
-  "ck_custom": ck_convention,
-  "ck": "ck_%(ck_custom)s",
-  "fk": "fk_%(table_name)s_%(column_0_name)s_%(referred_table_name)s",
-  "pk": "pk_%(table_name)s"
+    "ix": 'ix_%(column_0_label)s',
+    "uq_custom": uq_convention,
+    # "uq": "uq_%(table_name)s_%(column_0_name)s",
+    "uq": "uq_%(uq_custom)s",
+    # "ck": "ck_%(table_name)s_%(constraint_name)s",
+    "ck_custom": ck_convention,
+    "ck": "ck_%(ck_custom)s",
+    "fk": "fk_%(table_name)s_%(column_0_name)s_%(referred_table_name)s",
+    "pk": "pk_%(table_name)s"
 }
 
 _metadata = MetaData(naming_convention=convention)
-_dbsession = scoped_session(sessionmaker(class_ = RhoSession))
+_dbsession = scoped_session(sessionmaker(class_=RhoSession))
 register(_dbsession)
 _base = declarative_base(metadata=_metadata)
 
@@ -119,6 +122,7 @@ def set_sqlite_pragma(dbapi_connection, connection_record):
 
 _datalogger = None
 
+
 def _check_target(target):
     try:
         if _datalogger is not None and target.__class__.__typeid__ != -1:
@@ -127,13 +131,16 @@ def _check_target(target):
         pass
     return False
 
+
 def _after_insert_listener(mapper, connection, target):
     if _check_target(target):
         _datalogger.action_insert(target)
 
+
 def _after_update_listener(mapper, connection, target):
     if _check_target(target):
         _datalogger.action_update(target)
+
 
 def _after_delete_listener(mapper, connection, target):
     if _check_target(target):
@@ -159,5 +166,8 @@ def get_datalogger():
 def get_base():
     return _base
 
+
 def get_dbsession():
     return _dbsession
+
+# EOF
