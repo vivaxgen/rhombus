@@ -239,6 +239,7 @@ class RhoSecurityPolicy(object):
             # autheticator
             userinstance = self._perform_remote_login(request, authtoken)
 
+        get_dbhandler().session().set_user(userinstance)
         return userinstance
         # TODO: check userinstance last stamp
 
