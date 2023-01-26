@@ -348,11 +348,12 @@ class User(Base, BaseMixIn):
                 return True
         return False
 
-    def user_instance(self):
+    def user_instance(self, authhost=None):
         group_ids, role_ids = self.group_role_ids()
         return UserInstance(self.login, self.id, self.primarygroup_id,
                             self.userclass.domain, group_ids, role_ids,
-                            dbsession=object_session(self))
+                            dbsession=object_session(self),
+                            authhost=authhost)
 
     def render(self):
         return "%s | %s" % (str(self), self.fullname)
@@ -780,7 +781,7 @@ class UserInstance(object):
     """
 
     def __init__(self, login, id, primarygroup_id, domain=None, groups=None,
-                 roles=None, dbsession=None):
+                 roles=None, dbsession=None, authhost=None):
         """ login: string, id: int, primarygroup_id: int,
             primarygroup_id: group_id,
             groups: [ list of group_ids as Group ]
@@ -794,6 +795,7 @@ class UserInstance(object):
         self.groups = [(g.name, g.id) for g in [Group.get(gid, dbsession) for gid in groups]]
         self.roles = [(EK._key(rid, dbsession=dbsession), rid) for rid in roles]
         self.laststamp = -1
+        self.authhost = authhost
 
     def __str__(self):
         return f"{self.login}/{self.domain}"

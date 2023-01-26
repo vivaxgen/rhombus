@@ -237,7 +237,8 @@ class RhoSecurityPolicy(object):
         if not userinstance and ck.rb_authhost in request.registry.settings:
             # TODO: in client mode, if userinstance is not yet existed, check to the remote/host
             # autheticator
-            userinstance = self._perform_remote_login(request, authtoken)
+            userinstance = self._perform_remote_login(request, authtoken,
+                                                      request.registry.settings[ck.rb_authhost])
 
         get_dbhandler().session().set_user(userinstance)
         return userinstance
@@ -276,10 +277,10 @@ class RhoSecurityPolicy(object):
         el = authtoken.split('|')
         return el[0], el[1], int(el[2]), el[3]
 
-    def _perform_remote_login(self, request, authtoken):
+    def _perform_remote_login(self, request, authtoken, authhost):
 
         # verify to authentication host
-        confirmation = confirm_token(request.registry.settings[ck.rb_authhost], authtoken)
+        confirmation = confirm_token(authhost, authtoken)
         if confirmation[0]:
 
             dbh = get_dbhandler()
@@ -324,7 +325,7 @@ class RhoSecurityPolicy(object):
             added, modified, removed = user.sync_groups(confirmation[1][4], confirmation[1][5])
 
             # set user
-            userinstance = user.user_instance()
+            userinstance = user.user_instance(authhost=authhost)
             self.auth_cache.set(authtoken, userinstance)
             request.session.flash(
                 (
