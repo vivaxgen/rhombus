@@ -1,4 +1,5 @@
 
+from rhombus import configkeys as ck
 from rhombus.lib.utils import get_dbhandler
 from rhombus.lib.roles import (PUBLIC, SYSADM, GUEST, EK_VIEW, USERCLASS_VIEW, USER_VIEW,
                                GROUP_VIEW)
@@ -304,6 +305,12 @@ class UserViewer(BaseViewer):
             return HTTPFound(location=request.referer or '/')
 
         eform = password_form(request.identity)
+        if (authhost := request.registry.settings.get(ck.rb_authhost, '')):
+            eform = t.div(
+                t.p(f'Warning: this system has been set to use {authhost} remote authenticator. '
+                    'This is for changing password of local users'),
+                eform
+            )
 
         return render_to_response('rhombus:templates/generics/page.mako',
                                   {'html': eform},
@@ -367,7 +374,6 @@ def password_form(user):
 
 def user_menu(request):
     """ return a HTML for user menu, bootstrap-based """
-    authhost = request.registry.settings.get('rhombus.authhost', '')
     # url_login = authhost + '/login?'
     # url_logout = authhost + '/logout?'
     user_menu_html = ul(class_='navbar-nav me-auto navbar-nav-scroll')
@@ -389,16 +395,18 @@ def user_menu(request):
                 if not userinstance.has_roles(GUEST) else '',
                 li(a('Change password', class_='dropdown-item',
                      href=request.route_url('rhombus.user-passwd')))
-                if not (userinstance.has_roles(GUEST) or authhost) else '',
+                if not (userinstance.has_roles(GUEST) or userinstance.authhost) else '',
                 li(a('Management', class_='dropdown-item',
                      href=request.route_url('rhombus.dashboard')))
                 if userinstance.has_roles(SYSADM, SYSVIEW, DATAADM, DATAVIEW, EK_VIEW,
                                               USERCLASS_VIEW, USER_VIEW, GROUP_VIEW) else '',
-                li(a('Logout', class_='dropdown-item', href=get_logout_url(request, authhost)))
+                li(a('Logout', class_='dropdown-item',
+                     href=get_logout_url(request, userinstance.authhost or '')))
             ]
         ]
 
     else:
+        authhost = request.registry.settings.get(ck.rb_authhost, '')
         user_menu_list = li(class_='nav-item active')[
             a(class_='nav-link',
               href=get_login_url(request, authhost))[

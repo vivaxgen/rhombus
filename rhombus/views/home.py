@@ -100,9 +100,10 @@ def login(request):
         else:
             msg = 'Invalid userclass'
 
+    authhost = request.registry.settings.get(ck.rb_authhost, '')
     return render_to_response("rhombus:templates/login.mako",
                               {'msg': msg, 'came_from': came_from,
-                               'login': '%s' % (login)},
+                               'login': '%s' % (login), 'authhost': authhost},
                               request=request)
 
 

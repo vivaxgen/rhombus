@@ -10,6 +10,13 @@
                             <div class="row">
                                 <div class="col-md-12">
                                     <h3 class="text-center heading">Log In: ${title}</h3>
+%if authhost:
+    <div>
+        <p> Warning: this system has been set to use ${authhost} as remote authenticator.
+            This is local login.
+        </p>
+    <div>
+% endif
                                 </div>
 %if msg:
     <div><p>${msg}</p></div>
