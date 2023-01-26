@@ -371,7 +371,7 @@ def user_menu(request):
     # url_login = authhost + '/login?'
     # url_logout = authhost + '/logout?'
     user_menu_html = ul(class_='navbar-nav me-auto navbar-nav-scroll')
-    if request.identity:
+    if (userinstance := request.identity):
         user_menu_list = li(class_="nav-item active dropdown")[
             a(class_='nav-link dropdown-toggle', id="navbarUsermenu",
               ** {'data-bs-toggle': 'dropdown',
@@ -380,19 +380,19 @@ def user_menu(request):
                   }
               )[
                 i(class_='fas fa-user-circle'),
-                ' ' + request.identity.login,
+                ' ' + userinstance.login,
             ],
             ul(class_='dropdown-menu dropdown-menu-end',
                ** {'aria-labelledby': 'navbarUsermenu'})[
                 li(a('Profile', class_='dropdown-item',
                      href=request.route_url('rhombus.user-view', id=request.identity.id)))
-                if not request.identity.has_roles(GUEST) else '',
+                if not userinstance.has_roles(GUEST) else '',
                 li(a('Change password', class_='dropdown-item',
                      href=request.route_url('rhombus.user-passwd')))
-                if not (request.identity.has_roles(GUEST) or authhost) else '',
+                if not (userinstance.has_roles(GUEST) or authhost) else '',
                 li(a('Management', class_='dropdown-item',
                      href=request.route_url('rhombus.dashboard')))
-                if request.identity.has_roles(SYSADM, SYSVIEW, DATAADM, DATAVIEW, EK_VIEW,
+                if userinstance.has_roles(SYSADM, SYSVIEW, DATAADM, DATAVIEW, EK_VIEW,
                                               USERCLASS_VIEW, USER_VIEW, GROUP_VIEW) else '',
                 li(a('Logout', class_='dropdown-item', href=get_logout_url(request, authhost)))
             ]
