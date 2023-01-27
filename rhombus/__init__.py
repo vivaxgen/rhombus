@@ -258,6 +258,7 @@ class RhoSecurityPolicy(object):
 
     def remember(self, request, userinstance, **kw):
         authtoken = self._generate_authtoken(userinstance)
+        userinstance.authtoken = authtoken
         self.auth_cache.set(authtoken, userinstance)
         return self.helper.remember(request, authtoken, **kw)
 
@@ -326,6 +327,7 @@ class RhoSecurityPolicy(object):
 
             # set user
             userinstance = user.user_instance(authhost=authhost)
+            userinstance.authtoken = authtoken
             self.auth_cache.set(authtoken, userinstance)
             request.session.flash(
                 (

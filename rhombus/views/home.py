@@ -173,10 +173,8 @@ def rhombus_css(request):
 
     user = request.identity
     if user:
-        # unauthenticated_userid == autheticated_userid
-        key = request.unauthenticated_userid.decode('ASCII')
         # refresh cache expiration
-        request.auth_cache.set(key, user)
+        request.auth_cache.set(user.authtoken, user)
 
     return ""
 
@@ -195,3 +193,6 @@ def set_user_headers(userinstance, request):
     )
     request.set_user(token, userinstance)
     return remember(request, token)
+
+
+# EOF
