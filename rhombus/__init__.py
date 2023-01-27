@@ -143,6 +143,10 @@ def main(global_config, **settings):
     config.add_route('login', '/login')
     config.add_view('rhombus.views.home.login', route_name='login')
 
+    if settings.get(ck.rb_guestuser, None):
+        config.add_route('guest_login', '/guest_login')
+        config.add_view('rhombus.views.home.guest_login', route_name='guest_login')
+
     config.add_route('logout', '/logout')
     config.add_view('rhombus.views.home.logout', route_name='logout')
 

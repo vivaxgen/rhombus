@@ -14,6 +14,8 @@ rb_authcookie = 'rhombus.authcookie'
 rb_authmode = 'rhombus.authmode'
 rb_authhost = 'rhombus.authhost'
 
+rb_guestuser = 'rhombus.guest_user'
+
 # authentication caching menchanism
 
 rb_authcache_ = 'rhombus.authcache.'

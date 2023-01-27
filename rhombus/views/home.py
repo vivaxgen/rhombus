@@ -8,6 +8,7 @@ from rhombus.views import roles
 from rhombus.lib.roles import SYSADM, SYSVIEW
 from rhombus.models.user import UserClass, UserInstance
 from rhombus.lib.utils import get_dbhandler, random_string
+from rhombus.lib import exceptions as exc
 from rhombus import configkeys as ck
 
 from urllib.parse import urlparse
@@ -119,6 +120,21 @@ def logout(request):
                      headers=headers)
 
 
+def guest_login(request):
+    """ this function  will automatically log the visitor as guest user
+    """
+
+    guest_user = request.registry.settings.get(ck.rb_guestuser, None)
+    if guest_user is None:
+        raise exc.SysError("This system is not set to allow guest user!")
+
+    dbh = get_dbhandler()
+    user = dbh.get_user(guest_user)
+    userinstance = user.user_instance()
+    headers = remember(request, userinstance)
+    return HTTPFound(location=request.referrer or '/', headers=headers)
+
+
 def confirm(request):
     """ return (status, userinfo) tuple with status as boolen for confirmed (True)
         or unconfirmed (False), and userinfo is a list with the following content:
@@ -193,6 +209,7 @@ def set_user_headers(userinstance, request):
     )
     request.set_user(token, userinstance)
     return remember(request, token)
+
 
 
 # EOF
