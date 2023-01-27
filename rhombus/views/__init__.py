@@ -27,7 +27,7 @@ class not_roles(object):
         self.not_roles = role_list
 
 
-msg_0 = 'Please log in first. Click {login_link} to login.'
+msg_0 = 'Click {login_link} to login.'
 
 msg_1 = 'Please notify the administrator if you believe that '\
         'you should be able to access this resource.'

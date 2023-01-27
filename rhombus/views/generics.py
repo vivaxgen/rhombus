@@ -11,6 +11,22 @@ from datetime import datetime
 
 # error view handler
 
+# utilities
+
+def authn_or_authr(request):
+    """ return templ (for not authorized or not-authenticated), login and text """
+    userinstance = request.identity
+    if userinstance:
+        templ = 'rhombus:templates/generics/not_authorized.mako'
+        login = userinstance.login
+        text = f"Your login [{login}] is not authorized to access this resource."
+    else:
+        templ = 'rhombus:templates/generics/not_authenticated.mako'
+        login = ''
+        text = "You have not been authenticated in this system."
+    return templ, login, text
+
+
 # pages with exception handlers
 
 def syserror_page(exc, request):
@@ -40,7 +56,9 @@ def dberror_page(exc, request):
 
 def autherror_page(exc, request):
     transaction.abort()
-    text = (exc.args[0] if exc.args else str(exc)) or "You are not authorized to access this resource"
+    # check if request has been authenticated
+    template, login, text = authn_or_authr(request)
+    text = (exc.args[0] if exc.args else str(exc)) or text
     return render_to_response('rhombus:templates/generics/not_authorized.mako',
                               {'text': text, 'stamp': str(datetime.now())},
                               request=request)
@@ -57,8 +75,11 @@ def error_page(request, text=''):
 
 def not_authorized(request, text=''):
     transaction.abort()
-    return render_to_response('rhombus:templates/generics/not_authorized.mako',
-                              {'text': text}, request=request)
+    templ, login, err_text = authn_or_authr(request)
+    text = text or err_text
+    return render_to_response(templ,
+                              {'text': text, 'login': login},
+                              request=request)
 
 
 # pages with forwarding / refreshing
