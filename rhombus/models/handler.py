@@ -351,7 +351,14 @@ class DBHandler(object):
         return res
 
     def rejoin(self, q, class_):
-        joined_models = {e[0].entity_namespace: e[1] for e in q._legacy_setup_joins}
+        if any(q._legacy_setup_joins):
+            setup_joins = q._legacy_setup_joins
+        elif any(q._setup_joins):
+            setup_joins = q._setup_joins
+        else:
+            setup_joins = []
+
+        joined_models = {e[0].entity_namespace: e[1] for e in setup_joins}
         if class_ in joined_models:
             return q
         return q.join(class_)
