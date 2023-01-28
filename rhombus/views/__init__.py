@@ -4,7 +4,8 @@ from pyramid.response import Response, FileIter
 from pyramid.renderers import render_to_response
 from pyramid.httpexceptions import HTTPFound
 
-from rhombus.lib.roles import PUBLIC, SYSADM, SYSVIEW, DATAADM, DATAVIEW
+from rhombus import configkeys as ck
+from rhombus.lib.roles import PUBLIC, SYSADM, SYSVIEW, DATAADM, DATAVIEW, GUEST
 from rhombus.lib.utils import get_dbhandler, random_string, cerr, cout
 from rhombus.lib.fileutils import save_file
 from rhombus.views.generics import not_authorized, error_page
@@ -84,6 +85,7 @@ class m_roles(roles):
                                      href=get_login_url(request))
                     html = t.literal(
                         msg_0.format(login_link=login_link.r()))
+
                     return not_authorized(request, html)
                 if not request.identity.has_roles(*self.allowed):
                     return not_authorized(request, msg_1)
@@ -254,7 +256,7 @@ class BaseViewer(object):
     def lookup(self):
         return self.lookup_helper()
 
-    @m_roles(* accessing_roles)
+    @m_roles(not_roles(GUEST), * accessing_roles)
     def action(self):
 
         _m = self.request.method
@@ -273,7 +275,7 @@ class BaseViewer(object):
 
         return error_page(self.request, 'HTTP method not implemented!')
 
-    @m_roles(* accessing_roles)
+    @m_roles(not_roles(GUEST), * accessing_roles)
     def add(self):
         return self.add_helper()
 
@@ -326,7 +328,7 @@ class BaseViewer(object):
             return (eform, jscode)
         return self.render_edit_form(eform, jscode)
 
-    @m_roles(* accessing_roles)
+    @m_roles(not_roles(GUEST), * accessing_roles)
     def edit(self):
         self.obj = self.get_object()
         return self.edit_helper()
@@ -407,7 +409,7 @@ class BaseViewer(object):
     # fileupload() to facilitate uploading file
     # the sent form should contain sesskey
 
-    @m_roles(* accessing_roles)
+    @m_roles(not_roles(GUEST), * accessing_roles)
     def fileupload(self):
 
         request = self.request
