@@ -3,7 +3,7 @@ import sys
 
 from rhombus.lib.utils import cerr, cout
 from rhombus.models import (core, meta, ek, user, actionlog, filemgr)
-from sqlalchemy import engine_from_config, event, or_, and_
+from sqlalchemy import engine_from_config, event, or_, and_, select
 from sqlalchemy.orm import exc
 
 cinfo = print
@@ -355,5 +355,48 @@ class DBHandler(object):
         if class_ in joined_models:
             return q
         return q.join(class_)
+
+    def construct_select(self, object, selector):
+        """ return compound query constructed from list & dictionary
+
+            return objects with samples_id in [0, 1, 2] OR collection_id in [ 5 ]
+            [
+                {'sample_id': [0, 1, 2]},
+                {'collection_id': [5]}
+            ]
+            filter( or_( Sample.id.in_([0,1,2]), Collection.id.in_([5]) ) )
+
+            return objects with category_id in [1,2] AND collection_id in [ 5 ]
+            [
+                {'category_id': [1, 2], 'collection_id': [5]}
+            ]
+            filter ( or_( and_(Category.id.in_([1,2]), Collection.id.in_([5])) ) )
+        """
+
+        s = select(object)
+
+        selector = selector or []
+        constructor = self.get_query_constructor()
+        filter_expr, filter_classes = constructor.construct_query_from_list(selector)
+        filter_classes = filter_classes - {object}
+
+        for class_ in filter_classes:
+            s = s.join(class_)
+
+        s = s.filter(filter_expr)
+        return s
+
+    def fetch_select(self, stmt, fetch, raise_if_empty):
+        """ prepare query results, either the query itself, the fetched objects
+            or raised exception if necessary
+        """
+        if not fetch:
+            return stmt
+
+        res = self.session().execute(stmt)
+        if raise_if_empty and len(res) == 0:
+            raise exc.NoResultFound()
+        return res
+
 
 # end of file
