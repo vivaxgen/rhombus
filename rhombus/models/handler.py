@@ -350,4 +350,10 @@ class DBHandler(object):
             raise exc.NoResultFound()
         return res
 
+    def rejoin(self, q, class_):
+        joined_models = {e[0].entity_namespace: e[1] for e in q._legacy_setup_joins}
+        if class_ in joined_models:
+            return q
+        return q.join(class_)
+
 # end of file
