@@ -12,6 +12,7 @@ from rhombus.views.generics import not_authorized, error_page
 from rhombus.models.fileattach import FileAttachment
 import rhombus.lib.tags as t
 
+from sqlalchemy.engine.result import ScalarResult
 import sqlalchemy.exc
 import yaml
 import mimetypes
@@ -551,6 +552,10 @@ class BaseViewer(object):
                    groups=None if rq.identity.has_roles(* self.viewing_roles)
                    else rq.identity.groups,
                    user=rq.identity)
+
+        if type(res) == ScalarResult:
+            res = res.all()
+
         if len(res) == 0:
             raise RuntimeError('Either the object does not exist or you do not have '
                                'the authorization to access the object!')
