@@ -400,10 +400,19 @@ class DBHandler(object):
         if not fetch:
             return stmt
 
-        res = self.session().execute(stmt).scalars()
+        res = self.scalars(stmt)
         if raise_if_empty and len(res) == 0:
             raise exc.NoResultFound()
         return res
+
+    def execute(self, stmt):
+        return self.session().execute(stmt)
+
+    def scalar(self, stmt):
+        return self.session().scalar(stmt)
+
+    def scalars(self, stmt):
+        return self.session().scalars(stmt)
 
 
 # end of file
