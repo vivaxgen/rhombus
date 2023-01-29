@@ -12,6 +12,7 @@ from rhombus.views.generics import not_authorized, error_page
 from rhombus.models.fileattach import FileAttachment
 import rhombus.lib.tags as t
 
+from sqlalchemy import select
 from sqlalchemy.engine.result import ScalarResult
 import sqlalchemy.exc
 import yaml
