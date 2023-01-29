@@ -10,7 +10,8 @@ Please read the README.txt of this software.
 
 import logging
 
-from sqlalchemy import and_, or_, schema, types, MetaData, Sequence, Column, ForeignKey, UniqueConstraint, Table, Identity
+from sqlalchemy import (and_, or_, schema, types, MetaData, Sequence, Column, ForeignKey,
+                        UniqueConstraint, Table, Identity, select)
 from sqlalchemy.orm import relationship, backref, dynamic_loader, deferred, column_property
 from sqlalchemy.orm.collections import column_mapped_collection, attribute_mapped_collection
 from sqlalchemy.orm.session import object_session
@@ -157,6 +158,13 @@ def _generic_query(cls, dbsess=None):
 
 
 Base.query = classmethod(_generic_query)
+
+
+def _generic_select(cls):
+    return select(cls)
+
+
+Base.select = classmethod(_generic_select)
 
 
 def _generic_get(cls, dbid, dbsess=None):
