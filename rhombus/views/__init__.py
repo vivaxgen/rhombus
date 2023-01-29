@@ -29,6 +29,7 @@ class not_roles(object):
 
 
 msg_0 = 'Click {login_link} to login.'
+msg_0a = ' Or click {guestlogin_link} to login as guest user.'
 
 msg_1 = 'Please notify the administrator if you believe that '\
         'you should be able to access this resource.'
@@ -58,6 +59,10 @@ class roles(object):
                                      href=get_login_url(request))
                     html = t.literal(
                         msg_0.format(login_link=login_link.r()))
+                    if request.registry.settings.get(ck.rb_guestuser, None):
+                        guestlogin_link = t.a('here',
+                                              href=request.route_url('guest_login'))
+                        html += t.literal(msg_0a.format(guestlogin_link=guestlogin_link.r()))
                     return not_authorized(request, html)
                 if not request.identity.has_roles(*self.allowed):
                     return not_authorized(request, msg_1)
@@ -85,7 +90,10 @@ class m_roles(roles):
                                      href=get_login_url(request))
                     html = t.literal(
                         msg_0.format(login_link=login_link.r()))
-
+                    if request.registry.settings.get(ck.rb_guestuser, None):
+                        guestlogin_link = t.a('here',
+                                              href=request.route_url('guest_login'))
+                        html += t.literal(msg_0a.format(guestlogin_link=guestlogin_link.r()))
                     return not_authorized(request, html)
                 if not request.identity.has_roles(*self.allowed):
                     return not_authorized(request, msg_1)
