@@ -400,7 +400,7 @@ class DBHandler(object):
         if not fetch:
             return stmt
 
-        res = self.session().execute(stmt)
+        res = self.session().execute(stmt).scalars()
         if raise_if_empty and len(res) == 0:
             raise exc.NoResultFound()
         return res
