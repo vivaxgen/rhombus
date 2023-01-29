@@ -168,8 +168,7 @@ Base.select = classmethod(_generic_select)
 
 
 def _generic_get(cls, dbid, dbsess=None):
-    q = cls.query(dbsess)
-    return q.get(int(dbid))
+    return dbsess.get(cls, int(dbid))
 
 
 Base.get = classmethod(_generic_get)
@@ -183,8 +182,7 @@ Base.lowername = classmethod(_generic_lowername)
 
 
 def _generic_delete(cls, dbid, dbsess):
-    q = cls.query(dbsess)
-    return q.filter(cls.id == int(dbid)).delete()
+    return dbsess.delete(cls.get(int(dbid), dbsess))
 
 
 Base.delete = classmethod(_generic_delete)
