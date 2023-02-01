@@ -115,10 +115,17 @@ class FileAttachment(Base, BaseMixIn):
                 raise RuntimeError(f'ERR - incorrect file size during writing to file {destpath}')
 
     @classmethod
-    def create_from_path(cls, fullpath, filename, session, mimetype=None, use_move=False):
+    def create_from_path(cls, fullpath, filename, session, mimetype=None, use_move=False,
+                         func=None):
+        """ func is a function to be called before file operation steps, with signature
+            func(x) and x = newly created FileAttachment
+        """
+
         fa = cls(filename=filename,
                  mimetype=mimetype or mimetypes.guess_type(filename)[0],
                  size=fullpath.stat().st_size)
+        if func is not None:
+            func(fa)
         session.add(fa)
         session.flush([fa])
         fa.fullpath = fa.generate_fullpath()
