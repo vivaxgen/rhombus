@@ -4,6 +4,7 @@ from .ek import EK
 
 from rhombus.lib.utils import get_dbhandler
 from rhombus.lib.fileutils import get_file_size
+from rhombus.models.meta import RhoSession
 from sqlalchemy import event
 from pathlib import Path
 import mimetypes
@@ -219,28 +220,34 @@ class FileAttachment(Base, BaseMixIn):
 #    sweeping process
 
 
-__PENDING_FILES__ = []
+# Pending files are stored with session id as the keys, even though session itself can
+# be used for keys. This is to make sure that unused session can be removed and not stucked
+# in the memory because it is being used as a dict key.
+__PENDING_FILES__ = {}
 
 
-#@event.listens_for(FileAttachment, 'after_delete')
+@event.listens_for(FileAttachment, 'after_delete', propagate=True)
 def receive_after_delete(mapper, connection, target):
     global __PENDING_FILES__
-    for t in target:
-        sess = object_session(t)
-        if sess not in __PENDING_FILES__:
-            curr_list = __PENDING_FILES__[sess] = []
-        if (fullpath := t.fullpath):
-            curr_list.append(fullpath)
+    sess_id = id(object_session(target))
+    if sess_id not in __PENDING_FILES__:
+        curr_list = __PENDING_FILES__[sess_id] = []
+    else:
+        curr_list = __PENDING_FILES__[sess_id]
+    if (fullpath := target.get_fs_abspath()):
+        curr_list.append(fullpath)
+    print(__PENDING_FILES__)
 
 
-#@event.listens_for(FileAttachment, 'after_commit')
+@event.listens_for(RhoSession, 'after_commit')
 def receive_after_commit(session):
     global __PENDING_FILES__
-    if session in __PENDING_FILES__:
-        deleted_files = __PENDING_FILES__[session]
-        del __PENDING_FILES__[session]
+    sess_id = id(session)
+    if sess_id in __PENDING_FILES__:
+        deleted_files = __PENDING_FILES__[sess_id]
+        print(deleted_files)
         for f in deleted_files:
-            # removed files here
-            pass
+            Path(f).unlink()
+        del __PENDING_FILES__[sess_id]
 
 # EOF
