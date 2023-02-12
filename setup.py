@@ -9,7 +9,7 @@ with open(os.path.join(here, 'CHANGES.md')) as f:
     CHANGES = f.read()
 
 requires = [
-    'SQLAlchemy',
+    'SQLAlchemy<2',
     'zope.sqlalchemy',
     'transaction',
     'dogpile.cache',
@@ -24,7 +24,9 @@ requires = [
     'webhelpers2',
     'pyramid_exclog',
     'requests',
-    ]
+    'authlib',
+    'pyramid_rpc',
+]
 
 setup(name='rhombus',
       version='0.01',
