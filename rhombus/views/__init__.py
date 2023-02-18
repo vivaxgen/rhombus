@@ -625,8 +625,9 @@ def get_login_url(request, authhost=None):
     return authhost + '/login?' + urllib.parse.urlencode({'came_from': request.url})
 
 
-def get_logout_url(request, authhost=None):
-    authhost = authhost or request.registry.settings.get('rhombus.authhost', '')
+def get_logout_url(request, authhost=''):
+    # authhost = authhost or request.registry.settings.get('rhombus.authhost', '')
+    # authhost is supplied from function argument (usually from userinstance.authhost)
     return authhost + '/logout?'
 
 
