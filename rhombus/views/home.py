@@ -130,6 +130,9 @@ def guest_login(request):
 
     dbh = get_dbhandler()
     user = dbh.get_user(guest_user)
+    if not user:
+        raise ValueError(f'Guest account with login {guest_user} does not exist! '
+                         'Please fix the configuration.')
     userinstance = user.user_instance()
     headers = remember(request, userinstance)
     return HTTPFound(location=request.referrer or '/', headers=headers)
@@ -209,7 +212,6 @@ def set_user_headers(userinstance, request):
     )
     request.set_user(token, userinstance)
     return remember(request, token)
-
 
 
 # EOF
