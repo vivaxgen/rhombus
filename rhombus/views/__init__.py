@@ -631,6 +631,15 @@ def get_logout_url(request, authhost=''):
     return authhost + '/logout?'
 
 
+def generate_login_text(request):
+    login_link = t.a('here', href=get_login_url(request))
+    html = t.literal(msg_0.format(login_link=login_link.r()))
+    if request.registry.settings.get(ck.rb_guestuser, None):
+        guestlogin_link = t.a('here', href=request.route_url('guest_login'))
+        html += t.literal(msg_0a.format(guestlogin_link=guestlogin_link.r()))
+    return html
+
+
 # response generator
 
 def fileinstance_to_response(file_instance=None, fp=None, filename=None,
