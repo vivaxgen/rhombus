@@ -36,6 +36,12 @@ def login(request):
             came_from
     """
 
+    # make sure that current request has not already logged in
+    if (user := request.identity):
+        raise exc.AuthError(f'You are already logged in as [{user}]. '
+                            f'Please logout first if you want to access login page and relogin '
+                            f'as different user.')
+
     dbh = get_dbhandler()
 
     msg = None
