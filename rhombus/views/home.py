@@ -90,6 +90,7 @@ def login(request):
 
             if userinstance is not None:
                 # headers = set_user_headers(userinstance, request)
+                userinstance.authhost = request.host_url
                 headers = remember(request, userinstance)
                 if came_from:
                     o1 = urlparse(came_from)

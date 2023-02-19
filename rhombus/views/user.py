@@ -395,7 +395,8 @@ def user_menu(request):
                 if not userinstance.has_roles(GUEST) else '',
                 li(a('Change password', class_='dropdown-item',
                      href=request.route_url('rhombus.user-passwd')))
-                if not (userinstance.has_roles(GUEST) or userinstance.authhost) else '',
+                if not (userinstance.has_roles(GUEST) or userinstance.authhost != request.host_url)
+                else '',
                 li(a('Management', class_='dropdown-item',
                      href=request.route_url('rhombus.dashboard')))
                 if userinstance.has_roles(SYSADM, SYSVIEW, DATAADM, DATAVIEW, EK_VIEW,
