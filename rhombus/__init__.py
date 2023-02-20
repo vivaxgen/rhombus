@@ -285,7 +285,7 @@ class RhoSecurityPolicy(object):
     def _split_authtoken(self, authtoken):
         el = authtoken.split('|')
         return types.SimpleNamespace(
-            login=el[0], domain=el[1], timestamp=int(el[2]), random=el[3], authhost=el[4]
+            login=el[0], userclass=el[1], timestamp=int(el[2]), authhost=el[3], random=el[4]
         )
 
     def _perform_remote_login(self, request, authtoken, authhost):
@@ -297,17 +297,19 @@ class RhoSecurityPolicy(object):
             dbh = get_dbhandler()
 
             # check the existence of the user
-            login, userclass, stamp, randstr = self._split_authtoken(authtoken)
-            user = dbh.get_user('%s/%s' % (login, userclass))
+            #login, userclass, stamp, randstr = self._split_authtoken(authtoken)
+            tk = self._split_authtoken(authtoken)
+            user = dbh.get_user('%s/%s' % (tk.login, tk.userclass))
             if user is None:
                 # check is userclass is exists, then add the user automatically to user class
 
-                uc = dbh.get_userclass(userclass)
+                uc = dbh.get_userclass(tk.userclass)
                 if uc is None:
                     request.session.flash(
                         (
                             'danger',
-                            f'Warning: your current login [{login}] is not registered in this system!'
+                            f'Warning: your current login [{tk.login}] is not registered '
+                            'in this system!'
                         )
                     )
                     return None
@@ -317,14 +319,16 @@ class RhoSecurityPolicy(object):
                     request.session.flash(
                         (
                             'danger',
-                            f'Warning: your current login [{login}] is not registered in this system '
-                            f'and automatic remote user registration is disabled. Please contact '
-                            f'the system administrator of this system.'
+                            f'Warning: your current login [{tk.login}], as authenticated by '
+                            f'{tk.authhost}, is not registered in '
+                            f'this system and automatic remote user registration is disabled. '
+                            f'Please contact the system administrator of this system.'
                         )
                     )
                     return None
 
-                user = uc.add_user(login, lastname, firstname, email, uc.credscheme['primary_group'])
+                user = uc.add_user(tk.login, lastname, firstname, email,
+                                   uc.credscheme['primary_group'])
                 request.session.flash(
                     (
                         'success',
