@@ -6,7 +6,7 @@ from rhombus.lib.tags import (div, table, thead, tbody, th, tr, td, literal, sel
                               form, POST, GET, fieldset, input_text, input_hidden, input_select, input_password,
                               submit_bar, h2, h3, p, input_textarea)
 from rhombus.views import (BaseViewer, render_to_response, form_submit_bar, ParseFormError, roles, yaml_load,
-                           Response, HTTPFound)
+                           Response, HTTPFound, boolean_checkbox)
 from rhombus.lib.modals import modal_delete, popup, modal_error
 
 #from rhombus.views import *
@@ -28,6 +28,7 @@ class UserClassViewer(BaseViewer):
     form_fields = {
         'domain*': ('rhombus-userclass_domain', ),
         'desc': ('rhombus-userclass_desc', ),
+        'autoadd': ('rhombus-userclass_autoadd', boolean_checkbox),
         'credscheme': ('rhombus-userclass_credscheme', yaml_load),
     }
 
@@ -97,6 +98,9 @@ class UserClassViewer(BaseViewer):
                              offset=2),
                 t.input_text(ff('desc'), 'Description', value=obj.desc, maxlength=64,
                              offset=2),
+                    t.checkboxes('rhombus-userclass_options', 'Options', [
+                        (ff('autoadd'), 'Auto Add', obj.autoadd),
+                    ], offset=2),
                 t.input_textarea(ff('credscheme'), 'Cred Scheme', value=yaml.dump(obj.credscheme),
                                  offset=2),
             ),
