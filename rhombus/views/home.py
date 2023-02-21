@@ -36,6 +36,12 @@ def login(request):
             came_from
     """
 
+    # make sure that current request has not already logged in
+    if (user := request.identity):
+        raise exc.AuthError(f'You are already logged in as [{user}]. '
+                            f'Please logout first if you want to access login page and relogin '
+                            f'as different user.')
+
     dbh = get_dbhandler()
 
     msg = None
@@ -84,6 +90,7 @@ def login(request):
 
             if userinstance is not None:
                 # headers = set_user_headers(userinstance, request)
+                userinstance.authhost = request.host_url
                 headers = remember(request, userinstance)
                 if came_from:
                     o1 = urlparse(came_from)
@@ -130,6 +137,9 @@ def guest_login(request):
 
     dbh = get_dbhandler()
     user = dbh.get_user(guest_user)
+    if not user:
+        raise ValueError(f'Guest account with login {guest_user} does not exist! '
+                         'Please fix the configuration.')
     userinstance = user.user_instance()
     headers = remember(request, userinstance)
     return HTTPFound(location=request.referrer or '/', headers=headers)
@@ -209,7 +219,6 @@ def set_user_headers(userinstance, request):
     )
     request.set_user(token, userinstance)
     return remember(request, token)
-
 
 
 # EOF

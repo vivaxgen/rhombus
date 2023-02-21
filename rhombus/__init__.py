@@ -25,6 +25,7 @@ from rhombus.scripts import run
 
 import time
 import datetime
+import types
 
 import logging
 logger = logging.getLogger(__name__)
@@ -236,10 +237,12 @@ class RhoSecurityPolicy(object):
         # TODO: check token for hard expire time here
 
         authtoken = identity['userid']
+        authtk_struct = self._split_authtoken(authtoken)
         userinstance = self.auth_cache.get(authtoken)
 
-        if not userinstance and ck.rb_authhost in request.registry.settings:
-            # TODO: in client mode, if userinstance is not yet existed, check to the remote/host
+        if (not userinstance and ck.rb_authhost in request.registry.settings
+                and authtk_struct.authhost):
+            # in client mode, if userinstance is not yet existed, check to the remote/host
             # autheticator
             userinstance = self._perform_remote_login(request, authtoken,
                                                       request.registry.settings[ck.rb_authhost])
@@ -276,11 +279,14 @@ class RhoSecurityPolicy(object):
     def _generate_authtoken(self, userinstance):
         # use UTC timestamp to allow for different servers in different time zones
         timestamp = int(datetime.datetime.utcnow().timestamp())
-        return f'{userinstance.login}|{userinstance.domain}|{timestamp}|{random_string(128)}'
+        return (f'{userinstance.login}|{userinstance.domain}|{timestamp}|'
+                f'{userinstance.authhost}|{random_string(128)}')
 
     def _split_authtoken(self, authtoken):
         el = authtoken.split('|')
-        return el[0], el[1], int(el[2]), el[3]
+        return types.SimpleNamespace(
+            login=el[0], userclass=el[1], timestamp=int(el[2]), authhost=el[3], random=el[4]
+        )
 
     def _perform_remote_login(self, request, authtoken, authhost):
 
@@ -291,17 +297,19 @@ class RhoSecurityPolicy(object):
             dbh = get_dbhandler()
 
             # check the existence of the user
-            login, userclass, stamp, randstr = self._split_authtoken(authtoken)
-            user = dbh.get_user('%s/%s' % (login, userclass))
+            #login, userclass, stamp, randstr = self._split_authtoken(authtoken)
+            tk = self._split_authtoken(authtoken)
+            user = dbh.get_user('%s/%s' % (tk.login, tk.userclass))
             if user is None:
                 # check is userclass is exists, then add the user automatically to user class
 
-                uc = dbh.get_userclass(userclass)
+                uc = dbh.get_userclass(tk.userclass)
                 if uc is None:
                     request.session.flash(
                         (
                             'danger',
-                            f'Warning: your current login [{login}] is not registered in this system!'
+                            f'Warning: your current login [{tk.login}] is not registered '
+                            'in this system!'
                         )
                     )
                     return None
@@ -311,14 +319,16 @@ class RhoSecurityPolicy(object):
                     request.session.flash(
                         (
                             'danger',
-                            f'Warning: your current login [{login}] is not registered in this system '
-                            f'and automatic remote user registration is disabled. Please contact '
-                            f'the system administrator of this system.'
+                            f'Warning: your current login [{tk.login}], as authenticated by '
+                            f'{tk.authhost}, is not registered in '
+                            f'this system and automatic remote user registration is disabled. '
+                            f'Please contact the system administrator of this system.'
                         )
                     )
                     return None
 
-                user = uc.add_user(login, lastname, firstname, email, uc.credscheme['primary_group'])
+                user = uc.add_user(tk.login, lastname, firstname, email,
+                                   uc.credscheme['primary_group'])
                 request.session.flash(
                     (
                         'success',

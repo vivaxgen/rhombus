@@ -2,7 +2,7 @@
 from rhombus import configkeys as ck
 from rhombus.lib.utils import get_dbhandler
 from rhombus.lib.roles import (PUBLIC, SYSADM, GUEST, EK_VIEW, USERCLASS_VIEW, USER_VIEW,
-                               GROUP_VIEW)
+                               GROUP_VIEW, DATAADM, USER_MODIFY)
 from rhombus.lib.modals import popup, modal_delete
 from rhombus.lib.tags import (div, table, thead, tbody, th, tr, td, literal, selection_bar, br,
                               ul, li, a, i, form, POST, GET, fieldset, input_text, input_hidden,
@@ -78,6 +78,13 @@ class UserViewer(BaseViewer):
         dbh = self.dbh
 
         try:
+
+            # if current login does not have proper roles, only allow selected fields
+            # to be modified
+            if not self.request.identity.has_roles(SYSADM, DATAADM, USER_MODIFY):
+                for k in ['login', 'userclass_id', 'primarygroup_id']:
+                    del d[k]
+
             obj.update(d)
             if obj.id is None:
                 dbh.session().add(obj)
@@ -395,7 +402,8 @@ def user_menu(request):
                 if not userinstance.has_roles(GUEST) else '',
                 li(a('Change password', class_='dropdown-item',
                      href=request.route_url('rhombus.user-passwd')))
-                if not (userinstance.has_roles(GUEST) or userinstance.authhost) else '',
+                if not (userinstance.has_roles(GUEST) or userinstance.authhost != request.host_url)
+                else '',
                 li(a('Management', class_='dropdown-item',
                      href=request.route_url('rhombus.dashboard')))
                 if userinstance.has_roles(SYSADM, SYSVIEW, DATAADM, DATAVIEW, EK_VIEW,

@@ -87,6 +87,7 @@ essential_groups = [
             ( '_LogViewer_', [] ),
             ( '_MasterViewer_', [ SYSVIEW ] ),
             ( '_User_', [ USER ] ),
+            ('_Guest_', [GUEST]),
             ]
 
 ek_initlist = [
