@@ -399,9 +399,10 @@ class checkbox_item(input_text):
 
     def r(self):
         if self.ro():
+            badge_class = "text-bg-info" if self.value else "text-white bg-secondary bg-opacity-25"
             return literal(
                 '<div class="form-check form-check-inline justify-content-start align-self-end pt-2 pl-1 pr-0">'
-                f'<label class="form-check-label {"badge rounded-pill text-bg-info" if self.value else "text-muted"}">{self.label}</label>'
+                f'<label class="form-check-label badge rounded-pill {badge_class}">{self.label}</label>'
                 '</div>'
             )
 
@@ -413,7 +414,6 @@ class checkbox_item(input_text):
             # the browser will instead send the hidden input value.
             f'<input type="hidden" name="{self.name}" value="off" />'
             f'<input type="checkbox" class="form-check-input" value="on" name="{self.name}" id="{self.id}" {"checked" if self.value else ""} />'
-
             f'<label class="form-check-label" for="{self.id}">{self.label}</label>'
             f'</div>'
         )
