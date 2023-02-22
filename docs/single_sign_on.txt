@@ -1,0 +1,15 @@
+
+Rhombus has facility to provide single-sign-on mechanism with the following requirements:
+
+- client apps should have identical parent domain so that Rhombus' auth cookie can be shared
+
+Setting up:
+
+- use identical rhombus.authsecret and rhombus.authcookie as master
+- set rhombus.authhost to master host
+- add identical UserClass in client apps, with following options:
+	- autoadd: non-existant local users will be created automatically
+- for group sync, use this notation: sync:GROUP_NAME in auth host, and
+  create corresponding GROUP_NAME in client host (without sync:)
+
+

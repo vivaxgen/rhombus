@@ -1,0 +1,22 @@
+
+Running Rhombus Stand-Alone
+===========================
+
+Create this skeleton directory (PRJ = your_project_name)
+
+prj/
+   /db/
+   /templates/
+   /activate.sh
+   /development.ini
+
+Both activate.sh and development.ini can be copied from rhombus directory.
+
+Edit activate.sh and development.ini as necessary.
+
+Initialize the database::
+
+   rhombus-run rbmgr --initdb [-c development.ini]
+
+
+
