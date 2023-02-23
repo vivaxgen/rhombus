@@ -229,6 +229,12 @@ __PENDING_FILES__ = {}
 @event.listens_for(FileAttachment, 'after_delete', propagate=True)
 def receive_after_delete(mapper, connection, target):
     global __PENDING_FILES__
+
+    # check if target has actual physical file, or using bindata
+    if not target.fullpath:
+        # using bindata, just skip the rest of the process
+        return
+
     sess_id = id(object_session(target))
     if sess_id not in __PENDING_FILES__:
         curr_list = __PENDING_FILES__[sess_id] = []
