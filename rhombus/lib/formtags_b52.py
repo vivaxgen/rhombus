@@ -164,7 +164,7 @@ class input_text(htmltag):
                   ) if self.label is not None else '',
             div(class_=self.class_value())[
                 inputtag(type=self._type, id=self.id, name=self.name,
-                         value=value or self.get_value(), class_=self.class_input(),
+                         value=value or self.get_value() or '', class_=self.class_input(),
                          placeholder=self.placeholder, required=self.required,
                          maxlength=self.maxlength if self.maxlength > 0 else False,
                          style=self.style(), readonly=self.ro() or readonly,
