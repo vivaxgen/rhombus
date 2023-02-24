@@ -233,7 +233,7 @@ class input_select(input_text):
         if multiple:
             self.value = [str(x) for x in self.value]
         else:
-            self.value = str(self.value)
+            self.value = str(self.value) if self.value is not None else None
 
     def options(self):
         """ return a sorted list of options """
@@ -260,6 +260,9 @@ class input_select(input_text):
             if multiple:
                 value = ' | '.join([l for (v, l) in self.options() if v in self.value]) or ''
             else:
+                if self.value is None:
+                    # special cases when field is empty
+                    return super().r(value='')
                 value = [l for (v, l) in self.options() if v == self.value]
                 if len(value) == 0:
                     raise ValueError(f'key: {self.value} is not in list of option '
