@@ -400,7 +400,7 @@ class DBHandler(object):
         if not fetch:
             return stmt
 
-        res = self.scalars(stmt)
+        res = self.scalars(stmt).all()
         if raise_if_empty and len(res) == 0:
             raise exc.NoResultFound()
         return res
