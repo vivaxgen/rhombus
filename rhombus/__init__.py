@@ -241,7 +241,7 @@ class RhoSecurityPolicy(object):
         userinstance = self.auth_cache.get(authtoken)
 
         if (not userinstance and ck.rb_authhost in request.registry.settings
-                and authtk_struct.authhost):
+                and authtk_struct.authhost != request.host_url):
             # in client mode, if userinstance is not yet existed, check to the remote/host
             # autheticator
             userinstance = self._perform_remote_login(request, authtoken,
