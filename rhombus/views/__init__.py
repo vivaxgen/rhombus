@@ -233,15 +233,15 @@ class BaseViewer(object):
         self.vars = {}
 
     @m_roles(* accessing_roles)
-    def index(self):
+    def index(self) -> Response:
         return self.index_helper()
 
     @m_roles(* accessing_roles)
-    def view(self):
+    def view(self) -> Response:
         self.obj = self.get_object()
         return self.view_helper()
 
-    def view_helper(self, render=True):
+    def view_helper(self, render=True) -> tuple[str, str] | Response:
 
         rq = self.request
         obj = self.obj or self.get_object()
@@ -259,7 +259,7 @@ class BaseViewer(object):
             return (html, jscode)
         return self.render_edit_form(html, jscode)
 
-    def view_extender(self, html, jscode):
+    def view_extender(self, html, jscode) -> tuple[str, str]:
         return html, jscode
 
     @m_roles(* accessing_roles)
@@ -339,11 +339,11 @@ class BaseViewer(object):
         return self.render_edit_form(eform, jscode)
 
     @m_roles(not_roles(GUEST), * accessing_roles)
-    def edit(self):
+    def edit(self) -> Response:
         self.obj = self.get_object()
         return self.edit_helper()
 
-    def edit_helper(self, render=True):
+    def edit_helper(self, render=True) -> tuple[str, str] | Response:
 
         rq = self.request
         obj = self.obj or self.get_object()
@@ -536,7 +536,8 @@ class BaseViewer(object):
             eform, js = f(self, obj, eform, js, create, readonly, update_dict)
         return eform, js
 
-    def render_edit_form(self, eform, jscode):
+    def render_edit_form(self, eform, jscode) -> Response:
+        """ Return Response instance """
         return render_to_response(self.template_edit, {
             'html': eform,
             'code': jscode,
