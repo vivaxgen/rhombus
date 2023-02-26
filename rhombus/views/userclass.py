@@ -124,7 +124,7 @@ class UserClassViewer(BaseViewer):
             userclasses = dbh.get_userclasses_by_ids(userclass_ids, groups=None, user=rq.identity)
 
             if len(userclasses) == 0:
-                return Response(modal_error)
+                return Response(modal_error(content="Please select userclass to be removed!"))
 
             return Response(
                 modal_delete(
