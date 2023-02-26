@@ -7,7 +7,7 @@ from rhombus.lib.roles import (PUBLIC, SYSADM, SYSVIEW, GROUP_CREATE, GROUP_MODI
 from rhombus.lib.tags import (div, table, thead, tbody, th, tr, td, literal, selection_bar, br, ul,
                               li, a, i, form, fieldset, input_hidden, input_text, input_select, 
                               input_textarea, checkboxes, submit_bar, POST, GET)
-from rhombus.lib.modals import popup, modal_delete
+from rhombus.lib.modals import popup, modal_delete, modal_error
 from rhombus.models.user import Group
 
 from pyramid.renderers import render
@@ -163,7 +163,7 @@ def action_post(request):
         groups = dbh.get_group(group_ids)
 
         if len(groups) == 0:
-            return Response(modal_error)
+            return Response(modal_error(content="Please select group(s) to be removed!"))
 
         return Response(
             modal_delete(
@@ -251,7 +251,7 @@ def user_action(request):
             dbh.UserGroup.user_id.in_(user_ids), dbh.UserGroup.group_id == group_id)
 
         if usergroups.count() == 0:
-            return Response(modal_error)
+            return Response(modal_error(content="Please select user(s) to be removed!"))
 
         return Response(
             modal_delete(
@@ -340,7 +340,7 @@ def role_action(request):
         eks = [dbh.EK.get(role_id, dbh.session()) for role_id in role_ids]
 
         if len(eks) == 0:
-            return Response(modal_error)
+            return Response(modal_error(content="Please select role(s) to be removed"))
 
         return Response(
             modal_delete(
