@@ -17,7 +17,7 @@ from sqlalchemy import exc
 import json
 
 
-@roles( PUBLIC )
+@roles(PUBLIC)
 def index(request):
     """ list groups """
 
@@ -45,7 +45,7 @@ def index(request):
     )
 
 
-@roles( PUBLIC )
+@roles(PUBLIC)
 def view(request):
 
     dbh = get_dbhandler()
@@ -60,21 +60,21 @@ def view(request):
         role_table, role_js = '', ''
 
     if request.identity.has_roles(SYSADM, GROUP_CREATE, GROUP_DELETE, GROUP_ADDUSER,
-            GROUP_DELUSER):
+                                  GROUP_DELUSER):
         user_table, user_js = format_usertable(group, request)
     else:
         user_table, user_js = '', ''
 
-    return render_to_response("rhombus:templates/group/view.mako",
-        {   'group': group,
-            'form': grp_form,
-            'role_table': role_table,
-            'user_table': user_table,
-            'code': role_js + user_js
-        }, request = request)
+    return render_to_response("rhombus:templates/group/view.mako", {
+        'group': group,
+        'form': grp_form,
+        'role_table': role_table,
+        'user_table': user_table,
+        'code': role_js + user_js
+    }, request=request)
 
 
-@roles( SYSADM, GROUP_MODIFY )
+@roles(SYSADM, GROUP_MODIFY)
 def edit(request):
 
     grp_id = int(request.matchdict['id'])
@@ -94,35 +94,35 @@ def edit(request):
 
         editform, editjs = edit_form(group, dbh, request)
 
-        return render_to_response( "rhombus:templates/generics/formpage.mako",
-                {   'html': editform,
-                    'code': editjs,
-                }, request = request
-        )
+        return render_to_response("rhombus:templates/generics/formpage.mako", {
+            'html': editform,
+            'code': editjs,
+        }, request=request)
 
     elif request.POST:
 
-        group_d = parse_form( request.POST )
+        group_d = parse_form(request.POST)
         if group_d['id'] != grp_id:
             return error_page(request, "Inconsistent data!")
 
         try:
             if grp_id == 0:
                 group = dbh.Group(flags=0)
-                group.update( group_d )
-                dbh.session().add( group )
+                group.update(group_d)
+                dbh.session().add(group)
                 dbh.session().flush()
                 request.session.flash(
-                    (   'success',
-                        'Group [%s] has been created.' % group.name )
+                    (
+                        'success',
+                        'Group [%s] has been created.' % group.name)
                 )
 
             else:
                 group = dbh.get_group(grp_id)
 
-                #check security here
+                # TODO: should check security here
 
-                group.update( group_d )
+                group.update(group_d)
                 dbh.session().flush()
 
         except RuntimeError as err:
@@ -131,7 +131,7 @@ def edit(request):
         except:
             raise
 
-        return HTTPFound(location = request.route_url('rhombus.group-view', id=group.id))
+        return HTTPFound(location=request.route_url('rhombus.group-view', id=group.id))
 
     raise NotImplementedError
 
@@ -159,46 +159,50 @@ def action_post(request):
 
     if method == 'delete':
 
-        group_ids = [ int(x) for x in request.params.getall('group-ids') ]
-        groups = dbh.get_group( group_ids )
+        group_ids = [int(x) for x in request.params.getall('group-ids')]
+        groups = dbh.get_group(group_ids)
 
         if len(groups) == 0:
             return Response(modal_error)
 
         return Response(
             modal_delete(
-                title = 'Deleting Group(s)',
-                content = literal(
+                title='Deleting Group(s)',
+                content=literal(
                     'You are going to delete the following group(s):'
                     '<ul>' +
-                    ''.join( '<li>%s | %s</li>' % (g.name, len(g.users))
-                                        for g in groups ) +
+                    ''.join('<li>%s | %s</li>' % (g.name, len(g.users))
+                            for g in groups) +
                     '</ul>'
                 ),
-                request = request
+                request=request
             ),
-            request = request
+            request=request
         )
 
     elif method == 'delete/confirm':
 
-        group_ids = [ int(x) for x in request.params.getall('group-ids') ]
+        group_ids = [int(x) for x in request.params.getall('group-ids')]
         group_names = []
-        for group in dbh.get_group( group_ids ):
+        for group in dbh.get_group(group_ids):
             # XXX: check whether there are users with this group as primary group
-            n_users =  dbh.User.query(dbh.session()).filter(dbh.User.primarygroup_id == group.id).count()
+            n_users = dbh.User.query(dbh.session()).filter(
+                dbh.User.primarygroup_id == group.id
+            ).count()
             if n_users > 0:
-                return error_page( request,
-                    'Group %s cannot be deleted since it currently is a primary group with %d user member(s).'
-                        % (group.name, n_users) )
-            group_names.append( group.name )
+                return error_page(
+                    request,
+                    f'Group {group.name} cannot be deleted since it currently is a primary group '
+                    f'with {n_users} user member(s).'
+                )
+            group_names.append(group.name)
             dbh.session().delete(group)
 
         dbh.session().flush()
         request.session.flash(
-            ('success', 'Group %s has been deleted successfully' % ','.join( group_names )))
+            ('success', 'Group %s has been deleted successfully' % ','.join(group_names)))
 
-        return HTTPFound( location = request.referrer or request.route_url( 'rhombus.group'))
+        return HTTPFound(location=request.referrer or request.route_url('rhombus.group'))
 
     raise RuntimeError('FATAL - programming ERROR')
 
@@ -222,12 +226,11 @@ def user_action(request):
 
         try:
             ug = dbh.UserGroup(user, group, role)
-            dbh.session().flush( [ug] )
+            dbh.session().flush([ug])
             request.session.flash(
                 ('success', 'User %s has been added to group %s as %s.' %
-                (user_login, group_name, { 'A': 'an admin', 'M': 'a member'}[role]) )
+                 (user_login, group_name, {'A': 'an admin', 'M': 'a member'}[role]))
             )
-
 
         except exc.IntegrityError:
             request.session.flash(
@@ -236,41 +239,41 @@ def user_action(request):
             )
 
         return HTTPFound(
-                location = request.referrer or request.route_url('rhombus.group'))
+            location=request.referrer or request.route_url('rhombus.group')
+        )
 
     elif request.POST and method == 'delete':
 
-        user_ids = [ int(x) for x in request.params.getall('user-ids') ]
+        user_ids = [int(x) for x in request.params.getall('user-ids')]
         group_id = int(request.params.get('group_id'))
 
         usergroups = dbh.UserGroup.query(dbh.session()).filter(
-            dbh.UserGroup.user_id.in_( user_ids), dbh.UserGroup.group_id == group_id)
-
+            dbh.UserGroup.user_id.in_(user_ids), dbh.UserGroup.group_id == group_id)
 
         if usergroups.count() == 0:
             return Response(modal_error)
 
         return Response(
             modal_delete(
-                title = 'Removing Member(s)',
-                content = literal(
+                title='Removing Member(s)',
+                content=literal(
                     'You are going to remove the following user(s) from group:'
                     '<ul>' +
-                    ''.join( '<li>%s</li>' % ug.user.render() for ug in usergroups ) +
+                    ''.join('<li>%s</li>' % ug.user.render() for ug in usergroups) +
                     '</ul>'
                 ),
-                request = request
+                request=request
             ),
-            request = request
+            request=request
         )
 
     elif request.POST and method == 'delete/confirm':
 
-        user_ids = [ int(x) for x in request.params.getall('user-ids') ]
+        user_ids = [int(x) for x in request.params.getall('user-ids')]
         group_id = int(request.params.get('group_id'))
 
         usergroups = dbh.UserGroup.query(dbh.session()).filter(
-            dbh.UserGroup.user_id.in_( user_ids), dbh.UserGroup.group_id == group_id)
+            dbh.UserGroup.user_id.in_(user_ids), dbh.UserGroup.group_id == group_id)
 
         logins = []
         failed_logins = []
@@ -280,17 +283,17 @@ def user_action(request):
                     'Warning: cannot remove user %s because group %s is the primary group'
                     % (ug.user.login, ug.group.name))
                 continue
-            logins.append( ug.user.render() )
-            dbh.session().delete( ug )
+            logins.append(ug.user.render())
+            dbh.session().delete(ug)
 
         dbh.session.flush()
         for failed_login in failed_logins:
             request.session.flash(('danger', failed_login))
         if len(logins) > 0:
             request.session.flash(
-                ('success', 'User(s) %s has been removed successfully' % '; '.join( logins )))
+                ('success', 'User(s) %s has been removed successfully' % '; '.join(logins)))
 
-        return HTTPFound( location = request.referrer or request.route_url( 'rhombus.group'))
+        return HTTPFound(location=request.referrer or request.route_url('rhombus.group'))
 
     raise RuntimeError('FATAL - programming ERROR')
 
@@ -312,13 +315,12 @@ def role_action(request):
         group_name = group.name
 
         try:
-            group.roles.append( ek )
-            dbh.session().flush( [group] )
+            group.roles.append(ek)
+            dbh.session().flush([group])
             request.session.flash(
                 ('success', 'Role %s has been added to group %s.' %
                     (ek_key, group_name))
             )
-
 
         except exc.IntegrityError:
             request.session.flash(
@@ -327,52 +329,51 @@ def role_action(request):
             )
 
         return HTTPFound(
-                location = request.referrer or request.route_url('rhombus.group'))
+            location=request.referrer or request.route_url('rhombus.group')
+        )
 
     elif request.POST and method == 'delete':
 
-        role_ids = [ int(x) for x in request.params.getall('role-ids') ]
+        role_ids = [int(x) for x in request.params.getall('role-ids')]
         group_id = int(request.params.get('group_id'))
 
-        eks = [ dbh.EK.get(role_id, dbh.session()) for role_id in role_ids ]
-
+        eks = [dbh.EK.get(role_id, dbh.session()) for role_id in role_ids]
 
         if len(eks) == 0:
             return Response(modal_error)
 
         return Response(
             modal_delete(
-                title = 'Removing Role(s)',
-                content = literal(
+                title='Removing Role(s)',
+                content=literal(
                     'You are going to remove the following role(s) from group:'
                     '<ul>' +
-                    ''.join( '<li>%s</li>' % ek.key for ek in eks ) +
+                    ''.join('<li>%s</li>' % ek.key for ek in eks) +
                     '</ul>'
                 ),
-                request = request
+                request=request
             ),
-            request = request
+            request=request
         )
 
     elif request.POST and method == 'delete/confirm':
 
-        role_ids = [ int(x) for x in request.params.getall('role-ids') ]
+        role_ids = [int(x) for x in request.params.getall('role-ids')]
         group_id = int(request.params.get('group_id'))
 
-        eks = [ dbh.EK.get(role_id, dbh.session()) for role_id in role_ids ]
+        eks = [dbh.EK.get(role_id, dbh.session()) for role_id in role_ids]
         group = dbh.get_group(group_id)
 
         removes = []
         for ek in eks:
-            group.roles.remove( ek )
-            removes.append( ek.key )
+            group.roles.remove(ek)
+            removes.append(ek.key)
 
         dbh.session.flush([group])
         request.session.flash(
-            ('success', 'Role(s) %s has been removed successfully' % '; '.join( removes )))
+            ('success', 'Role(s) %s has been removed successfully' % '; '.join(removes)))
 
-        return HTTPFound( location = request.referrer or request.route_url( 'rhombus.group'))
-
+        return HTTPFound(location=request.referrer or request.route_url('rhombus.group'))
 
     raise RuntimeError('FATAL - programming ERROR')
 
@@ -392,7 +393,7 @@ def lookup(request):
     # formating for select2 consumption
 
     result = [
-        { 'id': g.id, 'text': g.name}
+        {'id': g.id, 'text': g.name}
         for g in groups]
 
     return result
@@ -469,9 +470,10 @@ def format_grouptable(groups, request):
     T = table(class_='table table-condensed table-striped', id='grouptable')
 
     data = [
-        [   '<input type="checkbox" name="group-ids" value="%d" />' % g.id,
+        [
+            '<input type="checkbox" name="group-ids" value="%d" />' % g.id,
             '<a href="%s">%s</a>' %
-                (request.route_url('rhombus.group-view', id=g.id), g.name),
+            (request.route_url('rhombus.group-view', id=g.id), g.name),
             len(g.users)
         ] for g in groups
     ]
@@ -492,7 +494,7 @@ $(document).ready(function() {
         ]
     } );
 } );
-''' % json.dumps( data )
+''' % json.dumps(data)
 
     return (T, jscode)
 
@@ -522,26 +524,29 @@ def format_roletable(group, request):
 
     role_content = div(class_='form-group')
     role_content.add(
-            div('Role',
-                literal('''<select id="roleadd_id" name="roleadd_id" class='form-control' style='width:100%;'></select>'''),
-                 class_='col-md-9 col-md-offset-1'),
-        )
+        div('Role',
+            literal('''<select id="roleadd_id" name="roleadd_id" class='form-control' style='width:100%;'></select>'''),
+            class_='col-md-9 col-md-offset-1'),
+    )
     submit_button = submit_bar('Add role', 'add-role')
 
-    add_role_form = form( name='add-role-form', method='POST',
-                            action=request.route_url('rhombus.group-role_action'),
-                        )[  role_content,
-                            literal('<input type="hidden" name="group_id" value="%d"/>'
-                                % group.id),
-                            submit_button ]
+    add_role_form = form(name='add-role-form', method='POST',
+                         action=request.route_url('rhombus.group-role_action'),
+                         )[role_content,
+                           literal('<input type="hidden" name="group_id" value="%d"/>'
+                                   % group.id),
+                           submit_button]
 
     role_table = div(
         div(
-            literal( render("rhombus:templates/generics/popup.mako",
-            {   'title': 'Add role',
-                'content': add_role_form,
-                'buttons': '',
-            }, request = request )),
+            literal(
+                render(
+                    "rhombus:templates/generics/popup.mako",
+                    {
+                        'title': 'Add role',
+                        'content': add_role_form,
+                        'buttons': '',
+                    }, request=request)),
             id='add-role-modal', class_='modal fade', tabindex='-1', role='dialog'
         ),
         role_table
@@ -553,7 +558,7 @@ $('#group-add-role').click( function(e) {
     $('#add-role-modal').modal('show');
 });
 
-''' +  '''
+''' + '''
   $('#roleadd_id').select2( {
         minimumInputLength: 3,
         placeholder: 'Type a role here',
@@ -577,14 +582,15 @@ def format_usertable(group, request):
             th('', style="width: 5px;"), th('Login'), th('Role'), th('Name'), th('Primary group')
         ],
         tbody()[
-            tuple([ tr()[
-                        td(literal('<input type="checkbox" name="user-ids" value="%d" />' % ug.user_id)),
-                        td(a(ug.user.login, href=request.route_url('rhombus.user-view', id=ug.user_id))),
-                        td(ug.role),
-                        td(ug.user.fullname),
-                        td(a(ug.user.primarygroup.name,
-                            href=request.route_url('rhombus.group-view', id=ug.user.primarygroup_id))),
-                    ] for ug in group.usergroups ])
+            tuple([
+                tr()[
+                    td(literal('<input type="checkbox" name="user-ids" value="%d" />' % ug.user_id)),
+                    td(a(ug.user.login, href=request.route_url('rhombus.user-view', id=ug.user_id))),
+                    td(ug.role),
+                    td(ug.user.fullname),
+                    td(a(ug.user.primarygroup.name,
+                         href=request.route_url('rhombus.group-view', id=ug.user.primarygroup_id))),
+                ] for ug in group.usergroups])
         ]
     ]
     user_bar = selection_bar('user-ids', action=request.route_url('rhombus.group-user_action'),
@@ -596,35 +602,40 @@ def format_usertable(group, request):
 
     content = div(class_='form-group form-inline')
     content.add(
-            div('Login',
-                literal('''<select id="useradd_id" name="useradd_id" class='form-control' style='width:100%;'></select>'''),
-                 class_='col-md-7 col-md-offset-1'),
-            div('Role',
-                literal("<select id='useradd_role' name='useradd_role' class='form-control'>"
-                        "<option value='M' default>Member</option>"
-                        "<option value='A'>Admin</option>"
-                        "</select>"),
-                class_='col-md-3')
-        )
+        div('Login',
+            literal('''<select id="useradd_id" name="useradd_id" class='form-control' style='width:100%;'></select>'''),
+            class_='col-md-7 col-md-offset-1'),
+        div('Role',
+            literal("<select id='useradd_role' name='useradd_role' class='form-control'>"
+                    "<option value='M' default>Member</option>"
+                    "<option value='A'>Admin</option>"
+                    "</select>"),
+            class_='col-md-3')
+    )
     submit_button = submit_bar('Add member', 'add-member')
 
-    add_member_form = form( name='add-member-form', method='POST',
-                            action=request.route_url('rhombus.group-user_action'),
-                        )[  content,
-                            literal('<input type="hidden" name="group_id" value="%d"/>'
-                                % group.id),
-                            submit_button ]
+    add_member_form = form(
+        name='add-member-form', method='POST',
+        action=request.route_url('rhombus.group-user_action'),
+    )[
+        content,
+        literal('<input type="hidden" name="group_id" value="%d"/>' % group.id),
+        submit_button
+    ]
 
     user_table = div(
         div(
-            literal( render("rhombus:templates/generics/popup.mako",
-            {   'title': 'Add group member',
-                'content': add_member_form,
-                'buttons': '',
-            }, request = request )),
+            literal(
+                render(
+                    "rhombus:templates/generics/popup.mako",
+                    {
+                        'title': 'Add group member',
+                        'content': add_member_form,
+                        'buttons': '',
+                    }, request=request)),
             id='add-member-modal', class_='modal fade', tabindex='-1', role='dialog'
         ),
-        #add_user_html,
+        # add_user_html,
         user_table
     )
 
@@ -634,7 +645,7 @@ $('#group-add-member').click( function(e) {
     $('#add-member-modal').modal('show');
 });
 
-''' +  '''
+''' + '''
   $('#useradd_id').select2( {
         minimumInputLength: 3,
         placeholder: 'Type a name here',
@@ -652,7 +663,7 @@ $('#group-add-member').click( function(e) {
 
 
 def select2_template(**keywords):
-    return  '''
+    return '''
   $('#%(tag)s').select2( {
         minimumInputLength: %(minlen)d,
         placeholder: '%(placeholder)s',
@@ -666,3 +677,4 @@ def select2_template(**keywords):
     });
 ''' % keywords
 
+# EOF
