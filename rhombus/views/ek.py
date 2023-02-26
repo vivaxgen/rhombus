@@ -1,5 +1,5 @@
 
-from rhombus.lib.modals import popup, modal_delete
+from rhombus.lib.modals import popup, modal_delete, modal_error
 
 from rhombus.lib.roles import PUBLIC, SYSADM, SYSVIEW, EK_VIEW, EK_CREATE, EK_MODIFY, EK_DELETE
 from rhombus.lib.tags import (div, table, thead, tbody, th, tr, td, literal, selection_bar, br, ul, li, a, i,
@@ -176,7 +176,7 @@ def action(request):
         eks = list(EK.query(dbh.session()).filter(EK.id.in_(ids)))
 
         if len(eks) == 0:
-            return Response(modal_error)
+            return Response(modal_error(content="Please select Enumerated Key(s) to be removed"))
 
         # return Response('Delete Enumerated Keys: ' + str(request.POST))
         # return Response(modal_delete % ''.join( '<li>%s</li>' % x.key for x in eks ))
@@ -235,18 +235,5 @@ def format_ektable(eks, request, ek=None):
 
     return bar.render(ek_table)
 
-
-modal_error = '''
-<div class="modal-header">
-    <button type="button" class="close" data-dismiss="modal" aria-hidden="true">×</button>
-    <h3 id="myModalLabel">Error</h3>
-</div>
-<div class="modal-body">
-    <p>Please select Enumerated Key(s) to be removed</p>
-</div>
-<div class="modal-footer">
-    <button class="btn" data-dismiss="modal" aria-hidden="true">Close</button>
-</div>
-'''
 
 # EOF
