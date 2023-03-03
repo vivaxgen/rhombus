@@ -1,13 +1,57 @@
 
-from rhombus.views import *
+from rhombus.views import (
+    get_dbhandler,
+    HTTPFound,
+    render_to_response,
+    Response,
+    roles,
+)
+
 from rhombus.views.generics import error_page
 from rhombus.lib.tags import button
-from rhombus.lib.roles import (PUBLIC, SYSADM, SYSVIEW, GROUP_CREATE, GROUP_MODIFY, GROUP_DELETE,
-                               GROUP_ADDUSER, GROUP_DELUSER, EK_VIEW)
-from rhombus.lib.tags import (div, table, thead, tbody, th, tr, td, literal, selection_bar, br, ul,
-                              li, a, i, form, fieldset, input_hidden, input_text, input_select, 
-                              input_textarea, checkboxes, submit_bar, POST, GET)
-from rhombus.lib.modals import popup, modal_delete, modal_error
+
+from rhombus.lib.roles import (
+    GROUP_ADDUSER,
+    GROUP_CREATE,
+    GROUP_DELETE,
+    GROUP_DELUSER,
+    GROUP_MODIFY,
+    PUBLIC,
+    SYSADM,
+)
+
+from rhombus.lib.tags import (
+    a,
+    br,
+    checkboxes,
+    div,
+    fieldset,
+    form,
+    i,
+    input_hidden,
+    input_select,
+    input_text,
+    input_textarea,
+    li,
+    literal,
+    selection_bar,
+    submit_bar,
+    table,
+    tbody,
+    td,
+    th,
+    thead,
+    tr,
+    ul,
+    POST,
+    GET
+)
+
+from rhombus.lib.modals import (
+    modal_delete,
+    modal_error
+)
+
 from rhombus.models.user import Group
 
 from pyramid.renderers import render
