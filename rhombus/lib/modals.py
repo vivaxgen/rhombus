@@ -17,7 +17,7 @@ def modal_delete(title, content, request, value='delete/confirm'):
         title=title,
         content=content,
         footer=literal(
-            '<button class="btn" data-dismiss="modal" aria-hidden="true">Cancel</button>'
+            '<button class="btn" data-bs-dismiss="modal" type="button" aria-hidden="true">Cancel</button>'
             '<button class="btn btn-danger" type="submit" name="_method" value="%s">'
             'Confirm Delete</button>' % value),
         request=request
