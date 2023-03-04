@@ -1,4 +1,5 @@
 <%inherit file="rhombus:templates/base.mako" />
+<!-- rhombus:generics/formpage.mako -->
 
 % if html:
 ${ html }
@@ -15,6 +16,7 @@ ${ content | n }
 ##
 <%def name="jslinks()">
 	<script src="/assets/rb/select2/js/select2.min.js"></script>
+	<script src="/assets/rb/js/behave.js"></script>
 </%def>
 ##
 ##
