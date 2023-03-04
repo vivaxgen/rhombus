@@ -727,4 +727,11 @@ def button(*args, **kwargs):
         class_ = 'btn btn-info'
     return t.span(*args, class_=class_, **kwargs)
 
+
+# using behave.js for textarea
+def behave_editor(element_id, soft_tabs=False):
+    editor_id = 'editor_' + element_id.replace('-', '_')
+    return f'var {editor_id} = new Behave({{ textarea: document.getElementById("{element_id}")}});'
+
+
 # EOF
