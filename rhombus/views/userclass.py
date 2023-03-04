@@ -6,7 +6,7 @@ from rhombus.lib.tags import (div, table, thead, tbody, th, tr, td, literal, sel
                               form, POST, GET, fieldset, input_text, input_hidden, input_select, input_password,
                               submit_bar, h2, h3, p, input_textarea)
 from rhombus.views import (BaseViewer, render_to_response, form_submit_bar, ParseFormError, roles, yaml_load,
-                           Response, HTTPFound, boolean_checkbox)
+                           Response, HTTPFound, boolean_checkbox, behave_editor)
 from rhombus.lib.modals import modal_delete, popup, modal_error
 
 #from rhombus.views import *
@@ -110,7 +110,9 @@ class UserClassViewer(BaseViewer):
             ),
         )
 
-        return t.div(t.h2('Userclass'), eform), ''
+        jscode = behave_editor(ff('credscheme'))
+
+        return t.div(t.h2('Userclass'), eform), jscode
 
     def action_post(self):
 
