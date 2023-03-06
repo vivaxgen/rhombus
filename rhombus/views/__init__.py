@@ -731,7 +731,10 @@ def button(*args, **kwargs):
 # using behave.js for textarea
 def behave_editor(element_id, soft_tabs=False):
     editor_id = 'editor_' + element_id.replace('-', '_')
-    return f'var {editor_id} = new Behave({{ textarea: document.getElementById("{element_id}")}});'
+    return (f'\nvar {editor_id} = new Behave({{'
+            f' textarea: document.getElementById("{element_id}"), '
+            f' softTabs: {"true" if soft_tabs else "false"}, '
+            f'}});\n')
 
 
 # EOF
