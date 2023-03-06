@@ -73,7 +73,7 @@
 ##
 <%def name="scriptlinks()">
     <script src="/assets/rb/js/jquery-3.6.0.min.js"></script>
-    <script src="/assets/rb/js/popper.min.js"></script>
+    <script src="https://unpkg.com/@popperjs/core@2"></script>
     <script src="/assets/rb/bootstrap/js/bootstrap.bundle.min.js"></script>
     <!-- <script src="${request.static_url('rhombus:static/js/jquery.ocupload-min.js')}"></script> -->
     ${self.jslinks()}
