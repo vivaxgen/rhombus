@@ -90,7 +90,17 @@ class AutoUpdateMixIn(object):
 
     @classmethod
     def can_modify(cls, user):
-        raise NotImplementedError()
+        # basic role checking, return
+        # - True, if user can modify,
+        # - False, if user cannot modify
+        # - None, user has necessary modifying roles, but required further authorization
+
+        if user.has_roles(* cls.__managing_roles__):
+            # designated manager can modify everything
+            return True
+        if user.has_roles(* cls.__modifying_roles__):
+            return None
+        return False
 
     @classmethod
     def bulk_load(cls, a_list, dbh, with_flush=False):
